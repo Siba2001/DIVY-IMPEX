@@ -40,25 +40,74 @@ const Home = () => {
   return (
     <PublicLayout>
       {/* Hero Section */}
-      <section className="text-white py-5 py-lg-6 position-relative overflow-hidden" style={{ minHeight: '82vh', display: 'flex', alignItems: 'center', background: 'radial-gradient(ellipse at 75% 50%, rgba(212, 175, 55, 0.16) 0%, rgba(10, 25, 47, 1) 70%)' }}>
+      <section
+        className="py-5 py-lg-6 position-relative overflow-hidden"
+        style={{
+          minHeight: '85vh',
+          display: 'flex',
+          alignItems: 'center',
+          background: 'radial-gradient(ellipse at 80% 40%, rgba(212, 175, 55, 0.15) 0%, rgba(17, 34, 64, 0.6) 40%, rgba(7, 18, 36, 1) 100%)',
+          backgroundColor: '#071224'
+        }}
+      >
+        {/* Subtle Luxury Pattern & Ambient Spotlights */}
+        <div
+          className="position-absolute top-0 start-0 w-100 h-100 pointer-events-none opacity-20"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(212, 175, 55, 0.25) 1px, transparent 1px)',
+            backgroundSize: '32px 32px'
+          }}
+        />
+
         <div className="container py-3 py-md-4 position-relative" style={{ zIndex: 2 }}>
           <div className="row align-items-center g-5">
             {/* Left Hero Column */}
             <div className="col-12 col-lg-6">
-              <span className="badge bg-navy border border-warning text-warning px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-sm" style={{ backgroundColor: 'rgba(10, 25, 47, 0.85)', letterSpacing: '0.08em' }}>
+              <span
+                className="badge px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-lg"
+                style={{
+                  backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                  color: '#FDE68A',
+                  backdropFilter: 'blur(10px)',
+                  letterSpacing: '0.08em'
+                }}
+              >
                 <Sparkles size={15} className="me-2 text-warning flex-shrink-0" /> WORLD-CLASS CONTRACT MANUFACTURING
               </span>
-              <h1 className="display-4 font-heading fw-extrabold gold-gradient-text mb-3.5 lh-tight">
+
+              <h1
+                className="display-4 font-heading fw-extrabold gold-gradient-text mb-3.5 lh-tight"
+                style={{ textShadow: '0 0 35px rgba(212, 175, 55, 0.2)' }}
+              >
                 Crafting Excellence, One Diamond at a Time
               </h1>
-              <p className="fs-5 text-slate-300 mb-4 mb-md-5 leading-relaxed" style={{ color: '#CBD5E1', maxWidth: '580px' }}>
+
+              <p className="fs-5 mb-4 mb-md-5 leading-relaxed" style={{ color: '#E2E8F0', maxWidth: '580px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                 Precision, master craftsmanship and next-generation laser technology come together to transform every rough diamond parcel into a masterpiece of brilliance.
               </p>
+
               <div className="d-flex flex-column flex-sm-row gap-3 mb-4 mb-md-5">
-                <Link to="/diamonds" className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center shadow-lg">
+                <Link
+                  to="/diamonds"
+                  className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center"
+                  style={{
+                    boxShadow: '0 10px 25px -5px rgba(212, 175, 55, 0.4), 0 0 15px rgba(212, 175, 55, 0.2)'
+                  }}
+                >
                   Explore Our Diamonds <ArrowRight size={18} className="ms-2" />
                 </Link>
-                <Link to="/manufacturing" className="btn btn-outline-light btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-semibold text-center">
+                <Link
+                  to="/manufacturing"
+                  className="btn btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-semibold text-center"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(212, 175, 55, 0.4)',
+                    color: '#F8FAFC',
+                    backdropFilter: 'blur(8px)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
                   Discover Our Process
                 </Link>
               </div>
@@ -66,21 +115,51 @@ const Home = () => {
               {/* Key Trust Stats Cards */}
               <div className="row g-3 pt-4 border-top border-secondary border-opacity-25">
                 <div className="col-4">
-                  <div className="p-3 rounded-3 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(212,175,55,0.2)' }}>
-                    <h3 className="fs-4 fs-md-3 font-heading fw-bold text-white mb-0">50,000+</h3>
-                    <small className="text-secondary d-block text-truncate" style={{ fontSize: '0.75rem' }}>Diamonds Processed</small>
+                  <div
+                    className="p-3.5 rounded-4 shadow-lg text-center"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(17, 34, 64, 0.8) 0%, rgba(10, 25, 47, 0.9) 100%)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">50,000+</h3>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.78rem' }}>
+                      Diamonds Processed
+                    </small>
                   </div>
                 </div>
                 <div className="col-4">
-                  <div className="p-3 rounded-3 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(212,175,55,0.2)' }}>
-                    <h3 className="fs-4 fs-md-3 font-heading fw-bold text-white mb-0">99.9%</h3>
-                    <small className="text-secondary d-block text-truncate" style={{ fontSize: '0.75rem' }}>Weight Precision</small>
+                  <div
+                    className="p-3.5 rounded-4 shadow-lg text-center"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(17, 34, 64, 0.8) 0%, rgba(10, 25, 47, 0.9) 100%)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">99.9%</h3>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.78rem' }}>
+                      Weight Precision
+                    </small>
                   </div>
                 </div>
                 <div className="col-4">
-                  <div className="p-3 rounded-3 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(212,175,55,0.2)' }}>
-                    <h3 className="fs-4 fs-md-3 font-heading fw-bold text-white mb-0">25+ Yrs</h3>
-                    <small className="text-secondary d-block text-truncate" style={{ fontSize: '0.75rem' }}>Industry Legacy</small>
+                  <div
+                    className="p-3.5 rounded-4 shadow-lg text-center"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(17, 34, 64, 0.8) 0%, rgba(10, 25, 47, 0.9) 100%)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">25+ Yrs</h3>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.78rem' }}>
+                      Industry Legacy
+                    </small>
                   </div>
                 </div>
               </div>
@@ -93,25 +172,31 @@ const Home = () => {
                 <div
                   className="position-absolute top-50 start-50 translate-middle rounded-circle pointer-events-none"
                   style={{
-                    width: '320px',
-                    height: '320px',
-                    background: 'radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(2,132,199,0.15) 50%, transparent 80%)',
-                    filter: 'blur(20px)',
+                    width: '380px',
+                    height: '380px',
+                    background: 'radial-gradient(circle, rgba(212,175,55,0.22) 0%, rgba(2,132,199,0.12) 45%, transparent 75%)',
+                    filter: 'blur(25px)',
                     zIndex: 0
                   }}
                 />
 
                 {/* Interactive 3D Diamond */}
                 <div className="position-relative" style={{ zIndex: 1 }}>
-                  <Diamond3D size={350} />
+                  <Diamond3D size={360} />
                 </div>
 
                 {/* Floating Feature Glass Badges */}
                 <div
-                  className="position-absolute bottom-0 end-0 px-3 py-1.5 rounded-pill border shadow-lg d-none d-sm-flex align-items-center gap-2"
-                  style={{ background: 'rgba(10, 25, 47, 0.85)', borderColor: 'rgba(2,132,199,0.4)', backdropFilter: 'blur(8px)', zIndex: 2 }}
+                  className="position-absolute bottom-0 end-0 px-3.5 py-2 rounded-pill shadow-xl d-none d-sm-flex align-items-center gap-2"
+                  style={{
+                    background: 'rgba(10, 25, 47, 0.88)',
+                    border: '1px solid rgba(212, 175, 55, 0.4)',
+                    backdropFilter: 'blur(12px)',
+                    zIndex: 2,
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                  }}
                 >
-                  <span className="small font-heading fw-bold text-info">⚡ 5-Axis Laser Precision</span>
+                  <span className="small font-heading fw-bold" style={{ color: '#38BDF8' }}>⚡ 5-Axis Laser Precision</span>
                 </div>
               </div>
             </div>
@@ -134,7 +219,7 @@ const Home = () => {
                 <span className="badge bg-navy border border-warning text-warning px-3 py-1.5 rounded-pill font-heading fw-semibold mb-2 small" style={{ backgroundColor: 'rgba(10, 25, 47, 0.9)' }}>
                   Master Craftsmanship
                 </span>
-                <h3 className="fs-4 fs-md-3 font-heading fw-bold text-white mb-1">
+                <h3 className="fs-4 fs-md-3 font-heading fw-bold gold-gradient-text mb-1">
                   Heartful Diamonds: The Heart of Every Diamond
                 </h3>
                 <p className="small mb-0 text-slate-300" style={{ color: '#E2E8F0' }}>
@@ -320,31 +405,31 @@ const Home = () => {
                 <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom border-secondary border-opacity-25">
                   <div>
                     <span className="badge bg-warning text-navy font-heading fw-bold px-3 py-1.5 rounded-pill mb-1">Surat Headquarters</span>
-                    <h4 className="font-heading fw-bold text-white mb-0">DIVY IMPEX - All Fancy Cut Manufacturer</h4>
+                    <h4 className="font-heading fw-bold gold-gradient-text mb-0">DIVY IMPEX - All Fancy Cut Manufacturer</h4>
                   </div>
                 </div>
 
-                <div className="row g-4 text-white">
+                <div className="row g-4">
                   <div className="col-12 col-md-6">
                     <div className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Company Owner</small>
-                      <h5 className="fw-bold mb-1">Chandrakant Vaghasiya</h5>
-                      <span className="text-slate-300 small" style={{ color: '#CBD5E1' }}>Proprietor & Production Head</span>
+                      <h5 className="fw-bold mb-1" style={{ color: '#F5D466' }}>Chandrakant Vaghasiya</h5>
+                      <span className="small" style={{ color: '#CBD5E1' }}>Proprietor & Production Head</span>
                     </div>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <div className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Direct Phone & Support</small>
-                      <h5 className="fw-bold mb-1"><a href="tel:+919879452045" className="text-white text-decoration-none">+91 98794 52045</a></h5>
-                      <span className="text-slate-300 small" style={{ color: '#CBD5E1' }}>Mon - Sat: 09:00 AM - 07:00 PM</span>
+                      <h5 className="fw-bold mb-1"><a href="tel:+919879452045" className="text-warning text-decoration-none fw-bold">+91 98794 52045</a></h5>
+                      <span className="small" style={{ color: '#CBD5E1' }}>Mon - Sat: 09:00 AM - 07:00 PM</span>
                     </div>
                   </div>
 
                   <div className="col-12">
                     <div className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Works Address</small>
-                      <p className="text-white mb-0 small leading-relaxed">
+                      <p className="mb-0 small leading-relaxed" style={{ color: '#E2E8F0' }}>
                         FP - 75, 3rd Floor, Room No.-8, G. K. Chambers, Kohinoor Society, Varachha Road, Surat - 395006, Gujarat, India
                       </p>
                     </div>
