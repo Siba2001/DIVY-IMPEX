@@ -184,20 +184,6 @@ const Home = () => {
                 <div className="position-relative" style={{ zIndex: 1 }}>
                   <Diamond3D size={360} />
                 </div>
-
-                {/* Floating Feature Glass Badges */}
-                <div
-                  className="position-absolute bottom-0 end-0 px-3.5 py-2 rounded-pill shadow-xl d-none d-sm-flex align-items-center gap-2"
-                  style={{
-                    background: 'rgba(10, 25, 47, 0.88)',
-                    border: '1px solid rgba(212, 175, 55, 0.4)',
-                    backdropFilter: 'blur(12px)',
-                    zIndex: 2,
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
-                  }}
-                >
-                  <span className="small font-heading fw-bold" style={{ color: '#38BDF8' }}>⚡ 5-Axis Laser Precision</span>
-                </div>
               </div>
             </div>
           </div>

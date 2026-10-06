@@ -158,11 +158,6 @@ const Diamond3D = ({ size = 380 }) => {
         style={{ width: size, height: size }}
         className="d-flex align-items-center justify-content-center"
       />
-      <div className="text-center mt-2 px-3 py-1.5 rounded-pill" style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.4)', backdropFilter: 'blur(6px)' }}>
-        <small className="font-heading fw-bold text-warning" style={{ fontSize: '0.75rem', letterSpacing: '0.12em' }}>
-          ✨ 360° ROTATING SHINING DIAMOND • DRAG TO ROTATE
-        </small>
-      </div>
     </div>
   );
 };
