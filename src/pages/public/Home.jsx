@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PublicLayout from '../../layouts/PublicLayout';
+import Diamond3D from '../../components/common/Diamond3D';
 import {
   Gem,
   CheckCircle,
@@ -39,21 +40,22 @@ const Home = () => {
   return (
     <PublicLayout>
       {/* Hero Section */}
-      <section className="bg-diamond-pattern text-white py-5 py-md-6 py-lg-7 position-relative overflow-hidden" style={{ minHeight: '85vh', display: 'flex', alignItems: 'center' }}>
-        <div className="container py-4 py-md-5 position-relative" style={{ zIndex: 2 }}>
-          <div className="row align-items-center g-4">
-            <div className="col-12 col-lg-10 col-xl-9">
-              <span className="badge bg-warning text-navy px-3 py-2 rounded-pill font-heading fw-bold mb-3 mb-md-4 d-inline-flex align-items-center text-wrap" style={{ fontSize: '0.825rem' }}>
-                <Sparkles size={15} className="me-2 text-dark flex-shrink-0" /> World-Class Diamond Contract Polishing
+      <section className="text-white py-5 py-lg-6 position-relative overflow-hidden" style={{ minHeight: '82vh', display: 'flex', alignItems: 'center', background: 'radial-gradient(ellipse at 75% 50%, rgba(212, 175, 55, 0.16) 0%, rgba(10, 25, 47, 1) 70%)' }}>
+        <div className="container py-3 py-md-4 position-relative" style={{ zIndex: 2 }}>
+          <div className="row align-items-center g-5">
+            {/* Left Hero Column */}
+            <div className="col-12 col-lg-6">
+              <span className="badge bg-navy border border-warning text-warning px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-sm" style={{ backgroundColor: 'rgba(10, 25, 47, 0.85)', letterSpacing: '0.08em' }}>
+                <Sparkles size={15} className="me-2 text-warning flex-shrink-0" /> WORLD-CLASS CONTRACT MANUFACTURING
               </span>
-              <h1 className="display-4 font-heading fw-extrabold gold-gradient-text mb-3 mb-md-4 lh-tight">
+              <h1 className="display-4 font-heading fw-extrabold gold-gradient-text mb-3.5 lh-tight">
                 Crafting Excellence, One Diamond at a Time
               </h1>
-              <p className="fs-5 text-slate-300 mb-4 mb-md-5 leading-relaxed" style={{ color: '#CBD5E1', maxWidth: '780px' }}>
-                Precision, master craftsmanship and technology come together to transform every rough diamond into a symbol of brilliance and perfection.
+              <p className="fs-5 text-slate-300 mb-4 mb-md-5 leading-relaxed" style={{ color: '#CBD5E1', maxWidth: '580px' }}>
+                Precision, master craftsmanship and next-generation laser technology come together to transform every rough diamond parcel into a masterpiece of brilliance.
               </p>
               <div className="d-flex flex-column flex-sm-row gap-3 mb-4 mb-md-5">
-                <Link to="/diamonds" className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center">
+                <Link to="/diamonds" className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center shadow-lg">
                   Explore Our Diamonds <ArrowRight size={18} className="ms-2" />
                 </Link>
                 <Link to="/manufacturing" className="btn btn-outline-light btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-semibold text-center">
@@ -61,19 +63,62 @@ const Home = () => {
                 </Link>
               </div>
 
-              {/* Key Trust Stats */}
-              <div className="row g-3 g-sm-4 pt-4 border-top border-secondary border-opacity-25" style={{ maxWidth: '780px' }}>
+              {/* Key Trust Stats Cards */}
+              <div className="row g-3 pt-4 border-top border-secondary border-opacity-25">
                 <div className="col-4">
-                  <h3 className="fs-3 fs-sm-2 fs-md-1 font-heading fw-bold text-white mb-0">50,000+</h3>
-                  <small className="text-secondary d-block text-truncate">Diamonds Processed</small>
+                  <div className="p-3 rounded-3 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(212,175,55,0.2)' }}>
+                    <h3 className="fs-4 fs-md-3 font-heading fw-bold text-white mb-0">50,000+</h3>
+                    <small className="text-secondary d-block text-truncate" style={{ fontSize: '0.75rem' }}>Diamonds Processed</small>
+                  </div>
                 </div>
                 <div className="col-4">
-                  <h3 className="fs-3 fs-sm-2 fs-md-1 font-heading fw-bold text-white mb-0">99.9%</h3>
-                  <small className="text-secondary d-block text-truncate">Weight Precision</small>
+                  <div className="p-3 rounded-3 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(212,175,55,0.2)' }}>
+                    <h3 className="fs-4 fs-md-3 font-heading fw-bold text-white mb-0">99.9%</h3>
+                    <small className="text-secondary d-block text-truncate" style={{ fontSize: '0.75rem' }}>Weight Precision</small>
+                  </div>
                 </div>
                 <div className="col-4">
-                  <h3 className="fs-3 fs-sm-2 fs-md-1 font-heading fw-bold text-white mb-0">25+ Yrs</h3>
-                  <small className="text-secondary d-block text-truncate">Industry Legacy</small>
+                  <div className="p-3 rounded-3 border" style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(212,175,55,0.2)' }}>
+                    <h3 className="fs-4 fs-md-3 font-heading fw-bold text-white mb-0">25+ Yrs</h3>
+                    <small className="text-secondary d-block text-truncate" style={{ fontSize: '0.75rem' }}>Industry Legacy</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Hero Column - Interactive 3D Diamond & Floating Feature Badges */}
+            <div className="col-12 col-lg-6 text-center d-flex justify-content-center align-items-center position-relative">
+              <div className="position-relative d-inline-block">
+                {/* Radial Glow Aura Ring */}
+                <div
+                  className="position-absolute top-50 start-50 translate-middle rounded-circle pointer-events-none"
+                  style={{
+                    width: '320px',
+                    height: '320px',
+                    background: 'radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(2,132,199,0.15) 50%, transparent 80%)',
+                    filter: 'blur(20px)',
+                    zIndex: 0
+                  }}
+                />
+
+                {/* Interactive 3D Diamond */}
+                <div className="position-relative" style={{ zIndex: 1 }}>
+                  <Diamond3D size={350} />
+                </div>
+
+                {/* Floating Feature Glass Badges */}
+                <div
+                  className="position-absolute top-0 start-0 px-3 py-1.5 rounded-pill border shadow-lg d-none d-sm-flex align-items-center gap-2"
+                  style={{ background: 'rgba(10, 25, 47, 0.85)', borderColor: 'rgba(212,175,55,0.4)', backdropFilter: 'blur(8px)', zIndex: 2 }}
+                >
+                  <span className="small font-heading fw-bold text-warning">💎 57-Facet Brilliant Cut</span>
+                </div>
+
+                <div
+                  className="position-absolute bottom-0 end-0 px-3 py-1.5 rounded-pill border shadow-lg d-none d-sm-flex align-items-center gap-2"
+                  style={{ background: 'rgba(10, 25, 47, 0.85)', borderColor: 'rgba(2,132,199,0.4)', backdropFilter: 'blur(8px)', zIndex: 2 }}
+                >
+                  <span className="small font-heading fw-bold text-info">⚡ 5-Axis Laser Precision</span>
                 </div>
               </div>
             </div>
