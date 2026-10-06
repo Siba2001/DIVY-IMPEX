@@ -108,13 +108,6 @@ const Home = () => {
 
                 {/* Floating Feature Glass Badges */}
                 <div
-                  className="position-absolute top-0 start-0 px-3 py-1.5 rounded-pill border shadow-lg d-none d-sm-flex align-items-center gap-2"
-                  style={{ background: 'rgba(10, 25, 47, 0.85)', borderColor: 'rgba(212,175,55,0.4)', backdropFilter: 'blur(8px)', zIndex: 2 }}
-                >
-                  <span className="small font-heading fw-bold text-warning">💎 57-Facet Brilliant Cut</span>
-                </div>
-
-                <div
                   className="position-absolute bottom-0 end-0 px-3 py-1.5 rounded-pill border shadow-lg d-none d-sm-flex align-items-center gap-2"
                   style={{ background: 'rgba(10, 25, 47, 0.85)', borderColor: 'rgba(2,132,199,0.4)', backdropFilter: 'blur(8px)', zIndex: 2 }}
                 >

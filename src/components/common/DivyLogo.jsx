@@ -19,7 +19,7 @@ const DivyLogo = ({ showText = true, iconSize = 44, textClassName = "", classNam
         <DivyLogoIcon size={iconSize} className="mb-2" />
         {showText && (
           <div className="lh-1">
-            <span className={`font-heading fw-bold text-white d-block ${textClassName || 'fs-4'}`} style={{ letterSpacing: '0.28em' }}>
+            <span className={`font-heading fw-bold gold-gradient-text d-block ${textClassName || 'fs-4'}`} style={{ letterSpacing: '0.28em' }}>
               DIVY IMPEX
             </span>
             <small className="text-uppercase text-warning d-block mt-1" style={{ fontSize: '0.65rem', letterSpacing: '0.15em' }}>
@@ -36,7 +36,7 @@ const DivyLogo = ({ showText = true, iconSize = 44, textClassName = "", classNam
       <DivyLogoIcon size={iconSize} className="me-2.5 flex-shrink-0" />
       {showText && (
         <div className="lh-1 ms-1">
-          <span className={`font-heading fw-bold text-white d-block ${textClassName || 'fs-4'}`} style={{ letterSpacing: '0.22em' }}>
+          <span className={`font-heading fw-bold gold-gradient-text d-block ${textClassName || 'fs-4'}`} style={{ letterSpacing: '0.22em' }}>
             DIVY IMPEX
           </span>
           <small className="text-uppercase text-warning d-block" style={{ fontSize: '0.62rem', letterSpacing: '0.14em', marginTop: '3px' }}>
