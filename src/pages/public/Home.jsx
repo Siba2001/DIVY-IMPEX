@@ -112,52 +112,28 @@ const Home = () => {
                 </Link>
               </div>
 
-              {/* Key Trust Stats Cards */}
+              {/* Key Trust Stats Text Only */}
               <div className="row g-3 pt-4 border-top border-secondary border-opacity-25">
                 <div className="col-4">
-                  <div
-                    className="p-3.5 rounded-4 shadow-lg text-center"
-                    style={{
-                      background: 'linear-gradient(145deg, rgba(17, 34, 64, 0.8) 0%, rgba(10, 25, 47, 0.9) 100%)',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
-                      boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-                      backdropFilter: 'blur(10px)'
-                    }}
-                  >
+                  <div>
                     <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">50,000+</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.78rem' }}>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.82rem' }}>
                       Diamonds Processed
                     </small>
                   </div>
                 </div>
                 <div className="col-4">
-                  <div
-                    className="p-3.5 rounded-4 shadow-lg text-center"
-                    style={{
-                      background: 'linear-gradient(145deg, rgba(17, 34, 64, 0.8) 0%, rgba(10, 25, 47, 0.9) 100%)',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
-                      boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-                      backdropFilter: 'blur(10px)'
-                    }}
-                  >
+                  <div>
                     <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">99.9%</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.78rem' }}>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.82rem' }}>
                       Weight Precision
                     </small>
                   </div>
                 </div>
                 <div className="col-4">
-                  <div
-                    className="p-3.5 rounded-4 shadow-lg text-center"
-                    style={{
-                      background: 'linear-gradient(145deg, rgba(17, 34, 64, 0.8) 0%, rgba(10, 25, 47, 0.9) 100%)',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
-                      boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-                      backdropFilter: 'blur(10px)'
-                    }}
-                  >
+                  <div>
                     <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">25+ Yrs</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.78rem' }}>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.82rem' }}>
                       Industry Legacy
                     </small>
                   </div>
