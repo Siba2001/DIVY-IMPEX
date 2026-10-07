@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const TOTAL_FRAMES = 120;
 
-const getFramePath = (index) => {
+const getFramePathPNG = (index) => {
+  const frameNum = String(index).padStart(3, '0');
+  return `/divy_impex 360Degree Images/diamond_${frameNum}.png`;
+};
+
+const getFramePathJPG = (index) => {
   const frameNum = String(index).padStart(3, '0');
   return `/divy_impex 360Degree Images/diamond_${frameNum}.jpg`;
 };
@@ -19,19 +24,31 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
   const canvasRef = useRef(null);
   const loadedImagesRef = useRef({});
 
-  // Preload frames for smooth rotation
+  // Preload frames (supports both .png and .jpg automatically)
   useEffect(() => {
     let loadedCount = 0;
 
     for (let i = 1; i <= TOTAL_FRAMES; i++) {
       const img = new Image();
-      img.src = getFramePath(i);
+      img.src = getFramePathPNG(i);
       img.onload = () => {
         loadedImagesRef.current[i] = img;
         loadedCount++;
-        if (loadedCount >= 5) {
+        if (loadedCount >= 1) {
           setIsLoaded(true);
         }
+      };
+      img.onerror = () => {
+        // Fallback to .jpg if .png is not found
+        const imgJpg = new Image();
+        imgJpg.src = getFramePathJPG(i);
+        imgJpg.onload = () => {
+          loadedImagesRef.current[i] = imgJpg;
+          loadedCount++;
+          if (loadedCount >= 1) {
+            setIsLoaded(true);
+          }
+        };
       };
     }
   }, []);
@@ -54,7 +71,7 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(img, 0, 0, width, height);
 
-    // Get pixel data to key out dark navy background
+    // Get pixel data to key out dark navy background if needed
     try {
       const imgData = ctx.getImageData(0, 0, width, height);
       const data = imgData.data;
@@ -64,7 +81,7 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
         const g = data[i + 1];
         const b = data[i + 2];
 
-        // Detect dark navy studio background (low R, low G, low B)
+        // Detect dark navy studio background
         if (r < 35 && g < 48 && b < 75) {
           const maxVal = Math.max(r, g, b);
           if (maxVal < 22) {
@@ -83,12 +100,12 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
     }
   };
 
-  // Re-render canvas whenever currentFrame updates
+  // Re-render canvas whenever currentFrame or isLoaded updates
   useEffect(() => {
     renderFrame(currentFrame);
   }, [currentFrame, isLoaded]);
 
-  // Continuous smooth 360° auto-rotation (pauses on hover/drag)
+  // Continuous smooth 360° auto-rotation
   useEffect(() => {
     autoRotateRef.current = setInterval(() => {
       if (!isDragging && !isHovering) {
@@ -98,14 +115,14 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
           return next;
         });
       }
-    }, 40); // Smooth rotation speed
+    }, 40);
 
     return () => {
       if (autoRotateRef.current) clearInterval(autoRotateRef.current);
     };
   }, [isDragging, isHovering]);
 
-  // Hover Movement & Cursor Location Rotation
+  // Mouse & Touch Drag & Hover Controls
   const handleMouseMove = (e) => {
     if (isDragging) {
       const deltaX = e.clientX - startXRef.current;
@@ -118,7 +135,6 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
         startXRef.current = e.clientX;
       }
     } else if (containerRef.current) {
-      // Hover Movement: Map mouse X position across container to 360 rotation frames
       const rect = containerRef.current.getBoundingClientRect();
       const relativeX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
       const ratio = relativeX / rect.width;
@@ -147,7 +163,6 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
     setIsDragging(false);
   };
 
-  // Touch Drag Handler
   const handleTouchStart = (e) => {
     setIsDragging(true);
     startXRef.current = e.touches[0].clientX;
@@ -169,6 +184,9 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
   const handleTouchEnd = () => {
     setIsDragging(false);
   };
+
+  // Current image fallback src
+  const fallbackSrc = loadedImagesRef.current[currentFrame]?.src || getFramePathPNG(currentFrame);
 
   return (
     <div
@@ -207,6 +225,7 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
         style={{
           width: '100%',
           maxWidth: `${size * 1.3}px`,
+          minHeight: `${size * 0.75}px`,
           zIndex: 1
         }}
       >
@@ -217,9 +236,25 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
             transform: 'scale(1.18)',
             transformOrigin: 'center center',
             filter: 'drop-shadow(0 15px 25px rgba(0,0,0,0.5))',
-            transition: isHovering ? 'none' : 'transform 0.3s ease'
+            display: isLoaded ? 'block' : 'none'
           }}
         />
+
+        {/* Fallback Direct Image if Canvas is Initializing */}
+        {!isLoaded && (
+          <img
+            src={fallbackSrc}
+            alt={`DIVY IMPEX 360 Diamond View - Frame ${currentFrame}`}
+            className="w-100 h-auto object-fit-contain"
+            draggable={false}
+            style={{
+              filter: 'contrast(1.08) brightness(1.08)',
+              mixBlendMode: 'lighten',
+              transform: 'scale(1.18)',
+              transformOrigin: 'center center'
+            }}
+          />
+        )}
       </div>
 
       {/* Sleek Floating 360 Control Indicator Badge */}
