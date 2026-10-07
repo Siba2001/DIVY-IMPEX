@@ -93,11 +93,11 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
       <div
         className="position-absolute top-50 start-50 translate-middle pointer-events-none"
         style={{
-          width: `${size * 0.9}px`,
-          height: `${size * 0.9}px`,
+          width: `${size * 0.95}px`,
+          height: `${size * 0.95}px`,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, rgba(14, 165, 233, 0.08) 45%, transparent 70%)',
-          filter: 'blur(35px)',
+          background: 'radial-gradient(circle, rgba(212, 175, 55, 0.16) 0%, rgba(14, 31, 57, 0.4) 50%, transparent 75%)',
+          filter: 'blur(30px)',
           zIndex: 0
         }}
       />
@@ -110,8 +110,8 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
           maxWidth: `${size * 1.25}px`,
           aspectRatio: '16 / 9',
           zIndex: 1,
-          WebkitMaskImage: 'radial-gradient(ellipse 75% 85% at 50% 50%, black 60%, transparent 100%)',
-          maskImage: 'radial-gradient(ellipse 75% 85% at 50% 50%, black 60%, transparent 100%)'
+          WebkitMaskImage: 'radial-gradient(ellipse 65% 75% at 50% 50%, black 55%, transparent 96%)',
+          maskImage: 'radial-gradient(ellipse 65% 75% at 50% 50%, black 55%, transparent 96%)'
         }}
       >
         <img
@@ -120,8 +120,8 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
           className="w-100 h-100 object-fit-contain"
           draggable={false}
           style={{
-            filter: 'contrast(1.08) brightness(1.08)',
-            transform: 'scale(1.15)',
+            filter: 'contrast(1.06) brightness(1.06)',
+            transform: 'scale(1.12)',
             transformOrigin: 'center center'
           }}
         />
