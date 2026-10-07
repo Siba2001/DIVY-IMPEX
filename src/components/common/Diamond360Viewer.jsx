@@ -256,22 +256,6 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
           />
         )}
       </div>
-
-      {/* Sleek Floating 360 Control Indicator Badge */}
-      <div
-        className="mt-1 px-3.5 py-1.5 rounded-pill shadow-lg text-center d-inline-flex align-items-center gap-2"
-        style={{
-          background: 'rgba(7, 18, 36, 0.85)',
-          border: '1px solid rgba(212, 175, 55, 0.4)',
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 8px 20px rgba(0,0,0,0.5)',
-          zIndex: 2
-        }}
-      >
-        <span className="small font-heading fw-bold" style={{ color: '#FDE68A', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-          ✨ 360° REAL DIAMOND VIEW • HOVER & DRAG TO ROTATE
-        </span>
-      </div>
     </div>
   );
 };
