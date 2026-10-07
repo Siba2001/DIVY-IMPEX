@@ -77,20 +77,30 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
       const data = imgData.data;
 
       for (let i = 0; i < data.length; i += 4) {
+        const pixelIdx = i / 4;
+        const y = Math.floor(pixelIdx / width);
+
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
 
         // Detect dark navy studio background
-        if (r < 35 && g < 48 && b < 75) {
+        if (r < 42 && g < 55 && b < 85) {
           const maxVal = Math.max(r, g, b);
-          if (maxVal < 22) {
+          if (maxVal < 25) {
             data[i + 3] = 0; // 100% transparent
-          } else if (maxVal < 42) {
+          } else if (maxVal < 50) {
             // Smooth edge alpha transition
-            const alpha = (maxVal - 22) / 20;
+            const alpha = (maxVal - 25) / 25;
             data[i + 3] = Math.floor(Math.max(0, Math.min(1, alpha)) * 255);
           }
+        }
+
+        // Smooth bottom edge fade to eliminate hard horizontal cut lines under the stand
+        const bottomThreshold = height * 0.70;
+        if (y > bottomThreshold) {
+          const bottomFade = Math.max(0, (height - 30 - y) / (height - 30 - bottomThreshold));
+          data[i + 3] = Math.floor(data[i + 3] * bottomFade);
         }
       }
 
@@ -226,7 +236,9 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
           width: '100%',
           maxWidth: `${size * 1.3}px`,
           minHeight: `${size * 0.75}px`,
-          zIndex: 1
+          zIndex: 1,
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 96%)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 96%)'
         }}
       >
         <canvas
