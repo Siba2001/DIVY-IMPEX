@@ -7,10 +7,12 @@ const getFramePath = (index) => {
   return `/divy_impex 360Degree Images/diamond_${frameNum}.jpg`;
 };
 
-const Diamond360Viewer = ({ size = 370, className = "" }) => {
+const Diamond360Viewer = ({ size = 410, className = "" }) => {
   const [currentFrame, setCurrentFrame] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const containerRef = useRef(null);
   const startXRef = useRef(0);
   const frameIndexRef = useRef(1);
   const autoRotateRef = useRef(null);
@@ -63,7 +65,6 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
         const b = data[i + 2];
 
         // Detect dark navy studio background (low R, low G, low B)
-        // Background pixels typically have R < 35, G < 48, B < 75
         if (r < 35 && g < 48 && b < 75) {
           const maxVal = Math.max(r, g, b);
           if (maxVal < 22) {
@@ -78,7 +79,7 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
 
       ctx.putImageData(imgData, 0, 0);
     } catch (e) {
-      // Fallback if canvas security blocks imageData
+      // Fallback
     }
   };
 
@@ -87,61 +88,105 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
     renderFrame(currentFrame);
   }, [currentFrame, isLoaded]);
 
-  // Continuous smooth 360° auto-rotation
+  // Continuous smooth 360° auto-rotation (pauses on hover/drag)
   useEffect(() => {
     autoRotateRef.current = setInterval(() => {
-      if (!isDragging) {
+      if (!isDragging && !isHovering) {
         setCurrentFrame((prev) => {
           const next = prev >= TOTAL_FRAMES ? 1 : prev + 1;
           frameIndexRef.current = next;
           return next;
         });
       }
-    }, 45); // Smooth rotation speed
+    }, 40); // Smooth rotation speed
 
     return () => {
       if (autoRotateRef.current) clearInterval(autoRotateRef.current);
     };
-  }, [isDragging]);
+  }, [isDragging, isHovering]);
 
-  // Mouse & Touch Drag Handler
-  const handleStart = (clientX) => {
-    setIsDragging(true);
-    startXRef.current = clientX;
+  // Hover Movement & Cursor Location Rotation
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      const deltaX = e.clientX - startXRef.current;
+      if (Math.abs(deltaX) > 2) {
+        const sensitivity = 0.4;
+        let newFrame = Math.round(frameIndexRef.current - deltaX * sensitivity) % TOTAL_FRAMES;
+        if (newFrame <= 0) newFrame += TOTAL_FRAMES;
+        setCurrentFrame(newFrame);
+        frameIndexRef.current = newFrame;
+        startXRef.current = e.clientX;
+      }
+    } else if (containerRef.current) {
+      // Hover Movement: Map mouse X position across container to 360 rotation frames
+      const rect = containerRef.current.getBoundingClientRect();
+      const relativeX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+      const ratio = relativeX / rect.width;
+      let frame = Math.floor(ratio * TOTAL_FRAMES) + 1;
+      frame = Math.max(1, Math.min(TOTAL_FRAMES, frame));
+      setCurrentFrame(frame);
+      frameIndexRef.current = frame;
+    }
   };
 
-  const handleMove = (clientX) => {
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    setIsDragging(false);
+  };
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    startXRef.current = e.clientX;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Touch Drag Handler
+  const handleTouchStart = (e) => {
+    setIsDragging(true);
+    startXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
     if (!isDragging) return;
-    const deltaX = clientX - startXRef.current;
-    if (Math.abs(deltaX) > 3) {
+    const deltaX = e.touches[0].clientX - startXRef.current;
+    if (Math.abs(deltaX) > 2) {
       const sensitivity = 0.4;
       let newFrame = Math.round(frameIndexRef.current - deltaX * sensitivity) % TOTAL_FRAMES;
       if (newFrame <= 0) newFrame += TOTAL_FRAMES;
       setCurrentFrame(newFrame);
       frameIndexRef.current = newFrame;
-      startXRef.current = clientX;
+      startXRef.current = e.touches[0].clientX;
     }
   };
 
-  const handleEnd = () => {
+  const handleTouchEnd = () => {
     setIsDragging(false);
   };
 
   return (
     <div
+      ref={containerRef}
       className={`position-relative d-inline-flex flex-column align-items-center justify-content-center user-select-none ${className}`}
       style={{
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isDragging ? 'grabbing' : 'pointer',
         maxWidth: '100%',
         width: `${size * 1.35}px`
       }}
-      onMouseDown={(e) => handleStart(e.clientX)}
-      onMouseMove={(e) => handleMove(e.clientX)}
-      onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
-      onTouchStart={(e) => handleStart(e.touches[0].clientX)}
-      onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-      onTouchEnd={handleEnd}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Soft Ambient Gold Lighting Behind Diamond */}
       <div
@@ -150,7 +195,7 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
           width: `${size * 0.9}px`,
           height: `${size * 0.9}px`,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, rgba(14, 165, 233, 0.08) 50%, transparent 75%)',
+          background: 'radial-gradient(circle, rgba(212, 175, 55, 0.22) 0%, rgba(14, 165, 233, 0.08) 50%, transparent 75%)',
           filter: 'blur(35px)',
           zIndex: 0
         }}
@@ -171,7 +216,8 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
           style={{
             transform: 'scale(1.18)',
             transformOrigin: 'center center',
-            filter: 'drop-shadow(0 15px 25px rgba(0,0,0,0.5))'
+            filter: 'drop-shadow(0 15px 25px rgba(0,0,0,0.5))',
+            transition: isHovering ? 'none' : 'transform 0.3s ease'
           }}
         />
       </div>
@@ -188,7 +234,7 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
         }}
       >
         <span className="small font-heading fw-bold" style={{ color: '#FDE68A', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-          ✨ 360° REAL DIAMOND VIEW • DRAG TO ROTATE
+          ✨ 360° REAL DIAMOND VIEW • HOVER & DRAG TO ROTATE
         </span>
       </div>
     </div>
