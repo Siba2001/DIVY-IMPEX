@@ -59,10 +59,10 @@ const Home = () => {
           }}
         />
 
-        <div className="container py-3 py-md-4 position-relative" style={{ zIndex: 2 }}>
-          <div className="row align-items-center g-5">
+        <div className="container py-3 py-md-5 position-relative" style={{ zIndex: 2 }}>
+          <div className="row align-items-center justify-content-start">
             {/* Left Hero Column */}
-            <div className="col-12 col-lg-6">
+            <div className="col-12 col-lg-10 col-xl-9">
               <span
                 className="badge px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-lg"
                 style={{
@@ -77,13 +77,13 @@ const Home = () => {
               </span>
 
               <h1
-                className="display-4 font-heading fw-extrabold gold-gradient-text mb-3.5 lh-tight"
+                className="display-3 font-heading fw-extrabold gold-gradient-text mb-3.5 lh-tight"
                 style={{ textShadow: '0 0 35px rgba(212, 175, 55, 0.2)' }}
               >
                 Crafting Excellence, One Diamond at a Time
               </h1>
 
-              <p className="fs-5 mb-4 mb-md-5 leading-relaxed" style={{ color: '#E2E8F0', maxWidth: '580px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              <p className="fs-4 mb-4 mb-md-5 leading-relaxed" style={{ color: '#E2E8F0', maxWidth: '740px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                 Precision, master craftsmanship and next-generation laser technology come together to transform every rough diamond parcel into a masterpiece of brilliance.
               </p>
 
@@ -113,52 +113,30 @@ const Home = () => {
               </div>
 
               {/* Key Trust Stats Text Only */}
-              <div className="row g-3 pt-4 border-top border-secondary border-opacity-25">
+              <div className="row g-3 pt-4 border-top border-secondary border-opacity-25" style={{ maxWidth: '680px' }}>
                 <div className="col-4">
-                  <div>
-                    <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">50,000+</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.82rem' }}>
+                  <div className="pe-2">
+                    <h3 className="fs-2 font-heading fw-extrabold gold-gradient-text mb-1">50,000+</h3>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
                       Diamonds Processed
                     </small>
                   </div>
                 </div>
-                <div className="col-4">
-                  <div>
-                    <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">99.9%</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.82rem' }}>
+                <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
+                  <div className="pe-2">
+                    <h3 className="fs-2 font-heading fw-extrabold gold-gradient-text mb-1">99.9%</h3>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
                       Weight Precision
                     </small>
                   </div>
                 </div>
-                <div className="col-4">
+                <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
                   <div>
-                    <h3 className="fs-3 font-heading fw-extrabold gold-gradient-text mb-1">25+ Yrs</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.82rem' }}>
+                    <h3 className="fs-2 font-heading fw-extrabold gold-gradient-text mb-1">25+ Yrs</h3>
+                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
                       Industry Legacy
                     </small>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Hero Column - Interactive 3D Diamond & Floating Feature Badges */}
-            <div className="col-12 col-lg-6 text-center d-flex justify-content-center align-items-center position-relative">
-              <div className="position-relative d-inline-block">
-                {/* Radial Glow Aura Ring */}
-                <div
-                  className="position-absolute top-50 start-50 translate-middle rounded-circle pointer-events-none"
-                  style={{
-                    width: '380px',
-                    height: '380px',
-                    background: 'radial-gradient(circle, rgba(212,175,55,0.22) 0%, rgba(2,132,199,0.12) 45%, transparent 75%)',
-                    filter: 'blur(25px)',
-                    zIndex: 0
-                  }}
-                />
-
-                {/* Interactive 3D Diamond */}
-                <div className="position-relative" style={{ zIndex: 1 }}>
-                  <Diamond3D size={360} />
                 </div>
               </div>
             </div>
