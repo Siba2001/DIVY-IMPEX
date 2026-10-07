@@ -104,24 +104,24 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
 
       {/* Pure Frameless 360 Diamond & Stand Container */}
       <div
-        className="position-relative overflow-visible"
+        className="position-relative overflow-visible d-flex justify-content-center align-items-center"
         style={{
           width: '100%',
-          maxWidth: `${size * 1.25}px`,
-          aspectRatio: '16 / 9',
+          maxWidth: `${size * 1.3}px`,
           zIndex: 1,
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 75% at 50% 50%, black 55%, transparent 96%)',
-          maskImage: 'radial-gradient(ellipse 65% 75% at 50% 50%, black 55%, transparent 96%)'
+          WebkitMaskImage: 'radial-gradient(ellipse 70% 80% at 50% 50%, black 65%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse 70% 80% at 50% 50%, black 65%, transparent 100%)'
         }}
       >
         <img
           src={getFramePath(currentFrame)}
           alt={`DIVY IMPEX 360 Diamond View - Frame ${currentFrame}`}
-          className="w-100 h-100 object-fit-contain"
+          className="w-100 h-auto object-fit-contain"
           draggable={false}
           style={{
-            filter: 'contrast(1.06) brightness(1.06)',
-            transform: 'scale(1.12)',
+            filter: 'contrast(1.08) brightness(1.08)',
+            mixBlendMode: 'lighten',
+            transform: 'scale(1.15)',
             transformOrigin: 'center center'
           }}
         />

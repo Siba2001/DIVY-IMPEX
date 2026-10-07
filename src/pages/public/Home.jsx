@@ -46,8 +46,8 @@ const Home = () => {
           minHeight: '88vh',
           display: 'flex',
           alignItems: 'center',
-          background: 'radial-gradient(ellipse at 78% 45%, rgba(212, 175, 55, 0.12) 0%, rgba(14, 31, 57, 0.95) 30%, rgba(8, 23, 46, 1) 65%, rgba(5, 20, 41, 1) 100%)',
-          backgroundColor: '#051429'
+          background: 'radial-gradient(ellipse at 75% 50%, #0a192f 0%, #06152a 50%, #030a16 100%)',
+          backgroundColor: '#06152a'
         }}
       >
         {/* Subtle Luxury Pattern & Ambient Spotlights */}
