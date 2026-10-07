@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PublicLayout from '../../layouts/PublicLayout';
+import Diamond360Viewer from '../../components/common/Diamond360Viewer';
 import {
   Gem,
   CheckCircle,
@@ -45,53 +46,70 @@ const Home = () => {
           minHeight: '88vh',
           display: 'flex',
           alignItems: 'center',
-          background: 'radial-gradient(ellipse at 75% 50%, #0a192f 0%, #06152a 50%, #030a16 100%)',
-          backgroundColor: '#06152a'
+          backgroundColor: '#051429'
         }}
       >
-        {/* Subtle Luxury Pattern & Ambient Spotlights */}
+        {/* Low-opacity gold dot pattern background matching reference image */}
         <div
-          className="position-absolute top-0 start-0 w-100 h-100 pointer-events-none opacity-20"
+          className="position-absolute top-0 start-0 w-100 h-100 pointer-events-none"
           style={{
-            backgroundImage: 'radial-gradient(rgba(212, 175, 55, 0.25) 1px, transparent 1px)',
-            backgroundSize: '32px 32px'
+            backgroundImage: 'radial-gradient(rgba(212, 175, 55, 0.22) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+            opacity: 0.25
           }}
         />
 
         <div className="container py-3 py-md-5 position-relative" style={{ zIndex: 2 }}>
-          <div className="row align-items-center justify-content-start">
-            {/* Left Hero Column */}
-            <div className="col-12 col-lg-10 col-xl-9">
+          <div className="row align-items-center justify-content-between g-4 g-lg-5">
+            {/* Left Hero Column (58% width on desktop) */}
+            <div className="col-12 col-lg-7 col-xl-7">
+              {/* 1. Outlined Gold Badge */}
               <span
-                className="badge px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-lg"
+                className="badge px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-sm"
                 style={{
-                  backgroundColor: 'rgba(212, 175, 55, 0.1)',
-                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                  backgroundColor: 'rgba(212, 175, 55, 0.08)',
+                  border: '1px solid rgba(212, 175, 55, 0.45)',
                   color: '#FDE68A',
-                  backdropFilter: 'blur(10px)',
-                  letterSpacing: '0.08em'
+                  backdropFilter: 'blur(8px)',
+                  letterSpacing: '0.08em',
+                  fontSize: '0.78rem'
                 }}
               >
-                <Sparkles size={15} className="me-2 text-warning flex-shrink-0" /> WORLD-CLASS CONTRACT MANUFACTURING
+                <Sparkles size={14} className="me-2 text-warning flex-shrink-0" /> WORLD-CLASS CONTRACT MANUFACTURING
               </span>
 
+              {/* 2. Large Editorial Gold Headline in 2 lines */}
               <h1
-                className="display-3 font-heading fw-extrabold gold-gradient-text mb-3.5 lh-tight"
-                style={{ textShadow: '0 0 35px rgba(212, 175, 55, 0.2)' }}
+                className="display-3 font-heading fw-extrabold mb-3.5 lh-tight"
+                style={{
+                  color: '#D4AF37',
+                  textShadow: '0 0 30px rgba(212, 175, 55, 0.15)',
+                  letterSpacing: '-0.02em'
+                }}
               >
-                Crafting Excellence, One Diamond at a Time
+                Crafting Excellence, One<br className="d-none d-sm-inline" /> Diamond at a Time
               </h1>
 
-              <p className="fs-4 mb-4 mb-md-5 leading-relaxed" style={{ color: '#E2E8F0', maxWidth: '740px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              {/* 3. Supporting Paragraph */}
+              <p
+                className="fs-5 fs-md-4 mb-4 mb-md-5 leading-relaxed"
+                style={{
+                  color: '#E2E8F0',
+                  maxWidth: '680px',
+                  fontWeight: 400,
+                  opacity: 0.95
+                }}
+              >
                 Precision, master craftsmanship and next-generation laser technology come together to transform every rough diamond parcel into a masterpiece of brilliance.
               </p>
 
+              {/* 4. Two CTA Buttons */}
               <div className="d-flex flex-column flex-sm-row gap-3 mb-4 mb-md-5">
                 <Link
                   to="/diamonds"
                   className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center"
                   style={{
-                    boxShadow: '0 10px 25px -5px rgba(212, 175, 55, 0.4), 0 0 15px rgba(212, 175, 55, 0.2)'
+                    boxShadow: '0 10px 25px -5px rgba(212, 175, 55, 0.4)'
                   }}
                 >
                   Explore Our Diamonds <ArrowRight size={18} className="ms-2" />
@@ -100,8 +118,8 @@ const Home = () => {
                   to="/manufacturing"
                   className="btn btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-semibold text-center"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    border: '1px solid rgba(212, 175, 55, 0.4)',
+                    background: 'rgba(255, 255, 255, 0.04)',
+                    border: '1px solid rgba(212, 175, 55, 0.45)',
                     color: '#F8FAFC',
                     backdropFilter: 'blur(8px)',
                     transition: 'all 0.3s ease'
@@ -111,33 +129,49 @@ const Home = () => {
                 </Link>
               </div>
 
-              {/* Key Trust Stats Text Only */}
-              <div className="row g-3 pt-4 border-top border-secondary border-opacity-25" style={{ maxWidth: '680px' }}>
-                <div className="col-4">
-                  <div className="pe-2">
-                    <h3 className="fs-2 font-heading fw-extrabold gold-gradient-text mb-1">50,000+</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
-                      Diamonds Processed
-                    </small>
+              {/* 5. Thin Horizontal Divider & 6. Statistics Feature Blocks */}
+              <div
+                className="pt-4 border-top border-secondary border-opacity-25"
+                style={{ maxWidth: '680px' }}
+              >
+                <div className="row g-3">
+                  <div className="col-4">
+                    <div className="pe-2">
+                      <h3 className="fs-2 font-heading fw-extrabold mb-1" style={{ color: '#D4AF37' }}>
+                        50,000+
+                      </h3>
+                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
+                        Diamonds Processed
+                      </small>
+                    </div>
                   </div>
-                </div>
-                <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
-                  <div className="pe-2">
-                    <h3 className="fs-2 font-heading fw-extrabold gold-gradient-text mb-1">99.9%</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
-                      Weight Precision
-                    </small>
+                  <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
+                    <div className="pe-2">
+                      <h3 className="fs-2 font-heading fw-extrabold mb-1" style={{ color: '#D4AF37' }}>
+                        99.9%
+                      </h3>
+                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
+                        Weight Precision
+                      </small>
+                    </div>
                   </div>
-                </div>
-                <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
-                  <div>
-                    <h3 className="fs-2 font-heading fw-extrabold gold-gradient-text mb-1">25+ Yrs</h3>
-                    <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
-                      Industry Legacy
-                    </small>
+                  <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
+                    <div>
+                      <h3 className="fs-2 font-heading fw-extrabold mb-1" style={{ color: '#D4AF37' }}>
+                        25+ Yrs
+                      </h3>
+                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
+                        Industry Legacy
+                      </small>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Right Hero Column (42% width on desktop) - Frameless 360 Real Diamond Visual */}
+            <div className="col-12 col-lg-5 col-xl-5 d-flex justify-content-center justify-content-lg-end align-items-center">
+              <Diamond360Viewer size={410} />
             </div>
           </div>
         </div>
