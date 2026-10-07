@@ -76,7 +76,11 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
   return (
     <div
       className={`position-relative d-inline-flex flex-column align-items-center justify-content-center user-select-none ${className}`}
-      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      style={{
+        cursor: isDragging ? 'grabbing' : 'grab',
+        maxWidth: '100%',
+        width: `${size * 1.3}px`
+      }}
       onMouseDown={(e) => handleStart(e.clientX)}
       onMouseMove={(e) => handleMove(e.clientX)}
       onMouseUp={handleEnd}
@@ -85,48 +89,52 @@ const Diamond360Viewer = ({ size = 370, className = "" }) => {
       onTouchMove={(e) => handleMove(e.touches[0].clientX)}
       onTouchEnd={handleEnd}
     >
-      {/* Radial Gold Studio Ambient Lighting Glow */}
+      {/* Subtle Gold Spotlight Soft Ambient Glow Behind Diamond */}
       <div
-        className="position-absolute top-50 start-50 translate-middle rounded-circle pointer-events-none"
+        className="position-absolute top-50 start-50 translate-middle pointer-events-none"
         style={{
-          width: `${size * 1.15}px`,
-          height: `${size * 1.15}px`,
-          background: 'radial-gradient(circle, rgba(212,175,55,0.25) 0%, rgba(2,132,199,0.12) 45%, transparent 75%)',
-          filter: 'blur(30px)',
+          width: `${size * 0.9}px`,
+          height: `${size * 0.9}px`,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, rgba(14, 165, 233, 0.08) 45%, transparent 70%)',
+          filter: 'blur(35px)',
           zIndex: 0
         }}
       />
 
-      {/* 360 Image Display Container */}
+      {/* Pure Frameless 360 Diamond & Stand Container */}
       <div
-        className="position-relative rounded-circle overflow-hidden shadow-2xl"
+        className="position-relative overflow-visible"
         style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          border: '1px solid rgba(212, 175, 55, 0.45)',
-          background: '#040A16',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.6), 0 0 35px rgba(212, 175, 55, 0.2)',
-          zIndex: 1
+          width: '100%',
+          maxWidth: `${size * 1.25}px`,
+          aspectRatio: '16 / 9',
+          zIndex: 1,
+          WebkitMaskImage: 'radial-gradient(ellipse 75% 85% at 50% 50%, black 60%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse 75% 85% at 50% 50%, black 60%, transparent 100%)'
         }}
       >
         <img
           src={getFramePath(currentFrame)}
           alt={`DIVY IMPEX 360 Diamond View - Frame ${currentFrame}`}
-          className="w-100 h-100 object-fit-cover"
+          className="w-100 h-100 object-fit-contain"
           draggable={false}
           style={{
-            filter: 'contrast(1.06) brightness(1.06)'
+            filter: 'contrast(1.08) brightness(1.08)',
+            transform: 'scale(1.15)',
+            transformOrigin: 'center center'
           }}
         />
       </div>
 
-      {/* Interactive 360 Control Indicator Badge */}
+      {/* Sleek Floating 360 Control Indicator Badge */}
       <div
-        className="mt-3 px-3.5 py-1.5 rounded-pill shadow-lg text-center d-inline-flex align-items-center gap-2"
+        className="mt-1 px-3.5 py-1.5 rounded-pill shadow-lg text-center d-inline-flex align-items-center gap-2"
         style={{
-          background: 'rgba(10, 25, 47, 0.92)',
-          border: '1px solid rgba(212, 175, 55, 0.45)',
-          backdropFilter: 'blur(10px)',
+          background: 'rgba(7, 18, 36, 0.75)',
+          border: '1px solid rgba(212, 175, 55, 0.35)',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
           zIndex: 2
         }}
       >
