@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import PublicLayout from '../../layouts/PublicLayout';
-import Diamond360Viewer from '../../components/common/Diamond360Viewer';
 import {
   Gem,
   CheckCircle,
@@ -60,9 +59,9 @@ const Home = () => {
         />
 
         <div className="container py-3 py-md-5 position-relative" style={{ zIndex: 2 }}>
-          <div className="row align-items-center justify-content-between g-4 g-lg-5">
-            {/* Left Hero Column (58% width on desktop) */}
-            <div className="col-12 col-lg-7 col-xl-7">
+          <div className="row align-items-center justify-content-start">
+            {/* Left Hero Column */}
+            <div className="col-12 col-lg-10 col-xl-9">
               {/* 1. Outlined Gold Badge */}
               <span
                 className="badge px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-sm"
@@ -95,7 +94,7 @@ const Home = () => {
                 className="fs-5 fs-md-4 mb-4 mb-md-5 leading-relaxed"
                 style={{
                   color: '#E2E8F0',
-                  maxWidth: '680px',
+                  maxWidth: '740px',
                   fontWeight: 400,
                   opacity: 0.95
                 }}
@@ -132,7 +131,7 @@ const Home = () => {
               {/* 5. Thin Horizontal Divider & 6. Statistics Feature Blocks */}
               <div
                 className="pt-4 border-top border-secondary border-opacity-25"
-                style={{ maxWidth: '680px' }}
+                style={{ maxWidth: '720px' }}
               >
                 <div className="row g-3">
                   <div className="col-4">
@@ -167,11 +166,6 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Right Hero Column (42% width on desktop) - Frameless 360 Real Diamond Visual */}
-            <div className="col-12 col-lg-5 col-xl-5 d-flex justify-content-center justify-content-lg-end align-items-center">
-              <Diamond360Viewer size={410} />
             </div>
           </div>
         </div>
