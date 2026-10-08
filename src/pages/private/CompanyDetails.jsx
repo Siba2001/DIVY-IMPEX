@@ -111,7 +111,7 @@ const CompanyDetails = () => {
                 <h4 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
                   {company.name}
                 </h4>
-                <span className="badge bg-light text-navy border fw-bold">{company.code}</span>
+                <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>{company.code}</span>
               </div>
               <p className="text-muted small mb-0">
                 Contact: <strong>{company.contactPerson}</strong> | Phone: {company.phone} | Location: {company.address}
@@ -189,12 +189,12 @@ const CompanyDetails = () => {
           <table className="table table-custom text-center align-middle">
             <thead>
               <tr>
-                <th className="text-start">Received Date</th>
-                <th>Received</th>
-                <th>Assigned</th>
-                <th>In Progress</th>
-                <th>Completed</th>
-                <th>Pending</th>
+                <th className="text-start text-nowrap">Received Date</th>
+                <th className="text-nowrap">Received</th>
+                <th className="text-nowrap">Assigned</th>
+                <th className="text-nowrap">In Progress</th>
+                <th className="text-nowrap">Completed</th>
+                <th className="text-nowrap">Pending</th>
               </tr>
             </thead>
             <tbody>
@@ -205,12 +205,12 @@ const CompanyDetails = () => {
               ) : (
                 dateWiseSummary.map((row) => (
                   <tr key={row.date}>
-                    <td className="text-start fw-bold text-navy">{row.date}</td>
+                    <td className="text-start fw-bold text-navy" style={{ color: '#0A192F' }}>{row.date}</td>
                     <td className="fw-semibold">{row.received}</td>
-                    <td><span className="badge bg-light text-dark border">{row.assigned}</span></td>
-                    <td><span className="badge bg-warning bg-opacity-20 text-warning border border-warning">{row.inProgress}</span></td>
-                    <td><span className="badge bg-success bg-opacity-20 text-success border border-success">{row.completed}</span></td>
-                    <td><span className="badge bg-secondary bg-opacity-15 text-dark border">{row.pending}</span></td>
+                    <td><span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>{row.assigned}</span></td>
+                    <td><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>{row.inProgress}</span></td>
+                    <td><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>{row.completed}</span></td>
+                    <td><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>{row.pending}</span></td>
                   </tr>
                 ))
               )}
