@@ -246,10 +246,10 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .stat-kpi-card {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--border-color);
   background: #FFFFFF;
-  padding: 1.25rem;
+  padding: 0.75rem 1rem;
 }
 
 .stat-kpi-card::after {

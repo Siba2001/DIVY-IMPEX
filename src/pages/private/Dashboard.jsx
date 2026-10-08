@@ -101,7 +101,7 @@ const Dashboard = () => {
   return (
     <PrivateLayout title="Executive Diamond Dashboard">
       {/* Top KPI Cards Grid */}
-      <div className="row g-2 g-sm-3 mb-4">
+      <div className="row g-2 mb-3">
         <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Total Companies"
