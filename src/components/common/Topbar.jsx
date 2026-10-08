@@ -42,7 +42,7 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
         </span>
       </div>
 
-      <div className="d-flex align-items-center gap-1.5 gap-sm-3 flex-shrink-0">
+      <div className="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
         {/* Global Search Bar */}
         <form onSubmit={handleSearchSubmit} className="position-relative d-none d-md-block" style={{ width: '200px' }}>
           <Search size={15} className="position-absolute top-50 start-0 translate-middle-y ms-2.5 text-muted" />

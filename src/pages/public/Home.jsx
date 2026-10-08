@@ -108,7 +108,7 @@ const Home = () => {
               </p>
 
               {/* 4. Two CTA Buttons */}
-              <div className="d-flex flex-column flex-sm-row gap-2.5 gap-sm-3 mb-4 mb-md-5">
+              <div className="d-flex flex-column flex-sm-row gap-3 gap-sm-3 mb-4 mb-md-5">
                 <Link
                   to="/diamonds"
                   className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-2.5 py-md-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center"
