@@ -26,21 +26,23 @@ const Header = () => {
   return (
     <nav className="navbar navbar-expand-lg public-navbar sticky-top">
       <div className="container">
-        <Link className="navbar-brand text-decoration-none me-4" to="/" onClick={closeNav}>
-          <DivyLogo iconSize={38} />
-        </Link>
+        <div className="d-flex align-items-center justify-content-between w-100 w-lg-auto me-lg-4">
+          <Link className="navbar-brand text-decoration-none py-1 me-0 me-lg-3" to="/" onClick={closeNav}>
+            <DivyLogo iconSize={32} textClassName="fs-5" />
+          </Link>
 
-        <button
-          className="navbar-toggler border-secondary text-white p-2"
-          type="button"
-          onClick={toggleNav}
-          aria-label="Toggle navigation"
-        >
-          {isNavOpen ? <X size={22} className="text-warning" /> : <Menu size={22} className="text-warning" />}
-        </button>
+          <button
+            className="navbar-toggler border-secondary text-white p-2 border-0"
+            type="button"
+            onClick={toggleNav}
+            aria-label="Toggle navigation"
+          >
+            {isNavOpen ? <X size={24} className="text-warning" /> : <Menu size={24} className="text-warning" />}
+          </button>
+        </div>
 
         <div className={`collapse navbar-collapse ${isNavOpen ? 'show' : ''}`} id="publicNav">
-          <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
+          <ul className="navbar-nav mx-auto mb-2 mb-lg-0 py-2 py-lg-0">
             {navLinks.map((link) => (
               <li className="nav-item" key={link.path}>
                 <Link
@@ -54,7 +56,7 @@ const Header = () => {
             ))}
           </ul>
 
-          <div className="d-flex align-items-center mt-3 mt-lg-0">
+          <div className="d-flex align-items-center mt-3 mt-lg-0 pb-2 pb-lg-0">
             <Link to="/login" className="btn btn-gold rounded-pill px-4 py-2 d-flex align-items-center shadow-sm w-100 w-lg-auto justify-content-center" onClick={closeNav}>
               <LogIn size={16} className="me-2" /> Sign In
             </Link>

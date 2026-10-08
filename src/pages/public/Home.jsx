@@ -61,30 +61,33 @@ const Home = () => {
 
         <div className="container py-3 py-md-5 position-relative" style={{ zIndex: 2 }}>
           <div className="row align-items-center justify-content-between g-4 g-lg-5">
-            {/* Left Hero Column (58% width on desktop) */}
+            {/* Left Hero Column */}
             <div className="col-12 col-lg-7 col-xl-7">
-              {/* 1. Outlined Gold Badge */}
+              {/* 1. Outlined Gold Badge (Responsive text-wrap for small mobile screens) */}
               <span
-                className="badge px-3.5 py-2 rounded-pill font-heading fw-bold mb-3.5 d-inline-flex align-items-center shadow-sm"
+                className="badge px-3 py-2 rounded-pill font-heading fw-bold mb-3 d-inline-flex align-items-center shadow-sm text-wrap text-start"
                 style={{
                   backgroundColor: 'rgba(212, 175, 55, 0.08)',
                   border: '1px solid rgba(212, 175, 55, 0.45)',
                   color: '#FDE68A',
                   backdropFilter: 'blur(8px)',
-                  letterSpacing: '0.08em',
-                  fontSize: '0.78rem'
+                  letterSpacing: '0.04em',
+                  fontSize: 'clamp(0.68rem, 2.5vw, 0.78rem)',
+                  lineHeight: '1.4',
+                  maxWidth: '100%'
                 }}
               >
-                <Sparkles size={14} className="me-2 text-warning flex-shrink-0" /> WORLD-CLASS CONTRACT MANUFACTURING
+                <Sparkles size={13} className="me-1.5 text-warning flex-shrink-0" /> WORLD-CLASS CONTRACT MANUFACTURING
               </span>
 
-              {/* 2. Large Editorial Gold Headline in 2 lines */}
+              {/* 2. Fluid Editorial Gold Headline */}
               <h1
-                className="display-3 font-heading fw-extrabold mb-3.5 lh-tight"
+                className="display-4 display-md-3 font-heading fw-extrabold mb-3 mb-md-3.5 lh-tight"
                 style={{
                   color: '#D4AF37',
                   textShadow: '0 0 30px rgba(212, 175, 55, 0.15)',
-                  letterSpacing: '-0.02em'
+                  letterSpacing: '-0.02em',
+                  fontSize: 'clamp(1.65rem, 5.5vw, 3.2rem)'
                 }}
               >
                 Crafting Excellence, One<br className="d-none d-sm-inline" /> Diamond at a Time
@@ -92,22 +95,23 @@ const Home = () => {
 
               {/* 3. Supporting Paragraph */}
               <p
-                className="fs-5 fs-md-4 mb-4 mb-md-5 leading-relaxed"
+                className="fs-6 fs-md-4 mb-4 mb-md-5 leading-relaxed"
                 style={{
                   color: '#E2E8F0',
                   maxWidth: '680px',
                   fontWeight: 400,
-                  opacity: 0.95
+                  opacity: 0.95,
+                  fontSize: 'clamp(0.92rem, 3.2vw, 1.25rem)'
                 }}
               >
                 Precision, master craftsmanship and next-generation laser technology come together to transform every rough diamond parcel into a masterpiece of brilliance.
               </p>
 
               {/* 4. Two CTA Buttons */}
-              <div className="d-flex flex-column flex-sm-row gap-3 mb-4 mb-md-5">
+              <div className="d-flex flex-column flex-sm-row gap-2.5 gap-sm-3 mb-4 mb-md-5">
                 <Link
                   to="/diamonds"
-                  className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center"
+                  className="btn btn-gold btn-lg rounded-pill px-4 px-md-5 py-2.5 py-md-3 font-heading fw-bold d-inline-flex align-items-center justify-content-center"
                   style={{
                     boxShadow: '0 10px 25px -5px rgba(212, 175, 55, 0.4)'
                   }}
@@ -116,7 +120,7 @@ const Home = () => {
                 </Link>
                 <Link
                   to="/manufacturing"
-                  className="btn btn-lg rounded-pill px-4 px-md-5 py-3 font-heading fw-semibold text-center"
+                  className="btn btn-lg rounded-pill px-4 px-md-5 py-2.5 py-md-3 font-heading fw-semibold text-center"
                   style={{
                     background: 'rgba(255, 255, 255, 0.04)',
                     border: '1px solid rgba(212, 175, 55, 0.45)',
@@ -129,38 +133,38 @@ const Home = () => {
                 </Link>
               </div>
 
-              {/* 5. Thin Horizontal Divider & 6. Statistics Feature Blocks */}
+              {/* 5. Thin Horizontal Divider & 6. Responsive Statistics Feature Blocks */}
               <div
-                className="pt-4 border-top border-secondary border-opacity-25"
+                className="pt-3.5 pt-md-4 border-top border-secondary border-opacity-25"
                 style={{ maxWidth: '680px' }}
               >
-                <div className="row g-3">
+                <div className="row g-2 g-sm-3">
                   <div className="col-4">
-                    <div className="pe-2">
-                      <h3 className="fs-2 font-heading fw-extrabold mb-1" style={{ color: '#D4AF37' }}>
+                    <div className="pe-1 pe-sm-2">
+                      <h3 className="font-heading fw-extrabold mb-1" style={{ color: '#D4AF37', fontSize: 'clamp(1.2rem, 4.5vw, 1.8rem)' }}>
                         50,000+
                       </h3>
-                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
+                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: 'clamp(0.68rem, 2.4vw, 0.85rem)' }}>
                         Diamonds Processed
                       </small>
                     </div>
                   </div>
-                  <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
-                    <div className="pe-2">
-                      <h3 className="fs-2 font-heading fw-extrabold mb-1" style={{ color: '#D4AF37' }}>
+                  <div className="col-4 border-start border-secondary border-opacity-25 ps-2 ps-sm-3">
+                    <div className="pe-1 pe-sm-2">
+                      <h3 className="font-heading fw-extrabold mb-1" style={{ color: '#D4AF37', fontSize: 'clamp(1.2rem, 4.5vw, 1.8rem)' }}>
                         99.9%
                       </h3>
-                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
+                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: 'clamp(0.68rem, 2.4vw, 0.85rem)' }}>
                         Weight Precision
                       </small>
                     </div>
                   </div>
-                  <div className="col-4 border-start border-secondary border-opacity-25 ps-3">
+                  <div className="col-4 border-start border-secondary border-opacity-25 ps-2 ps-sm-3">
                     <div>
-                      <h3 className="fs-2 font-heading fw-extrabold mb-1" style={{ color: '#D4AF37' }}>
+                      <h3 className="font-heading fw-extrabold mb-1" style={{ color: '#D4AF37', fontSize: 'clamp(1.2rem, 4.5vw, 1.8rem)' }}>
                         25+ Yrs
                       </h3>
-                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: '0.85rem' }}>
+                      <small className="d-block text-truncate fw-medium" style={{ color: '#CBD5E1', fontSize: 'clamp(0.68rem, 2.4vw, 0.85rem)' }}>
                         Industry Legacy
                       </small>
                     </div>
@@ -169,9 +173,9 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Right Hero Column (42% width on desktop) - Frameless 360 Real Diamond Visual with Hover & Drag Rotation */}
-            <div className="col-12 col-lg-5 col-xl-5 d-flex justify-content-center justify-content-lg-end align-items-center">
-              <Diamond360Viewer size={410} />
+            {/* Right Hero Column (Frameless 360 Real Diamond Visual) */}
+            <div className="col-12 col-lg-5 col-xl-5 mt-4 mt-lg-0 d-flex justify-content-center justify-content-lg-end align-items-center">
+              <Diamond360Viewer size={340} />
             </div>
           </div>
         </div>
