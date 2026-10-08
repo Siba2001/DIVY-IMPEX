@@ -122,23 +122,25 @@ const Companies = () => {
                       </div>
                     </td>
                     <td>
-                      <span className="badge bg-light text-navy border fw-bold">{c.code}</span>
+                      <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
+                        {c.code}
+                      </span>
                     </td>
                     <td className="fw-medium text-dark">{c.contactPerson}</td>
                     <td className="small text-muted">{c.phone}</td>
                     <td className="fw-bold text-navy">{totalReceived}</td>
                     <td>
-                      <span className="badge bg-warning bg-opacity-20 text-warning border border-warning px-2 py-1">
+                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
                         {pending}
                       </span>
                     </td>
                     <td>
-                      <span className="badge bg-success bg-opacity-20 text-success border border-success px-2 py-1">
+                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
                         {completed}
                       </span>
                     </td>
                     <td>
-                      <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                      <span className="badge px-2.5 py-1.5 fw-bold bg-success-subtle text-success border border-success-subtle">
                         {c.status || 'ACTIVE'}
                       </span>
                     </td>

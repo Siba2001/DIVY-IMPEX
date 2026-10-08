@@ -264,13 +264,13 @@ const Dashboard = () => {
           <table className="table table-custom table-hover align-middle">
             <thead>
               <tr>
-                <th>Company Name</th>
-                <th>Company Code</th>
-                <th>Total Received</th>
-                <th>In Production</th>
-                <th>Pending</th>
-                <th>Completed</th>
-                <th className="text-end">Action</th>
+                <th className="text-nowrap">Company Name</th>
+                <th className="text-nowrap">Company Code</th>
+                <th className="text-nowrap">Total Received</th>
+                <th className="text-nowrap">In Production</th>
+                <th className="text-nowrap">Pending</th>
+                <th className="text-nowrap">Completed</th>
+                <th className="text-end text-nowrap">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -280,30 +280,32 @@ const Dashboard = () => {
                   style={{ cursor: 'pointer' }}
                   onClick={() => navigate(`/companies/${comp.id}`)}
                 >
-                  <td className="fw-bold text-navy" style={{ color: '#0A192F' }}>
+                  <td className="fw-bold text-nowrap" style={{ color: '#0A192F' }}>
                     {comp.name}
                   </td>
                   <td>
-                    <span className="badge bg-light text-navy border">{comp.code}</span>
+                    <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
+                      {comp.code}
+                    </span>
                   </td>
-                  <td className="fw-semibold text-dark">{comp.received}</td>
+                  <td className="fw-semibold text-dark text-nowrap">{comp.received}</td>
                   <td>
-                    <span className="badge bg-warning bg-opacity-20 text-warning border border-warning px-2 py-1">
+                    <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
                       {comp.inProduction}
                     </span>
                   </td>
                   <td>
-                    <span className="badge bg-secondary bg-opacity-15 text-dark border px-2 py-1">
+                    <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>
                       {comp.pending}
                     </span>
                   </td>
                   <td>
-                    <span className="badge bg-success bg-opacity-20 text-success border border-success px-2 py-1">
+                    <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
                       {comp.completed}
                     </span>
                   </td>
-                  <td className="text-end">
-                    <span className="btn btn-sm btn-light border rounded-pill">
+                  <td className="text-end text-nowrap">
+                    <span className="btn btn-sm btn-light border rounded-pill px-3 py-1 font-body text-nowrap">
                       View Details <ArrowUpRight size={14} className="ms-1" />
                     </span>
                   </td>
