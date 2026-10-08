@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Search, Bell, LogOut, RefreshCw, User, ShieldCheck } from 'lucide-react';
+import { Search, Bell, LogOut, RefreshCw, User, ShieldCheck, Menu } from 'lucide-react';
 
-const Topbar = ({ pageTitle }) => {
+const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
   const { user, logout } = useAuth();
   const { resetAllData } = useDiamonds();
   const navigate = useNavigate();
@@ -27,7 +27,14 @@ const Topbar = ({ pageTitle }) => {
   return (
     <header className="topbar">
       <div className="d-flex align-items-center">
-        <h4 className="font-heading fw-bold text-dark mb-0 me-3 fs-5" style={{ color: '#0A192F' }}>
+        <button
+          className="btn btn-sm btn-link text-navy p-0 me-2.5 d-lg-none border-0"
+          onClick={toggleMobileSidebar}
+          title="Open Navigation Menu"
+        >
+          <Menu size={22} style={{ color: '#0A192F' }} />
+        </button>
+        <h4 className="font-heading fw-bold text-dark mb-0 me-3 fs-5 text-truncate" style={{ color: '#0A192F', maxWidth: '200px' }}>
           {pageTitle || 'Management System'}
         </h4>
         <span className="badge bg-light text-navy border fw-medium small d-none d-md-inline-block">

@@ -101,8 +101,8 @@ const Dashboard = () => {
   return (
     <PrivateLayout title="Executive Diamond Dashboard">
       {/* Top KPI Cards Grid */}
-      <div className="row g-3 mb-4">
-        <div className="col-xl-3 col-md-6">
+      <div className="row g-2 g-sm-3 mb-4">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Total Companies"
             value={kpis.totalCompanies}
@@ -111,7 +111,7 @@ const Dashboard = () => {
             subtitle="Registered Client Partners"
           />
         </div>
-        <div className="col-xl-3 col-md-6">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Total Diamonds"
             value={kpis.totalDiamonds}
@@ -120,7 +120,7 @@ const Dashboard = () => {
             subtitle="Master Recorded Count"
           />
         </div>
-        <div className="col-xl-3 col-md-6">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Today's Received"
             value={kpis.todaysReceived}
@@ -129,7 +129,7 @@ const Dashboard = () => {
             subtitle="New Physical Inward"
           />
         </div>
-        <div className="col-xl-3 col-md-6">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Pending Diamonds"
             value={kpis.pending}
@@ -139,7 +139,7 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="col-xl-3 col-md-6">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="In Production"
             value={kpis.inProduction}
@@ -148,7 +148,7 @@ const Dashboard = () => {
             subtitle="Active on Sockets"
           />
         </div>
-        <div className="col-xl-3 col-md-6">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Work Completed"
             value={kpis.workCompleted}
@@ -157,7 +157,7 @@ const Dashboard = () => {
             subtitle="Worker Polishing Done"
           />
         </div>
-        <div className="col-xl-3 col-md-6">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Deposited in QC"
             value={kpis.deposited}
@@ -166,7 +166,7 @@ const Dashboard = () => {
             subtitle="Ready for Carat Verification"
           />
         </div>
-        <div className="col-xl-3 col-md-6">
+        <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Verified & Completed"
             value={kpis.verified}
@@ -181,22 +181,22 @@ const Dashboard = () => {
       <div className="row g-4 mb-4">
         {/* Chart 1: Date-wise Received vs Completed */}
         <div className="col-lg-8">
-          <div className="card card-custom p-4 h-100">
-            <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="card card-custom p-3 p-md-4 h-100">
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
               <div>
                 <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
                   Date-Wise Received & Completed Trends
                 </h6>
                 <small className="text-muted">Daily inward volume vs QC verified output</small>
               </div>
-              <span className="badge bg-light text-dark border">Daily Trend</span>
+              <span className="badge bg-light text-dark border align-self-start align-self-sm-center">Daily Trend</span>
             </div>
-            <div style={{ width: '100%', height: 300 }}>
+            <div style={{ width: '100%', height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dateWiseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="date" stroke="#64748B" fontSize={12} />
-                  <YAxis stroke="#64748B" fontSize={12} />
+                  <XAxis dataKey="date" stroke="#64748B" fontSize={11} />
+                  <YAxis stroke="#64748B" fontSize={11} />
                   <Tooltip contentStyle={{ backgroundColor: '#0A192F', color: '#fff', borderRadius: '8px' }} />
                   <Legend />
                   <Bar dataKey="received" name="Received" fill="#0284C7" radius={[4, 4, 0, 0]} />
@@ -209,7 +209,7 @@ const Dashboard = () => {
 
         {/* Chart 2: Company-wise Diamond Share */}
         <div className="col-lg-4">
-          <div className="card card-custom p-4 h-100">
+          <div className="card card-custom p-3 p-md-4 h-100">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
@@ -218,15 +218,15 @@ const Dashboard = () => {
                 <small className="text-muted">Diamond breakdown by company</small>
               </div>
             </div>
-            <div style={{ width: '100%', height: 300 }} className="d-flex align-items-center justify-content-center">
+            <div style={{ width: '100%', height: 280 }} className="d-flex align-items-center justify-content-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={companyPieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
+                    innerRadius={50}
+                    outerRadius={80}
                     paddingAngle={3}
                     dataKey="value"
                   >
@@ -244,8 +244,8 @@ const Dashboard = () => {
       </div>
 
       {/* Company Summary Table Section */}
-      <div className="card card-custom p-4 shadow-sm">
-        <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="card card-custom p-3 p-md-4 shadow-sm">
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
           <div>
             <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
               Company Production Summary

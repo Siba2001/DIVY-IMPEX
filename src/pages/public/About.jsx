@@ -39,29 +39,29 @@ const About = () => {
             <div className="col-lg-6">
               <div className="row g-3">
                 <div className="col-6">
-                  <div className="p-4 bg-light rounded-4 border text-center">
-                    <Award size={36} className="text-warning mb-2" />
+                  <div className="p-3 p-md-4 bg-light rounded-4 border text-center">
+                    <Award size={32} className="text-warning mb-2" />
                     <h3 className="font-heading fw-bold text-navy mb-1">25+</h3>
                     <span className="small text-muted">Years Excellence</span>
                   </div>
                 </div>
                 <div className="col-6">
-                  <div className="p-4 bg-light rounded-4 border text-center">
-                    <Users size={36} className="text-warning mb-2" />
+                  <div className="p-3 p-md-4 bg-light rounded-4 border text-center">
+                    <Users size={32} className="text-warning mb-2" />
                     <h3 className="font-heading fw-bold text-navy mb-1">120+</h3>
                     <span className="small text-muted">Master Craftsmen</span>
                   </div>
                 </div>
                 <div className="col-6">
-                  <div className="p-4 bg-light rounded-4 border text-center">
-                    <Gem size={36} className="text-warning mb-2" />
+                  <div className="p-3 p-md-4 bg-light rounded-4 border text-center">
+                    <Gem size={32} className="text-warning mb-2" />
                     <h3 className="font-heading fw-bold text-navy mb-1">50K+</h3>
                     <span className="small text-muted">Carats Polished</span>
                   </div>
                 </div>
                 <div className="col-6">
-                  <div className="p-4 bg-light rounded-4 border text-center">
-                    <Shield size={36} className="text-warning mb-2" />
+                  <div className="p-3 p-md-4 bg-light rounded-4 border text-center">
+                    <Shield size={32} className="text-warning mb-2" />
                     <h3 className="font-heading fw-bold text-navy mb-1">100%</h3>
                     <span className="small text-muted">Barcode Accuracy</span>
                   </div>

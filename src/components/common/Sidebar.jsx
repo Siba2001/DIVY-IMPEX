@@ -16,16 +16,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  HardHat
+  HardHat,
+  X
 } from 'lucide-react';
 
-const Sidebar = ({ isCollapsed, toggleSidebar }) => {
+const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+    if (closeMobileSidebar) closeMobileSidebar();
   };
 
   const isAdminOrSupervisor = user?.role === 'admin' || user?.role === 'supervisor';
@@ -50,7 +52,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
   const navItems = isAdminOrSupervisor ? adminNavItems : workerNavItems;
 
   return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
       {/* Brand Header */}
       <div className="p-3 d-flex align-items-center justify-content-between border-bottom border-secondary border-opacity-25">
         <div className="d-flex align-items-center overflow-hidden">
@@ -60,13 +62,24 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
             <DivyLogo iconSize={36} textClassName="fs-6" />
           )}
         </div>
-        <button
-          className="btn btn-sm btn-link text-secondary p-0 ms-1 border-0"
-          onClick={toggleSidebar}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
+        <div className="d-flex align-items-center">
+          {/* Mobile Close Button */}
+          <button
+            className="btn btn-sm btn-link text-secondary p-0 me-2 d-lg-none border-0"
+            onClick={closeMobileSidebar}
+            title="Close Drawer"
+          >
+            <X size={20} />
+          </button>
+          {/* Desktop Toggle Button */}
+          <button
+            className="btn btn-sm btn-link text-secondary p-0 ms-1 d-none d-lg-inline-block border-0"
+            onClick={toggleSidebar}
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -78,11 +91,12 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={closeMobileSidebar}
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 title={isCollapsed ? item.label : undefined}
               >
                 <Icon size={18} />
-                {!isCollapsed && <span>{item.label}</span>}
+                {(!isCollapsed || isMobileOpen) && <span>{item.label}</span>}
               </NavLink>
             );
           })}

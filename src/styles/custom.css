@@ -338,7 +338,26 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
-/* Responsive Layout Utilities (Mobile, Tablet, Laptop) */
+/* Responsive Layout Utilities (Mobile, Tablet, Laptop, iOS & Android) */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Touch momentum scrolling for tables on iOS & Android */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+
+/* Prevent auto-zoom on iOS inputs */
+@media (max-width: 767.98px) {
+  input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="search"], input[type="date"], select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobile Sidebar Drawer (< 992px) */
 @media (max-width: 991.98px) {
   .public-navbar .navbar-collapse {
     background: rgba(10, 25, 47, 0.98);
@@ -358,31 +377,106 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   .public-navbar .nav-link:last-child {
     border-bottom: none;
   }
+
+  /* Off-canvas sidebar for private layout */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 275px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1060;
+    box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(7, 18, 36, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 1055;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .topbar {
+    padding: 0 1rem;
+  }
+
+  .content-body {
+    padding: 1rem;
+  }
 }
 
+/* Small phones (iPhone SE, Galaxy S, 320px - 575px) */
 @media (max-width: 575.98px) {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
   }
 
+  .display-3 {
+    font-size: 2.1rem !important;
+  }
+
   .display-4 {
-    font-size: 2rem !important;
+    font-size: 1.8rem !important;
+  }
+
+  .display-5 {
+    font-size: 1.5rem !important;
   }
 
   .display-6 {
-    font-size: 1.5rem !important;
+    font-size: 1.35rem !important;
   }
 
   .btn-lg {
     padding: 0.75rem 1.25rem !important;
-    font-size: 0.95rem !important;
+    font-size: 0.92rem !important;
+  }
+
+  .stat-kpi-card {
+    padding: 0.85rem !important;
+  }
+
+  .table-custom th, .table-custom td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Extra small devices (< 375px) */
+@media (max-width: 374.98px) {
+  .display-3 {
+    font-size: 1.75rem !important;
+  }
+  .display-4 {
+    font-size: 1.55rem !important;
+  }
+  .content-body {
+    padding: 0.65rem;
   }
 }
 
 /* Print Styles for Reports */
 @media print {
-  .sidebar, .topbar, .btn-print-hide, .nav, footer {
+  .sidebar, .topbar, .btn-print-hide, .nav, footer, .sidebar-backdrop {
     display: none !important;
   }
   .main-wrapper {

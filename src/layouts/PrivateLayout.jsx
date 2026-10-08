@@ -8,6 +8,7 @@ import Toast from '../components/common/Toast';
 const PrivateLayout = ({ children, title }) => {
   const { isAuthenticated } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -17,11 +18,30 @@ const PrivateLayout = ({ children, title }) => {
     setIsCollapsed(!isCollapsed);
   };
 
+  const toggleMobileSidebar = () => {
+    setIsMobileOpen(!isMobileOpen);
+  };
+
+  const closeMobileSidebar = () => {
+    setIsMobileOpen(false);
+  };
+
   return (
-    <div className="app-container">
-      <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
+    <div className="app-container position-relative">
+      {/* Backdrop overlay for mobile drawer */}
+      <div
+        className={`sidebar-backdrop ${isMobileOpen ? 'show' : ''}`}
+        onClick={closeMobileSidebar}
+      />
+
+      <Sidebar
+        isCollapsed={isCollapsed}
+        toggleSidebar={toggleSidebar}
+        isMobileOpen={isMobileOpen}
+        closeMobileSidebar={closeMobileSidebar}
+      />
       <div className="main-wrapper">
-        <Topbar pageTitle={title} />
+        <Topbar pageTitle={title} toggleMobileSidebar={toggleMobileSidebar} />
         <main className="content-body">{children}</main>
       </div>
       <Toast />
