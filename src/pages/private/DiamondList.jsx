@@ -62,24 +62,24 @@ const DiamondList = () => {
   return (
     <PrivateLayout title="Master Diamond Inventory">
       {/* Filters Toolbar */}
-      <div className="card card-custom p-4 mb-4 shadow-sm">
+      <div className="card card-custom p-3 p-md-4 mb-4 shadow-sm">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h6 className="font-heading fw-bold text-navy mb-0 d-flex align-items-center" style={{ color: '#0A192F' }}>
             <Filter size={18} className="me-2 text-warning" /> Filter Diamonds Inventory
           </h6>
-          <button className="btn btn-sm btn-link text-secondary p-0 border-0" onClick={clearFilters}>
+          <button className="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-semibold text-nowrap" onClick={clearFilters}>
             Clear All Filters
           </button>
         </div>
 
-        <div className="row g-3">
-          <div className="col-lg-3 col-md-4">
-            <label className="form-label">Search Barcode / Worker</label>
+        <div className="row g-2.5 g-md-3">
+          <div className="col-xl-3 col-lg-4 col-md-6">
+            <label className="form-label small fw-semibold text-muted mb-1">Search Barcode / Worker</label>
             <div className="position-relative">
-              <Search size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+              <Search size={15} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
               <input
                 type="text"
-                className="form-control ps-5"
+                className="form-control form-control-sm ps-5"
                 placeholder="KGK001..."
                 value={barcodeSearch}
                 onChange={(e) => setBarcodeSearch(e.target.value)}
@@ -87,9 +87,9 @@ const DiamondList = () => {
             </div>
           </div>
 
-          <div className="col-lg-2 col-md-4">
-            <label className="form-label">Company</label>
-            <select className="form-select" value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
+          <div className="col-xl-2 col-lg-4 col-md-6">
+            <label className="form-label small fw-semibold text-muted mb-1">Company</label>
+            <select className="form-select form-select-sm" value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
               <option value="">All Companies</option>
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -99,9 +99,9 @@ const DiamondList = () => {
             </select>
           </div>
 
-          <div className="col-lg-2 col-md-4">
-            <label className="form-label">Work Status</label>
-            <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <div className="col-xl-2 col-lg-4 col-md-6">
+            <label className="form-label small fw-semibold text-muted mb-1">Work Status</label>
+            <select className="form-select form-select-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">All Statuses</option>
               <option value="RECEIVED">RECEIVED</option>
               <option value="ASSIGNED">ASSIGNED</option>
@@ -114,9 +114,9 @@ const DiamondList = () => {
             </select>
           </div>
 
-          <div className="col-lg-2 col-md-4">
-            <label className="form-label">Assigned Worker</label>
-            <select className="form-select" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
+          <div className="col-xl-2 col-lg-4 col-md-6">
+            <label className="form-label small fw-semibold text-muted mb-1">Assigned Worker</label>
+            <select className="form-select form-select-sm" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
               <option value="">All Workers</option>
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
@@ -126,21 +126,27 @@ const DiamondList = () => {
             </select>
           </div>
 
-          <div className="col-lg-3 col-md-4">
-            <label className="form-label">Received Date Range</label>
-            <div className="d-flex gap-2">
-              <input
-                type="date"
-                className="form-control form-control-sm"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
-              <input
-                type="date"
-                className="form-control form-control-sm"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-              />
+          <div className="col-xl-3 col-lg-8 col-md-12">
+            <label className="form-label small fw-semibold text-muted mb-1">Received Date Range</label>
+            <div className="row g-2">
+              <div className="col-6">
+                <input
+                  type="date"
+                  className="form-control form-control-sm px-2"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  title="From Date"
+                />
+              </div>
+              <div className="col-6">
+                <input
+                  type="date"
+                  className="form-control form-control-sm px-2"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  title="To Date"
+                />
+              </div>
             </div>
           </div>
         </div>
