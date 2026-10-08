@@ -67,8 +67,8 @@ const Workers = () => {
 
   return (
     <PrivateLayout title="Artisan Worker Roster">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div className="position-relative" style={{ minWidth: '280px' }}>
+      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3 mb-4">
+        <div className="position-relative flex-grow-1" style={{ maxWidth: '400px' }}>
           <Search size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
           <input
             type="text"
@@ -79,26 +79,26 @@ const Workers = () => {
           />
         </div>
 
-        <button className="btn btn-gold rounded-pill px-4 font-heading fw-bold d-flex align-items-center" onClick={handleOpenAdd}>
+        <button className="btn btn-gold rounded-pill px-4 py-2 font-heading fw-bold d-flex align-items-center justify-content-center flex-shrink-0 text-nowrap" onClick={handleOpenAdd}>
           <Plus size={18} className="me-2" /> Register New Artisan Worker
         </button>
       </div>
 
-      <div className="card card-custom p-4 shadow-sm">
+      <div className="card card-custom p-3 p-md-4 shadow-sm">
         <div className="table-responsive">
           <table className="table table-custom table-hover align-middle">
             <thead>
               <tr>
-                <th>Emp ID</th>
-                <th>Artisan Name</th>
-                <th>Department</th>
-                <th>Mobile Contact</th>
-                <th>Total Assigned</th>
-                <th>In Progress</th>
-                <th>Completed</th>
-                <th>Pending</th>
-                <th>Status</th>
-                <th className="text-end">Actions</th>
+                <th className="text-nowrap">Emp ID</th>
+                <th className="text-nowrap">Artisan Name</th>
+                <th className="text-nowrap">Department</th>
+                <th className="text-nowrap">Mobile Contact</th>
+                <th className="text-nowrap">Total Assigned</th>
+                <th className="text-nowrap">In Progress</th>
+                <th className="text-nowrap">Completed</th>
+                <th className="text-nowrap">Pending</th>
+                <th className="text-nowrap">Status</th>
+                <th className="text-end text-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -116,49 +116,51 @@ const Workers = () => {
                     onClick={() => navigate(`/workers/${w.id}`)}
                   >
                     <td>
-                      <span className="badge bg-light text-navy border font-mono fw-bold">{w.employeeId}</span>
+                      <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
+                        {w.employeeId}
+                      </span>
                     </td>
                     <td>
-                      <div className="d-flex align-items-center">
-                        <div className="avatar bg-navy text-warning rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
+                      <div className="d-flex align-items-center text-nowrap">
+                        <div className="avatar text-warning rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#0A192F' }}>
                           <HardHat size={16} />
                         </div>
-                        <span className="fw-bold text-navy" style={{ color: '#0A192F' }}>{w.name}</span>
+                        <span className="fw-bold" style={{ color: '#0A192F' }}>{w.name}</span>
                       </div>
                     </td>
-                    <td className="fw-medium text-dark">{w.department}</td>
-                    <td className="small text-muted">{w.phone}</td>
-                    <td className="fw-bold text-navy">{totalAssigned}</td>
+                    <td className="fw-medium text-dark text-nowrap">{w.department}</td>
+                    <td className="small text-muted text-nowrap">{w.phone}</td>
+                    <td className="fw-bold text-nowrap" style={{ color: '#0A192F' }}>{totalAssigned}</td>
                     <td>
-                      <span className="badge bg-warning bg-opacity-20 text-warning border border-warning px-2 py-1">
+                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
                         {inProgress}
                       </span>
                     </td>
                     <td>
-                      <span className="badge bg-success bg-opacity-20 text-success border border-success px-2 py-1">
+                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
                         {completed}
                       </span>
                     </td>
                     <td>
-                      <span className="badge bg-secondary bg-opacity-15 text-dark border px-2 py-1">
+                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>
                         {pending}
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${w.status === 'ACTIVE' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle'} px-2 py-1`}>
+                      <span className={`badge px-2.5 py-1.5 fw-bold ${w.status === 'ACTIVE' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle'}`}>
                         {w.status}
                       </span>
                     </td>
-                    <td className="text-end" onClick={(e) => e.stopPropagation()}>
+                    <td className="text-end text-nowrap" onClick={(e) => e.stopPropagation()}>
                       <button
-                        className="btn btn-sm btn-outline-primary me-2 rounded-circle p-2"
+                        className="btn btn-sm btn-outline-primary me-1 rounded-circle p-1.5"
                         onClick={() => navigate(`/workers/${w.id}`)}
                         title="View Work History"
                       >
                         <Eye size={14} />
                       </button>
                       <button
-                        className="btn btn-sm btn-outline-secondary rounded-circle p-2"
+                        className="btn btn-sm btn-outline-secondary rounded-circle p-1.5"
                         onClick={(e) => handleOpenEdit(w, e)}
                         title="Edit Worker Info"
                       >
