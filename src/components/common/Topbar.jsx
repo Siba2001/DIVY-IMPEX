@@ -25,27 +25,27 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
   ];
 
   return (
-    <header className="topbar">
-      <div className="d-flex align-items-center">
+    <header className="topbar px-2 px-sm-3">
+      <div className="d-flex align-items-center me-2 overflow-hidden" style={{ minWidth: 0 }}>
         <button
-          className="btn btn-sm btn-link text-navy p-0 me-2.5 d-lg-none border-0"
+          className="btn btn-sm btn-link text-navy p-0 me-2 d-lg-none border-0 flex-shrink-0"
           onClick={toggleMobileSidebar}
           title="Open Navigation Menu"
         >
           <Menu size={22} style={{ color: '#0A192F' }} />
         </button>
-        <h4 className="font-heading fw-bold text-dark mb-0 me-3 fs-5 text-truncate" style={{ color: '#0A192F', maxWidth: '200px' }}>
+        <h4 className="font-heading fw-bold text-dark mb-0 fs-6 fs-sm-5 text-truncate" style={{ color: '#0A192F', maxWidth: '160px' }}>
           {pageTitle || 'Management System'}
         </h4>
-        <span className="badge bg-light text-navy border fw-medium small d-none d-md-inline-block">
+        <span className="badge bg-light text-navy border fw-medium small ms-2 d-none d-xl-inline-block flex-shrink-0">
           Surat Manufacturing Hub
         </span>
       </div>
 
-      <div className="d-flex align-items-center gap-3">
+      <div className="d-flex align-items-center gap-1.5 gap-sm-3 flex-shrink-0">
         {/* Global Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="position-relative d-none d-sm-block" style={{ width: '240px' }}>
-          <Search size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+        <form onSubmit={handleSearchSubmit} className="position-relative d-none d-md-block" style={{ width: '200px' }}>
+          <Search size={15} className="position-absolute top-50 start-0 translate-middle-y ms-2.5 text-muted" />
           <input
             type="text"
             className="form-control form-control-sm ps-5 bg-light border-0"
@@ -68,7 +68,7 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
         {/* Notifications Dropdown */}
         <div className="position-relative">
           <button
-            className="btn btn-sm btn-light border rounded-circle position-relative p-2"
+            className="btn btn-sm btn-light border rounded-circle position-relative p-1.5 p-sm-2"
             onClick={() => setShowNotifications(!showNotifications)}
             title="Notifications"
           >
@@ -81,7 +81,7 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
           {showNotifications && (
             <div
               className="position-absolute end-0 mt-2 bg-white rounded-3 shadow-lg border p-3"
-              style={{ width: '300px', zIndex: 1050 }}
+              style={{ width: '280px', zIndex: 1050 }}
             >
               <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                 <h6 className="font-heading fw-bold mb-0 text-navy">Notifications</h6>
@@ -100,8 +100,8 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
         </div>
 
         {/* User Badge */}
-        <div className="d-flex align-items-center ps-2 border-start">
-          <div className="avatar bg-navy text-warning rounded-circle fw-bold me-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', backgroundColor: '#0A192F' }}>
+        <div className="d-flex align-items-center ps-1.5 ps-sm-2 border-start">
+          <div className="avatar bg-navy text-warning rounded-circle fw-bold me-1 me-sm-2 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#0A192F' }}>
             <User size={16} />
           </div>
           <div className="d-none d-lg-block me-2" style={{ lineHeight: '1.2' }}>

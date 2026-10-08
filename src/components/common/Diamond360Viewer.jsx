@@ -97,9 +97,9 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
         }
 
         // Smooth bottom edge fade to eliminate hard horizontal cut lines under the stand
-        const bottomThreshold = height * 0.70;
+        const bottomThreshold = height * 0.94;
         if (y > bottomThreshold) {
-          const bottomFade = Math.max(0, (height - 30 - y) / (height - 30 - bottomThreshold));
+          const bottomFade = Math.max(0, (height - y) / (height - bottomThreshold));
           data[i + 3] = Math.floor(data[i + 3] * bottomFade);
         }
       }
@@ -235,17 +235,15 @@ const Diamond360Viewer = ({ size = 410, className = "" }) => {
         style={{
           width: '100%',
           maxWidth: `${size * 1.3}px`,
-          minHeight: `${size * 0.75}px`,
-          zIndex: 1,
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 96%)',
-          maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 96%)'
+          minHeight: `${size * 0.85}px`,
+          zIndex: 1
         }}
       >
         <canvas
           ref={canvasRef}
           className="w-100 h-auto"
           style={{
-            transform: 'scale(1.18)',
+            transform: 'scale(1.06)',
             transformOrigin: 'center center',
             filter: 'drop-shadow(0 15px 25px rgba(0,0,0,0.5))',
             display: isLoaded ? 'block' : 'none'

@@ -46,11 +46,17 @@ const Header = () => {
             {navLinks.map((link) => (
               <li className="nav-item" key={link.path}>
                 <Link
-                  className={`nav-link px-3 ${location.pathname === link.path ? 'active border-bottom border-warning' : ''}`}
+                  className={`nav-link px-3 position-relative ${location.pathname === link.path ? 'active text-white fw-semibold' : ''}`}
                   to={link.path}
                   onClick={closeNav}
                 >
                   {link.label}
+                  {location.pathname === link.path && (
+                    <span
+                      className="position-absolute start-50 translate-middle-x bg-warning rounded-pill"
+                      style={{ bottom: '2px', width: '24px', height: '2px' }}
+                    />
+                  )}
                 </Link>
               </li>
             ))}
