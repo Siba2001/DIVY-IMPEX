@@ -42,11 +42,11 @@ const Header = () => {
         </div>
 
         <div className={`collapse navbar-collapse ${isNavOpen ? 'show' : ''}`} id="publicNav">
-          <ul className="navbar-nav mx-auto mb-2 mb-lg-0 py-2 py-lg-0">
+          <ul className="navbar-nav mx-auto mb-2 mb-lg-0 py-2 py-lg-0 align-items-lg-center">
             {navLinks.map((link) => (
               <li className="nav-item" key={link.path}>
                 <Link
-                  className={`nav-link px-3 position-relative ${location.pathname === link.path ? 'active text-white fw-semibold' : ''}`}
+                  className={`nav-link px-2 px-xl-3 text-nowrap position-relative ${location.pathname === link.path ? 'active text-white fw-semibold' : ''}`}
                   to={link.path}
                   onClick={closeNav}
                 >
@@ -62,9 +62,14 @@ const Header = () => {
             ))}
           </ul>
 
-          <div className="d-flex align-items-center mt-3 mt-lg-0 pb-2 pb-lg-0">
-            <Link to="/login" className="btn btn-gold rounded-pill px-4 py-2 d-flex align-items-center shadow-sm w-100 w-lg-auto justify-content-center" onClick={closeNav}>
-              <LogIn size={16} className="me-2" /> Sign In
+          <div className="d-flex align-items-center mt-3 mt-lg-0 pb-2 pb-lg-0 flex-shrink-0">
+            <Link
+              to="/login"
+              className="btn btn-gold rounded-pill px-3 px-xl-4 py-2 d-inline-flex align-items-center text-nowrap shadow-sm w-100 w-lg-auto justify-content-center"
+              style={{ whiteSpace: 'nowrap' }}
+              onClick={closeNav}
+            >
+              <LogIn size={16} className="me-2 flex-shrink-0" /> <span className="text-nowrap">Sign In</span>
             </Link>
           </div>
         </div>
