@@ -63,13 +63,33 @@ const DiamondList = () => {
     <PrivateLayout title="Master Diamond Inventory">
       {/* Filters Toolbar */}
       <div className="card card-custom p-3 p-md-4 mb-4 shadow-sm">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6 className="font-heading fw-bold text-navy mb-0 d-flex align-items-center" style={{ color: '#0A192F' }}>
-            <Filter size={18} className="me-2 text-warning" /> Filter Diamonds Inventory
-          </h6>
-          <button className="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-semibold text-nowrap" onClick={clearFilters}>
-            Clear All Filters
-          </button>
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+          <div className="d-flex align-items-center flex-wrap gap-2">
+            <h6 className="font-heading fw-bold text-navy mb-0 d-flex align-items-center" style={{ color: '#0A192F' }}>
+              <Filter size={18} className="me-2 text-warning" /> Filter Diamonds Inventory
+            </h6>
+            <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#EEF2FF', color: '#4338CA', border: '1px solid #C7D2FE' }}>
+              Live Match: {filteredDiamonds.length}
+            </span>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-gold rounded-pill px-3 py-1 font-heading fw-bold d-inline-flex align-items-center text-nowrap shadow-sm"
+              onClick={() => {}}
+              title="Apply Live Search Filters"
+            >
+              <Search size={14} className="me-1.5" /> Search
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 fw-semibold text-nowrap"
+              onClick={clearFilters}
+              title="Reset All Filters"
+            >
+              Clear All Filters
+            </button>
+          </div>
         </div>
 
         <div className="row g-2.5 g-md-3">
