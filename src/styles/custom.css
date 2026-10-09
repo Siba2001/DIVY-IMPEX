@@ -235,19 +235,38 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   flex-grow: 1;
 }
 
-/* Custom Cards */
-.card-custom {
+/* Custom Cards & Interactive Micro-Animations */
+.card-custom, .card {
+  position: relative;
   background: #FFFFFF;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.2s ease;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
+  will-change: transform, box-shadow;
 }
 
-.card-custom:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+.card-custom:hover, .card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px -8px rgba(10, 25, 47, 0.12), 0 4px 16px -2px rgba(212, 175, 55, 0.2) !important;
+  border-color: rgba(212, 175, 55, 0.45) !important;
 }
 
+/* Card Icon Micro-Animation on Hover */
+.card-custom:hover .bg-navy svg,
+.card:hover .bg-navy svg,
+.stat-kpi-card:hover svg {
+  transform: scale(1.15) rotate(-3deg);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-custom .bg-navy svg,
+.card .bg-navy svg,
+.stat-kpi-card svg {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Stat KPI Cards Animation */
 .stat-kpi-card {
   position: relative;
   overflow: hidden;
@@ -255,6 +274,22 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   border: 1px solid var(--border-color);
   background: #FFFFFF;
   padding: 0.75rem 1rem;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+  will-change: transform, box-shadow;
+}
+
+.stat-kpi-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 24px -4px rgba(10, 25, 47, 0.1) !important;
+  border-color: rgba(212, 175, 55, 0.45) !important;
+}
+
+/* Watermark Number Hover Glow */
+.card-custom:hover .display-6.text-muted,
+.card:hover .display-6.text-muted {
+  color: var(--accent-gold) !important;
+  opacity: 0.55 !important;
+  transition: all 0.3s ease;
 }
 
 .stat-kpi-card::after {

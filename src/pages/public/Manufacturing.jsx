@@ -29,13 +29,19 @@ const Manufacturing = () => {
           <div className="row g-4">
             {steps.map((step, idx) => {
               const IconComp = step.icon;
+              const numStr = String(idx + 1).padStart(2, '0');
               return (
                 <div key={idx} className="col-md-6 col-lg-4">
-                  <div className="card card-custom h-100 p-4 border">
-                    <div className="p-3 bg-navy text-warning rounded-3 me-auto mb-3" style={{ backgroundColor: '#0A192F' }}>
-                      <IconComp size={24} />
+                  <div className="card card-custom h-100 p-4 border shadow-sm position-relative">
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <div className="p-3 bg-navy text-warning rounded-3" style={{ backgroundColor: '#0A192F' }}>
+                        <IconComp size={24} />
+                      </div>
+                      <span className="font-heading fw-bold display-6 text-muted opacity-25">{numStr}</span>
                     </div>
-                    <h5 className="font-heading fw-bold text-navy mb-2" style={{ color: '#0A192F' }}>{step.title}</h5>
+                    <h5 className="font-heading fw-bold text-navy mb-2" style={{ color: '#0A192F' }}>
+                      {step.title.replace(/^\d+\.\s*/, '')}
+                    </h5>
                     <p className="text-secondary small mb-0">{step.desc}</p>
                   </div>
                 </div>
