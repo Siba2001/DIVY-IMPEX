@@ -36,7 +36,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/companies', label: 'Companies', icon: Building2 },
     { path: '/diamond-receiving', label: 'Diamond Receiving', icon: PackagePlus },
-    { path: '/diamonds', label: 'Diamonds List', icon: Gem },
+    { path: '/diamonds-list', label: 'Diamonds List', icon: Gem },
     { path: '/assignment', label: 'Worker Assignment', icon: UserCheck },
     { path: '/workers', label: 'Workers', icon: Users },
     { path: '/deposit', label: 'Deposit & QC Verify', icon: ShieldCheck },
@@ -46,7 +46,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
 
   const workerNavItems = [
     { path: '/worker-dashboard', label: 'My Assigned Work', icon: HardHat },
-    { path: '/diamonds', label: 'Search Diamonds', icon: Gem },
+    { path: '/diamonds-list', label: 'Search Diamonds', icon: Gem },
   ];
 
   const navItems = isAdminOrSupervisor ? adminNavItems : workerNavItems;

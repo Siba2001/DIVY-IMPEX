@@ -14,7 +14,7 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/diamonds?search=${encodeURIComponent(searchTerm.trim())}`);
+      navigate(`/diamonds-list?search=${encodeURIComponent(searchTerm.trim())}`);
     }
   };
 

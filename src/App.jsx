@@ -40,16 +40,16 @@ function App() {
             {/* Public Portfolio Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/diamonds" element={<DiamondsPublic />} />
             <Route path="/diamonds-showcase" element={<DiamondsPublic />} />
             <Route path="/manufacturing" element={<Manufacturing />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
 
-            {/* Smart route for /diamonds */}
-            <Route path="/diamonds" element={<DiamondRoute />} />
-
             {/* Private Management Routes */}
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/diamonds-list" element={<DiamondList />} />
+            <Route path="/companies" element={<Companies />} />
             <Route path="/companies" element={<Companies />} />
             <Route path="/companies/:id" element={<CompanyDetails />} />
             <Route path="/diamond-receiving" element={<DiamondReceiving />} />

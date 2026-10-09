@@ -93,7 +93,7 @@ const DiamondReceiving = () => {
         diamondsList
       });
 
-      navigate('/diamonds');
+      navigate('/diamonds-list');
     } catch (err) {
       setError(err.message || 'Failed to process receiving batch');
     }
@@ -288,7 +288,7 @@ const DiamondReceiving = () => {
             <button
               type="button"
               className="btn btn-light border px-4 rounded-pill"
-              onClick={() => navigate('/diamonds')}
+              onClick={() => navigate('/diamonds-list')}
             >
               Cancel
             </button>
