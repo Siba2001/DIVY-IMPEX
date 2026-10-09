@@ -1,6 +1,6 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import { DiamondProvider } from './context/DiamondContext';
 
 // Public Pages
@@ -25,10 +25,19 @@ import DepositVerification from './pages/private/DepositVerification';
 import Stock from './pages/private/Stock';
 import Reports from './pages/private/Reports';
 
-// Smart Diamond Route Component
-const DiamondRoute = () => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <DiamondList /> : <DiamondsPublic />;
+// Auto Scroll To Top Component on Route Change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant'
+    });
+  }, [pathname]);
+
+  return null;
 };
 
 function App() {
@@ -36,6 +45,7 @@ function App() {
     <AuthProvider>
       <DiamondProvider>
         <Router>
+          <ScrollToTop />
           <Routes>
             {/* Public Portfolio Routes */}
             <Route path="/" element={<Home />} />
@@ -49,7 +59,6 @@ function App() {
             {/* Private Management Routes */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/diamonds-list" element={<DiamondList />} />
-            <Route path="/companies" element={<Companies />} />
             <Route path="/companies" element={<Companies />} />
             <Route path="/companies/:id" element={<CompanyDetails />} />
             <Route path="/diamond-receiving" element={<DiamondReceiving />} />
