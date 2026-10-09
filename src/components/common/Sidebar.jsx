@@ -54,32 +54,47 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
       {/* Brand Header */}
-      <div className="p-3 d-flex align-items-center justify-content-between border-bottom border-secondary border-opacity-25">
-        <div className="d-flex align-items-center overflow-hidden">
-          {isCollapsed ? (
-            <DivyLogoIcon size={32} />
-          ) : (
-            <DivyLogo iconSize={36} textClassName="fs-6" />
-          )}
-        </div>
-        <div className="d-flex align-items-center">
-          {/* Mobile Close Button */}
+      <div className={`p-3 d-flex align-items-center ${isCollapsed ? 'justify-content-center px-1' : 'justify-content-between'} border-bottom border-secondary border-opacity-25 position-relative`}>
+        {isCollapsed ? (
           <button
-            className="btn btn-sm btn-link text-secondary p-0 me-2 d-lg-none border-0"
-            onClick={closeMobileSidebar}
-            title="Close Drawer"
-          >
-            <X size={20} />
-          </button>
-          {/* Desktop Toggle Button */}
-          <button
-            className="btn btn-sm btn-link text-secondary p-0 ms-1 d-none d-lg-inline-block border-0"
+            className="btn p-0 border-0 d-flex align-items-center justify-content-center text-decoration-none w-100 position-relative"
             onClick={toggleSidebar}
-            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            title="Expand Navigation Menu"
+            style={{ cursor: 'pointer' }}
           >
-            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            <DivyLogoIcon size={34} />
+            <span
+              className="position-absolute top-50 start-100 translate-middle badge bg-warning text-navy rounded-circle p-0 shadow-sm d-none d-lg-flex align-items-center justify-content-center"
+              style={{ width: '18px', height: '18px', marginLeft: '-14px', zIndex: 10 }}
+            >
+              <ChevronRight size={12} style={{ color: '#0A192F' }} />
+            </span>
           </button>
-        </div>
+        ) : (
+          <>
+            <div className="d-flex align-items-center overflow-hidden me-2">
+              <DivyLogo iconSize={36} textClassName="fs-6" />
+            </div>
+            <div className="d-flex align-items-center flex-shrink-0">
+              {/* Mobile Close Button */}
+              <button
+                className="btn btn-sm btn-link text-secondary p-0 me-2 d-lg-none border-0"
+                onClick={closeMobileSidebar}
+                title="Close Drawer"
+              >
+                <X size={20} />
+              </button>
+              {/* Desktop Toggle Button */}
+              <button
+                className="btn btn-sm btn-link text-secondary p-0 ms-1 d-none d-lg-inline-block border-0"
+                onClick={toggleSidebar}
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft size={18} />
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Navigation */}
