@@ -164,6 +164,9 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 .sidebar {
   width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
   background: var(--primary-navy);
   color: #E2E8F0;
   flex-shrink: 0;
@@ -312,15 +315,25 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 /* Status Badges */
 .badge-status {
-  padding: 0.35em 0.75em;
-  font-size: 0.75rem;
+  padding: 0.3em 0.7em;
+  font-size: 0.74rem;
   font-weight: 600;
   border-radius: 20px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.btn-compact-sm {
+  font-size: 0.8125rem !important;
+  padding: 0.35rem 0.85rem !important;
+  white-space: nowrap !important;
+  line-height: 1.35 !important;
+  font-weight: 600 !important;
 }
 
 .badge-status-RECEIVED { background-color: var(--status-received-bg); color: var(--status-received-text); }

@@ -32,9 +32,9 @@ const WorkerDetails = () => {
 
   const workerDiamonds = diamonds.filter((d) => d.assignedWorkerId === worker.id);
   const totalAssigned = workerDiamonds.length;
-  const inProgress = workerDiamonds.filter((d) => d.status === 'IN PROGRESS').length;
-  const completed = workerDiamonds.filter((d) => d.status === 'COMPLETED' || d.status === 'VERIFIED').length;
-  const pending = workerDiamonds.filter((d) => ['ASSIGNED', 'IN PROGRESS', 'WORK COMPLETED', 'DEPOSITED'].includes(d.status)).length;
+  const inProgress = workerDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+  const completed = workerDiamonds.filter((d) => ['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)).length;
+  const pending = workerDiamonds.filter((d) => ['ASSIGNED', 'REWORK'].includes(d.status)).length;
 
   const handleOpenTimeline = (diamond) => {
     setSelectedDiamond(diamond);

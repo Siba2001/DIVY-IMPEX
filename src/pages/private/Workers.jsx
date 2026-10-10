@@ -105,9 +105,9 @@ const Workers = () => {
               {filteredWorkers.map((w) => {
                 const wDiamonds = diamonds.filter((d) => d.assignedWorkerId === w.id);
                 const totalAssigned = wDiamonds.length;
-                const inProgress = wDiamonds.filter((d) => d.status === 'IN PROGRESS').length;
-                const completed = wDiamonds.filter((d) => d.status === 'COMPLETED' || d.status === 'VERIFIED').length;
-                const pending = wDiamonds.filter((d) => ['ASSIGNED', 'IN PROGRESS', 'WORK COMPLETED', 'DEPOSITED'].includes(d.status)).length;
+                const inProgress = wDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+                const completed = wDiamonds.filter((d) => ['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)).length;
+                const pending = wDiamonds.filter((d) => ['ASSIGNED', 'REWORK'].includes(d.status)).length;
 
                 return (
                   <tr

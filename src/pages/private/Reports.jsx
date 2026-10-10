@@ -133,14 +133,30 @@ const Reports = () => {
 
       {/* Filter Toolbar */}
       <div className="card card-custom p-4 mb-4 shadow-sm btn-print-hide">
-        <h6 className="font-heading fw-bold text-navy mb-3 d-flex align-items-center" style={{ color: '#0A192F' }}>
-          <Filter size={18} className="me-2 text-warning" /> Report Filter Parameters
-        </h6>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h6 className="font-heading fw-bold text-navy mb-0 d-flex align-items-center" style={{ color: '#0A192F' }}>
+            <Filter size={18} className="me-2 text-warning" /> Report Filter Parameters
+          </h6>
+          {(companyFilter || workerFilter || statusFilter || fromDate || toDate) && (
+            <button
+              className="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 font-heading"
+              onClick={() => {
+                setCompanyFilter('');
+                setWorkerFilter('');
+                setStatusFilter('');
+                setFromDate('');
+                setToDate('');
+              }}
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
 
-        <div className="row g-3">
-          <div className="col-md-3">
-            <label className="form-label">Company</label>
-            <select className="form-select" value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
+        <div className="row g-3 align-items-end">
+          <div className="col-xl-3 col-lg-3 col-md-6">
+            <label className="form-label font-heading fw-semibold small text-muted mb-1">Company</label>
+            <select className="form-select form-select-sm" value={companyFilter} onChange={(e) => setCompanyFilter(e.target.value)}>
               <option value="">All Companies</option>
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -150,9 +166,9 @@ const Reports = () => {
             </select>
           </div>
 
-          <div className="col-md-3">
-            <label className="form-label">Assigned Worker</label>
-            <select className="form-select" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
+          <div className="col-xl-3 col-lg-3 col-md-6">
+            <label className="form-label font-heading fw-semibold small text-muted mb-1">Assigned Worker</label>
+            <select className="form-select form-select-sm" value={workerFilter} onChange={(e) => setWorkerFilter(e.target.value)}>
               <option value="">All Workers</option>
               {workers.map((w) => (
                 <option key={w.id} value={w.id}>
@@ -162,9 +178,9 @@ const Reports = () => {
             </select>
           </div>
 
-          <div className="col-md-3">
-            <label className="form-label">Stage Status</label>
-            <select className="form-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <div className="col-xl-2 col-lg-2 col-md-4">
+            <label className="form-label font-heading fw-semibold small text-muted mb-1">Stage Status</label>
+            <select className="form-select form-select-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">All Statuses</option>
               <option value="RECEIVED">RECEIVED</option>
               <option value="ASSIGNED">ASSIGNED</option>
@@ -177,22 +193,24 @@ const Reports = () => {
             </select>
           </div>
 
-          <div className="col-md-3">
-            <label className="form-label">Date Range</label>
-            <div className="d-flex gap-2">
-              <input
-                type="date"
-                className="form-control form-control-sm"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
-              <input
-                type="date"
-                className="form-control form-control-sm"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-              />
-            </div>
+          <div className="col-xl-2 col-lg-2 col-md-4">
+            <label className="form-label font-heading fw-semibold small text-muted mb-1">From Date</label>
+            <input
+              type="date"
+              className="form-control form-control-sm"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </div>
+
+          <div className="col-xl-2 col-lg-2 col-md-4">
+            <label className="form-label font-heading fw-semibold small text-muted mb-1">To Date</label>
+            <input
+              type="date"
+              className="form-control form-control-sm"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
           </div>
         </div>
       </div>

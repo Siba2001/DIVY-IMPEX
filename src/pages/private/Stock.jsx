@@ -181,12 +181,12 @@ const Stock = () => {
                     <td>
                       <Badge status={d.status} />
                     </td>
-                    <td className="text-end">
+                    <td className="text-end text-nowrap">
                       <button
-                        className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                        className="btn btn-compact-sm btn-outline-primary rounded-pill"
                         onClick={() => handleOpenTimeline(d)}
                       >
-                        <Eye size={14} className="me-1" /> History
+                        <Eye size={13} className="me-1" /> History
                       </button>
                     </td>
                   </tr>

@@ -62,13 +62,13 @@ const CompanyDetails = () => {
     companyDiamonds = companyDiamonds.filter((d) => d.receivedDate <= toDate);
   }
 
-  // Calculate aggregates
+  // Calculate aggregates with 100% mathematical integrity
   const totalReceived = companyDiamonds.length;
-  const inProduction = companyDiamonds.filter((d) => d.status === 'IN PROGRESS').length;
-  const pending = companyDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'REWORK'].includes(d.status)).length;
-  const completed = companyDiamonds.filter((d) => d.status === 'COMPLETED' || d.status === 'VERIFIED').length;
+  const completed = companyDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
+  const inProduction = companyDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+  const pending = companyDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
 
-  // Group date-wise summary
+  // Group date-wise summary with 100% mathematical integrity (received = assigned + inProgress + completed + pending)
   const dateWiseMap = {};
   companyDiamonds.forEach((d) => {
     const dDate = d.receivedDate || '2026-10-01';
@@ -83,10 +83,16 @@ const CompanyDetails = () => {
       };
     }
     dateWiseMap[dDate].received += 1;
-    if (d.status === 'ASSIGNED') dateWiseMap[dDate].assigned += 1;
-    if (d.status === 'IN PROGRESS') dateWiseMap[dDate].inProgress += 1;
-    if (d.status === 'COMPLETED' || d.status === 'VERIFIED') dateWiseMap[dDate].completed += 1;
-    if (['RECEIVED', 'ASSIGNED', 'IN PROGRESS', 'REWORK'].includes(d.status)) dateWiseMap[dDate].pending += 1;
+    if (d.status === 'ASSIGNED') {
+      dateWiseMap[dDate].assigned += 1;
+    } else if (['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)) {
+      dateWiseMap[dDate].inProgress += 1;
+    } else if (['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)) {
+      dateWiseMap[dDate].completed += 1;
+    } else {
+      // RECEIVED, REWORK, and any other initial pending status
+      dateWiseMap[dDate].pending += 1;
+    }
   });
 
   const dateWiseSummary = Object.values(dateWiseMap).sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -255,12 +261,12 @@ const CompanyDetails = () => {
                     <td>{d.assignedWorkerName || <span className="text-muted small">Unassigned</span>}</td>
                     <td><Badge status={d.status} /></td>
                     <td className="small text-muted">{d.completedDate || '-'}</td>
-                    <td className="text-end">
+                    <td className="text-end text-nowrap">
                       <button
-                        className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                        className="btn btn-compact-sm btn-outline-primary rounded-pill"
                         onClick={(e) => handleOpenTimeline(d, e)}
                       >
-                        <Eye size={14} className="me-1" /> History
+                        <Eye size={13} className="me-1" /> History
                       </button>
                     </td>
                   </tr>

@@ -44,10 +44,9 @@ const Dashboard = () => {
       dateWiseMap[dDate] = { date: dDate, received: 0, completed: 0, pending: 0 };
     }
     dateWiseMap[dDate].received += 1;
-    if (d.status === 'COMPLETED' || d.status === 'VERIFIED') {
+    if (['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)) {
       dateWiseMap[dDate].completed += 1;
-    }
-    if (['RECEIVED', 'ASSIGNED', 'IN PROGRESS', 'REWORK'].includes(d.status)) {
+    } else {
       dateWiseMap[dDate].pending += 1;
     }
   });
@@ -83,9 +82,9 @@ const Dashboard = () => {
   const companySummaries = companies.map((c) => {
     const compDiamonds = diamonds.filter((d) => d.companyId === c.id);
     const received = compDiamonds.length;
-    const inProduction = compDiamonds.filter((d) => d.status === 'IN PROGRESS').length;
-    const pending = compDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'REWORK'].includes(d.status)).length;
-    const completed = compDiamonds.filter((d) => d.status === 'COMPLETED' || d.status === 'VERIFIED').length;
+    const completed = compDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
+    const inProduction = compDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+    const pending = compDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
 
     return {
       id: c.id,

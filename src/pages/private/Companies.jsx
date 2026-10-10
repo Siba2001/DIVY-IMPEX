@@ -101,8 +101,9 @@ const Companies = () => {
               {filteredCompanies.map((c) => {
                 const compDiamonds = diamonds.filter((d) => d.companyId === c.id);
                 const totalReceived = compDiamonds.length;
-                const pending = compDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'IN PROGRESS', 'REWORK'].includes(d.status)).length;
-                const completed = compDiamonds.filter((d) => d.status === 'COMPLETED' || d.status === 'VERIFIED').length;
+                const completed = compDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
+                const inProduction = compDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+                const pending = compDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
 
                 return (
                   <tr

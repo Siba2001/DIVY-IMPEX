@@ -130,12 +130,12 @@ export const DiamondProvider = ({ children }) => {
     const today = new Date().toISOString().split('T')[0];
     const todaysReceived = diamonds.filter(d => d.receivedDate === today).length;
     
-    const pending = diamonds.filter(d => ['RECEIVED', 'ASSIGNED', 'REWORK'].includes(d.status)).length;
-    const inProduction = diamonds.filter(d => d.status === 'IN PROGRESS').length;
+    const completed = diamonds.filter(d => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
+    const inProduction = diamonds.filter(d => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+    const pending = diamonds.filter(d => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
     const workCompleted = diamonds.filter(d => d.status === 'WORK COMPLETED').length;
     const deposited = diamonds.filter(d => d.status === 'DEPOSITED').length;
-    const verified = diamonds.filter(d => ['VERIFIED', 'COMPLETED'].includes(d.status)).length;
-    const completed = diamonds.filter(d => d.status === 'COMPLETED').length;
+    const verified = diamonds.filter(d => d.status === 'VERIFIED').length;
 
     return {
       totalCompanies,

@@ -173,24 +173,24 @@ const DiamondList = () => {
       </div>
 
       {/* Master Inventory Table */}
-      <div className="card card-custom p-4 shadow-sm">
-        <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="card card-custom p-3 p-sm-4 shadow-sm">
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
           <div>
-            <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
+            <h6 className="font-heading fw-bold text-navy mb-1 mb-sm-0" style={{ color: '#0A192F' }}>
               Diamond Records List ({filteredDiamonds.length})
             </h6>
-            <small className="text-muted">Showing all matched diamonds across stages</small>
+            <small className="text-muted d-block d-sm-inline">Showing all matched diamonds across stages</small>
           </div>
           <button
-            className="btn btn-navy rounded-pill px-4"
+            className="btn btn-navy rounded-pill px-3 px-sm-4 py-2 font-heading fw-semibold text-nowrap w-100 w-sm-auto text-center"
             onClick={() => navigate('/diamond-receiving')}
           >
             + Receive New Diamonds
           </button>
         </div>
 
-        <div className="table-responsive">
-          <table className="table table-custom table-hover align-middle">
+        <div className="table-responsive rounded border">
+          <table className="table table-custom table-hover align-middle mb-0" style={{ minWidth: '780px' }}>
             <thead>
               <tr>
                 <th>Barcode</th>
@@ -234,13 +234,13 @@ const DiamondList = () => {
                         <span className="text-muted small italic">Unassigned</span>
                       )}
                     </td>
-                    <td>
+                    <td className="text-nowrap">
                       <Badge status={d.status} />
                     </td>
-                    <td className="text-end">
-                      <div className="d-flex justify-content-end gap-2">
+                    <td className="text-end text-nowrap">
+                      <div className="d-flex justify-content-end align-items-center gap-3" style={{ gap: '12px' }}>
                         <button
-                          className="btn btn-sm btn-outline-primary rounded-pill px-3"
+                          className="btn btn-compact-sm btn-outline-primary rounded-pill"
                           onClick={() => handleOpenTimeline(d)}
                         >
                           <Eye size={14} className="me-1" /> History
@@ -249,7 +249,7 @@ const DiamondList = () => {
                         {/* Quick action button dependent on status */}
                         {d.status === 'RECEIVED' && (
                           <button
-                            className="btn btn-sm btn-gold rounded-pill px-3"
+                            className="btn btn-compact-sm btn-gold rounded-pill ms-2"
                             onClick={() => navigate(`/assignment?barcode=${d.barcode}`)}
                           >
                             Assign Worker
@@ -257,7 +257,7 @@ const DiamondList = () => {
                         )}
                         {d.status === 'DEPOSITED' && (
                           <button
-                            className="btn btn-sm btn-success rounded-pill px-3"
+                            className="btn btn-compact-sm btn-success rounded-pill ms-2"
                             onClick={() => navigate(`/deposit?barcode=${d.barcode}`)}
                           >
                             Verify Deposit

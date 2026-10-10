@@ -104,16 +104,16 @@ const DepositVerification = () => {
       <div className="row g-4">
         {/* Verification Console Form */}
         <div className="col-lg-7">
-          <div className="card card-custom p-4 shadow-sm h-100">
+          <div className="card card-custom p-3 p-sm-4 shadow-sm h-100">
             <div className="d-flex align-items-center mb-4">
-              <div className="p-3 bg-navy text-warning rounded-3 me-3" style={{ backgroundColor: '#0A192F' }}>
-                <ShieldCheck size={24} />
+              <div className="p-2.5 p-sm-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
+                <ShieldCheck size={22} />
               </div>
               <div>
-                <h5 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
+                <h5 className="font-heading fw-bold text-navy mb-1 mb-sm-0" style={{ color: '#0A192F' }}>
                   QC Barcode & Scale Weight Verification
                 </h5>
-                <small className="text-muted">Scan diamond barcode and compare scale carats against inward specs.</small>
+                <small className="text-muted d-block d-sm-inline">Scan diamond barcode and compare scale carats against inward specs.</small>
               </div>
             </div>
 
@@ -134,26 +134,26 @@ const DepositVerification = () => {
             {/* Barcode Search Box */}
             <form onSubmit={handleScanOrSearch} className="mb-4">
               <label className="form-label font-heading fw-bold">1. Enter or Scan Barcode</label>
-              <div className="input-group">
-                <span className="input-group-text bg-light text-navy fw-bold">
-                  <Barcode size={18} className="me-1" /> BARCODE
-                </span>
-                <input
-                  type="text"
-                  className="form-control form-control-lg text-uppercase fw-bold text-navy"
-                  placeholder="e.g. KGK003 or RSB010..."
-                  value={inputBarcode}
-                  onChange={(e) => setInputBarcode(e.target.value)}
-                />
-                <button type="submit" className="btn btn-navy px-4 font-heading fw-bold">
-                  <Search size={16} className="me-1" /> Scan & Lookup
+              <div className="d-flex flex-column flex-sm-row gap-2">
+                <div className="position-relative flex-grow-1">
+                  <Barcode size={18} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+                  <input
+                    type="text"
+                    className="form-control form-control-lg ps-5 text-uppercase fw-bold text-navy"
+                    placeholder="e.g. KGK003 or RSB010..."
+                    value={inputBarcode}
+                    onChange={(e) => setInputBarcode(e.target.value)}
+                  />
+                </div>
+                <button type="submit" className="btn btn-navy px-4 font-heading fw-bold text-nowrap w-100 w-sm-auto d-flex align-items-center justify-content-center py-2.5">
+                  <Search size={16} className="me-1.5" /> Scan & Lookup
                 </button>
               </div>
             </form>
 
             {/* Display Diamond Inspection Card */}
             {scannedDiamond ? (
-              <div className="border rounded-3 p-4 bg-light position-relative">
+              <div className="border rounded-3 p-3 p-sm-4 bg-light position-relative">
                 <div className="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3">
                   <div>
                     <span className="text-uppercase text-muted small d-block">Found Diamond Spec</span>
@@ -165,19 +165,19 @@ const DepositVerification = () => {
                 </div>
 
                 <div className="row g-3 mb-4">
-                  <div className="col-md-6">
+                  <div className="col-6 col-md-6">
                     <span className="text-muted small d-block">Client Company</span>
                     <span className="fw-bold text-dark">{scannedDiamond.companyName} ({scannedDiamond.companyCode})</span>
                   </div>
-                  <div className="col-md-6">
+                  <div className="col-6 col-md-6">
                     <span className="text-muted small d-block">Diamond Cut / Size</span>
                     <span className="fw-semibold text-dark">{scannedDiamond.size}</span>
                   </div>
-                  <div className="col-md-6">
-                    <span className="text-muted small d-block">Original Received Weight</span>
+                  <div className="col-6 col-md-6">
+                    <span className="text-muted small d-block">Original Weight</span>
                     <span className="fw-bold text-primary fs-5">{scannedDiamond.weight} ct</span>
                   </div>
-                  <div className="col-md-6">
+                  <div className="col-6 col-md-6">
                     <span className="text-muted small d-block">Assigned Artisan</span>
                     <span className="fw-semibold text-dark">{scannedDiamond.assignedWorkerName || 'Unassigned'}</span>
                   </div>
@@ -190,7 +190,7 @@ const DepositVerification = () => {
                   </h6>
 
                   <div className="row g-3 align-items-center">
-                    <div className="col-md-6">
+                    <div className="col-12 col-md-6">
                       <label className="form-label small text-muted">Actual Scale Weight (Carats) *</label>
                       <input
                         type="number"
@@ -203,7 +203,7 @@ const DepositVerification = () => {
                       />
                     </div>
 
-                    <div className="col-md-6">
+                    <div className="col-12 col-md-6">
                       <div className="p-3 bg-light rounded-3 text-center border">
                         <span className="text-muted small d-block">Weight Loss Difference</span>
                         <span className={`fw-bold fs-5 ${isMajorWeightMismatch ? 'text-danger' : 'text-success'}`}>
@@ -214,7 +214,7 @@ const DepositVerification = () => {
                   </div>
 
                   {/* Verification Check Indicators */}
-                  <div className="d-flex flex-wrap gap-3 mt-3 pt-3 border-top">
+                  <div className="d-flex flex-wrap gap-2 gap-sm-3 mt-3 pt-3 border-top">
                     <div className="d-flex align-items-center">
                       <CheckCircle2 size={16} className="text-success me-1" />
                       <span className="small fw-semibold">Barcode Match: PASS</span>
@@ -247,17 +247,17 @@ const DepositVerification = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="d-flex gap-3">
+                <div className="d-flex flex-column flex-sm-row gap-2 gap-sm-3">
                   <button
                     type="button"
-                    className="btn btn-success flex-fill py-2 font-heading fw-bold shadow-sm"
+                    className="btn btn-success flex-fill py-2.5 font-heading fw-bold shadow-sm w-100 w-sm-auto"
                     onClick={() => handleConfirmVerification(true)}
                   >
                     <CheckCircle2 size={18} className="me-2" /> Confirm Deposit & Mark COMPLETED
                   </button>
                   <button
                     type="button"
-                    className="btn btn-outline-danger flex-fill py-2 font-heading fw-bold"
+                    className="btn btn-outline-danger flex-fill py-2.5 font-heading fw-bold w-100 w-sm-auto"
                     onClick={() => handleConfirmVerification(false)}
                   >
                     <XCircle size={18} className="me-2" /> Reject & Send for REWORK
@@ -276,13 +276,13 @@ const DepositVerification = () => {
 
         {/* Pending Deposit Queue Table */}
         <div className="col-lg-5">
-          <div className="card card-custom p-4 shadow-sm h-100">
+          <div className="card card-custom p-3 p-sm-4 shadow-sm h-100">
             <h6 className="font-heading fw-bold text-navy mb-3" style={{ color: '#0A192F' }}>
               Pending QC Verification Queue ({pendingDeposits.length})
             </h6>
 
-            <div className="table-responsive">
-              <table className="table table-custom table-hover align-middle">
+            <div className="table-responsive rounded border">
+              <table className="table table-custom table-hover align-middle mb-0" style={{ minWidth: '420px' }}>
                 <thead>
                   <tr>
                     <th>Barcode</th>
