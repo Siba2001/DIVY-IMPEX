@@ -52,15 +52,7 @@ const Dashboard = () => {
   });
 
   const chartData = Object.values(dateWiseMap).sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  // Fallback demo chart data if data is sparse
-  const dateWiseData = chartData.length >= 3 ? chartData : [
-    { date: '01-Oct', received: 15, completed: 12, pending: 3 },
-    { date: '02-Oct', received: 25, completed: 18, pending: 7 },
-    { date: '03-Oct', received: 30, completed: 22, pending: 8 },
-    { date: '04-Oct', received: 20, completed: 15, pending: 5 },
-    { date: '05-Oct', received: 35, completed: 28, pending: 7 },
-  ];
+  const dateWiseData = chartData;
 
   // Company-wise distribution data
   const companyDataMap = {};
@@ -190,18 +182,26 @@ const Dashboard = () => {
               </div>
               <span className="badge bg-light text-dark border align-self-start align-self-sm-center">Daily Trend</span>
             </div>
-            <div style={{ width: '100%', height: 280 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dateWiseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="date" stroke="#64748B" fontSize={11} />
-                  <YAxis stroke="#64748B" fontSize={11} />
-                  <Tooltip contentStyle={{ backgroundColor: '#0A192F', color: '#fff', borderRadius: '8px' }} />
-                  <Legend />
-                  <Bar dataKey="received" name="Received" fill="#0284C7" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="completed" name="Completed" fill="#10B981" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div style={{ width: '100%', height: 280 }} className="d-flex align-items-center justify-content-center">
+              {dateWiseData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dateWiseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis dataKey="date" stroke="#64748B" fontSize={11} />
+                    <YAxis stroke="#64748B" fontSize={11} />
+                    <Tooltip contentStyle={{ backgroundColor: '#0A192F', color: '#fff', borderRadius: '8px' }} />
+                    <Legend />
+                    <Bar dataKey="received" name="Received" fill="#0284C7" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="completed" name="Completed" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-muted py-5">
+                  <Activity size={32} className="mb-2 text-secondary opacity-50" />
+                  <p className="mb-0 small fw-semibold">No inward trends yet</p>
+                  <small className="text-secondary">Charts will update once diamonds are received</small>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -218,25 +218,33 @@ const Dashboard = () => {
               </div>
             </div>
             <div style={{ width: '100%', height: 280 }} className="d-flex align-items-center justify-content-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={companyPieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {companyPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#0A192F', color: '#fff', borderRadius: '8px' }} />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
+              {companyPieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={companyPieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {companyPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: '#0A192F', color: '#fff', borderRadius: '8px' }} />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-muted py-5">
+                  <Building2 size={32} className="mb-2 text-secondary opacity-50" />
+                  <p className="mb-0 small fw-semibold">No company share data yet</p>
+                  <small className="text-secondary">Register companies and receive parcels</small>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -273,7 +281,14 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {companySummaries.map((comp) => (
+              {companySummaries.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-4 text-muted">
+                    No client companies found. Click "View All Companies" to register your first partner.
+                  </td>
+                </tr>
+              ) : (
+                companySummaries.map((comp) => (
                 <tr
                   key={comp.id}
                   style={{ cursor: 'pointer' }}
@@ -309,7 +324,7 @@ const Dashboard = () => {
                     </span>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

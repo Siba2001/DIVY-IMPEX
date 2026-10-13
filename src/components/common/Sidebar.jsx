@@ -35,10 +35,10 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
   const adminNavItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/companies', label: 'Companies', icon: Building2 },
+    { path: '/workers', label: 'Workers', icon: Users },
     { path: '/diamond-receiving', label: 'Diamond Receiving', icon: PackagePlus },
     { path: '/diamonds-list', label: 'Diamonds List', icon: Gem },
     { path: '/assignment', label: 'Worker Assignment', icon: UserCheck },
-    { path: '/workers', label: 'Workers', icon: Users },
     { path: '/deposit', label: 'Deposit & QC Verify', icon: ShieldCheck },
     { path: '/stock', label: 'Stock Overview', icon: Layers },
     { path: '/reports', label: 'Reports & Analytics', icon: FileBarChart2 },

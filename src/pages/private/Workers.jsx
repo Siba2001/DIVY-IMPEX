@@ -102,74 +102,84 @@ const Workers = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredWorkers.map((w) => {
-                const wDiamonds = diamonds.filter((d) => d.assignedWorkerId === w.id);
-                const totalAssigned = wDiamonds.length;
-                const inProgress = wDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
-                const completed = wDiamonds.filter((d) => ['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)).length;
-                const pending = wDiamonds.filter((d) => ['ASSIGNED', 'REWORK'].includes(d.status)).length;
+              {filteredWorkers.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className="text-center py-5 text-muted">
+                    <Users size={36} className="mb-2 text-secondary opacity-50 d-block mx-auto" />
+                    <p className="mb-1 fw-semibold">No artisans or workers enrolled yet</p>
+                    <small className="text-secondary">Click the "+ Add New Worker" button above to register your first artisan.</small>
+                  </td>
+                </tr>
+              ) : (
+                filteredWorkers.map((w) => {
+                  const wDiamonds = diamonds.filter((d) => d.assignedWorkerId === w.id);
+                  const totalAssigned = wDiamonds.length;
+                  const inProgress = wDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+                  const completed = wDiamonds.filter((d) => ['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)).length;
+                  const pending = wDiamonds.filter((d) => ['ASSIGNED', 'REWORK'].includes(d.status)).length;
 
-                return (
-                  <tr
-                    key={w.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/workers/${w.id}`)}
-                  >
-                    <td>
-                      <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
-                        {w.employeeId}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center text-nowrap">
-                        <div className="avatar text-warning rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#0A192F' }}>
-                          <HardHat size={16} />
+                  return (
+                    <tr
+                      key={w.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/workers/${w.id}`)}
+                    >
+                      <td>
+                        <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
+                          {w.employeeId}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center text-nowrap">
+                          <div className="avatar text-warning rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#0A192F' }}>
+                            <HardHat size={16} />
+                          </div>
+                          <span className="fw-bold" style={{ color: '#0A192F' }}>{w.name}</span>
                         </div>
-                        <span className="fw-bold" style={{ color: '#0A192F' }}>{w.name}</span>
-                      </div>
-                    </td>
-                    <td className="fw-medium text-dark text-nowrap">{w.department}</td>
-                    <td className="small text-muted text-nowrap">{w.phone}</td>
-                    <td className="fw-bold text-nowrap" style={{ color: '#0A192F' }}>{totalAssigned}</td>
-                    <td>
-                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
-                        {inProgress}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
-                        {completed}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>
-                        {pending}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge px-2.5 py-1.5 fw-bold ${w.status === 'ACTIVE' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle'}`}>
-                        {w.status}
-                      </span>
-                    </td>
-                    <td className="text-end text-nowrap" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="btn btn-sm btn-outline-primary me-1 rounded-circle p-1.5"
-                        onClick={() => navigate(`/workers/${w.id}`)}
-                        title="View Work History"
-                      >
-                        <Eye size={14} />
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-secondary rounded-circle p-1.5"
-                        onClick={(e) => handleOpenEdit(w, e)}
-                        title="Edit Worker Info"
-                      >
-                        <Edit size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="fw-medium text-dark text-nowrap">{w.department}</td>
+                      <td className="small text-muted text-nowrap">{w.phone}</td>
+                      <td className="fw-bold text-nowrap" style={{ color: '#0A192F' }}>{totalAssigned}</td>
+                      <td>
+                        <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
+                          {inProgress}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
+                          {completed}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>
+                          {pending}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge px-2.5 py-1.5 fw-bold ${w.status === 'ACTIVE' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle'}`}>
+                          {w.status}
+                        </span>
+                      </td>
+                      <td className="text-end text-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="btn btn-sm btn-outline-primary me-1 rounded-circle p-1.5"
+                          onClick={() => navigate(`/workers/${w.id}`)}
+                          title="View Work History"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-secondary rounded-circle p-1.5"
+                          onClick={(e) => handleOpenEdit(w, e)}
+                          title="Edit Worker Info"
+                        >
+                          <Edit size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

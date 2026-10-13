@@ -98,72 +98,82 @@ const Companies = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredCompanies.map((c) => {
-                const compDiamonds = diamonds.filter((d) => d.companyId === c.id);
-                const totalReceived = compDiamonds.length;
-                const completed = compDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
-                const inProduction = compDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
-                const pending = compDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
+              {filteredCompanies.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="text-center py-5 text-muted">
+                    <Building2 size={36} className="mb-2 text-secondary opacity-50 d-block mx-auto" />
+                    <p className="mb-1 fw-semibold">No companies registered yet</p>
+                    <small className="text-secondary">Click the "+ Add New Company" button above to create your first client company.</small>
+                  </td>
+                </tr>
+              ) : (
+                filteredCompanies.map((c) => {
+                  const compDiamonds = diamonds.filter((d) => d.companyId === c.id);
+                  const totalReceived = compDiamonds.length;
+                  const completed = compDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
+                  const inProduction = compDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
+                  const pending = compDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
 
-                return (
-                  <tr
-                    key={c.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/companies/${c.id}`)}
-                  >
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="p-2 rounded bg-light text-navy me-2 fw-bold" style={{ color: '#0A192F' }}>
-                          <Building2 size={18} />
+                  return (
+                    <tr
+                      key={c.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/companies/${c.id}`)}
+                    >
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <div className="p-2 rounded bg-light text-navy me-2 fw-bold" style={{ color: '#0A192F' }}>
+                            <Building2 size={18} />
+                          </div>
+                          <div>
+                            <span className="fw-bold text-navy d-block" style={{ color: '#0A192F' }}>{c.name}</span>
+                            <small className="text-muted">{c.email}</small>
+                          </div>
                         </div>
-                        <div>
-                          <span className="fw-bold text-navy d-block" style={{ color: '#0A192F' }}>{c.name}</span>
-                          <small className="text-muted">{c.email}</small>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
-                        {c.code}
-                      </span>
-                    </td>
-                    <td className="fw-medium text-dark">{c.contactPerson}</td>
-                    <td className="small text-muted">{c.phone}</td>
-                    <td className="fw-bold text-navy">{totalReceived}</td>
-                    <td>
-                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
-                        {pending}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
-                        {completed}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="badge px-2.5 py-1.5 fw-bold bg-success-subtle text-success border border-success-subtle">
-                        {c.status || 'ACTIVE'}
-                      </span>
-                    </td>
-                    <td className="text-end" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="btn btn-sm btn-outline-primary me-2 rounded-circle p-2"
-                        onClick={() => navigate(`/companies/${c.id}`)}
-                        title="View Details"
-                      >
-                        <Eye size={14} />
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-secondary rounded-circle p-2"
-                        onClick={(e) => handleOpenEditModal(c, e)}
-                        title="Edit Company"
-                      >
-                        <Edit size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td>
+                        <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
+                          {c.code}
+                        </span>
+                      </td>
+                      <td className="fw-medium text-dark">{c.contactPerson}</td>
+                      <td className="small text-muted">{c.phone}</td>
+                      <td className="fw-bold text-navy">{totalReceived}</td>
+                      <td>
+                        <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
+                          {pending}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
+                          {completed}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="badge px-2.5 py-1.5 fw-bold bg-success-subtle text-success border border-success-subtle">
+                          {c.status || 'ACTIVE'}
+                        </span>
+                      </td>
+                      <td className="text-end" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="btn btn-sm btn-outline-primary me-2 rounded-circle p-2"
+                          onClick={() => navigate(`/companies/${c.id}`)}
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-secondary rounded-circle p-2"
+                          onClick={(e) => handleOpenEditModal(c, e)}
+                          title="Edit Company"
+                        >
+                          <Edit size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

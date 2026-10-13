@@ -1,33 +1,76 @@
 // API Abstraction Service Layer for DIVY IMPEX
-// This layer abstracts data persistence so mock data can later be swapped out with
-// Google Apps Script endpoint calls or Spring Boot REST APIs without changing UI components.
+// Supports both Google Apps Script (Google Sheets backend) and local browser storage fallback.
 
 import { INITIAL_COMPANIES, INITIAL_WORKERS, INITIAL_DIAMONDS, INITIAL_HISTORIES } from '../data/mockData';
 
+// Clear legacy mock data keys from earlier sessions
+try {
+  ['divy_companies_v1', 'divy_workers_v1', 'divy_diamonds_v1', 'divy_histories_v1'].forEach((k) => {
+    localStorage.removeItem(k);
+  });
+} catch (e) {}
+
 const STORAGE_KEYS = {
-  COMPANIES: 'divy_companies_v1',
-  WORKERS: 'divy_workers_v1',
-  DIAMONDS: 'divy_diamonds_v1',
-  HISTORIES: 'divy_histories_v1',
+  COMPANIES: 'divy_companies_clean',
+  WORKERS: 'divy_workers_clean',
+  DIAMONDS: 'divy_diamonds_clean',
+  HISTORIES: 'divy_histories_clean',
 };
 
-// Helper: Initialize LocalStorage if empty
+const SCRIPT_URL = (import.meta.env.VITE_GOOGLE_SCRIPT_URL || '').trim();
+const isRemoteApiEnabled = Boolean(SCRIPT_URL && SCRIPT_URL.startsWith('http'));
+
+// Helper: Call Google Apps Script Web App Endpoint
+const callGas = async (action, data = null, method = 'POST') => {
+  if (method === 'GET') {
+    const url = new URL(SCRIPT_URL);
+    url.searchParams.set('action', action);
+    if (data && typeof data === 'object') {
+      Object.entries(data).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) {
+          url.searchParams.set(k, String(v));
+        }
+      });
+    }
+    const res = await fetch(url.toString(), { redirect: 'follow' });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Failed to fetch from Google Script');
+    return json.data;
+  } else {
+    // Send POST payload as text/plain to bypass browser CORS preflight OPTIONS request
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8',
+      },
+      body: JSON.stringify({ action, data }),
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Google Script request failed');
+    return json.data;
+  }
+};
+
+// Helper: Initialize LocalStorage if empty (clean empty state)
 const initializeStorage = () => {
   if (!localStorage.getItem(STORAGE_KEYS.COMPANIES)) {
-    localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(INITIAL_COMPANIES));
+    localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify([]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.WORKERS)) {
-    localStorage.setItem(STORAGE_KEYS.WORKERS, JSON.stringify(INITIAL_WORKERS));
+    localStorage.setItem(STORAGE_KEYS.WORKERS, JSON.stringify([]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.DIAMONDS)) {
-    localStorage.setItem(STORAGE_KEYS.DIAMONDS, JSON.stringify(INITIAL_DIAMONDS));
+    localStorage.setItem(STORAGE_KEYS.DIAMONDS, JSON.stringify([]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.HISTORIES)) {
-    localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify(INITIAL_HISTORIES));
+    localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify([]));
   }
 };
 
-initializeStorage();
+if (!isRemoteApiEnabled) {
+  initializeStorage();
+}
 
 const getItem = (key) => JSON.parse(localStorage.getItem(key) || '[]');
 const setItem = (key, data) => localStorage.setItem(key, JSON.stringify(data));
@@ -41,8 +84,27 @@ const getFormattedCurrentTime = () => {
 };
 
 export const apiService = {
+  isRemote: () => isRemoteApiEnabled,
+
+  // Combined initial load to minimize roundtrips to Google Script
+  getInitialData: async () => {
+    if (isRemoteApiEnabled) {
+      return callGas('getInitialData', null, 'GET');
+    }
+    return {
+      companies: getItem(STORAGE_KEYS.COMPANIES),
+      workers: getItem(STORAGE_KEYS.WORKERS),
+      diamonds: getItem(STORAGE_KEYS.DIAMONDS),
+      histories: getItem(STORAGE_KEYS.HISTORIES),
+    };
+  },
+
   // Reset demo data to default initial state
   resetDataToDefault: async () => {
+    if (isRemoteApiEnabled) {
+      // In remote mode, you can call seedInitialData if desired
+      return true;
+    }
     localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(INITIAL_COMPANIES));
     localStorage.setItem(STORAGE_KEYS.WORKERS, JSON.stringify(INITIAL_WORKERS));
     localStorage.setItem(STORAGE_KEYS.DIAMONDS, JSON.stringify(INITIAL_DIAMONDS));
@@ -50,17 +112,24 @@ export const apiService = {
     return true;
   },
 
-  // COMPANIES API
+  // ==================== COMPANIES API ====================
   getCompanies: async () => {
+    if (isRemoteApiEnabled) return callGas('getCompanies', null, 'GET');
     return getItem(STORAGE_KEYS.COMPANIES);
   },
 
   getCompanyById: async (id) => {
+    if (isRemoteApiEnabled) {
+      const companies = await callGas('getCompanies', null, 'GET');
+      return companies.find((c) => c.id === id) || null;
+    }
     const companies = getItem(STORAGE_KEYS.COMPANIES);
     return companies.find((c) => c.id === id) || null;
   },
 
   addCompany: async (companyData) => {
+    if (isRemoteApiEnabled) return callGas('addCompany', companyData);
+
     const companies = getItem(STORAGE_KEYS.COMPANIES);
     const newCompany = {
       id: `comp-${Date.now()}`,
@@ -73,6 +142,8 @@ export const apiService = {
   },
 
   updateCompany: async (id, companyData) => {
+    if (isRemoteApiEnabled) return callGas('updateCompany', { id, ...companyData });
+
     const companies = getItem(STORAGE_KEYS.COMPANIES);
     const index = companies.findIndex((c) => c.id === id);
     if (index !== -1) {
@@ -83,17 +154,24 @@ export const apiService = {
     throw new Error('Company not found');
   },
 
-  // WORKERS API
+  // ==================== WORKERS API ====================
   getWorkers: async () => {
+    if (isRemoteApiEnabled) return callGas('getWorkers', null, 'GET');
     return getItem(STORAGE_KEYS.WORKERS);
   },
 
   getWorkerById: async (id) => {
+    if (isRemoteApiEnabled) {
+      const workers = await callGas('getWorkers', null, 'GET');
+      return workers.find((w) => w.id === id) || null;
+    }
     const workers = getItem(STORAGE_KEYS.WORKERS);
     return workers.find((w) => w.id === id) || null;
   },
 
   addWorker: async (workerData) => {
+    if (isRemoteApiEnabled) return callGas('addWorker', workerData);
+
     const workers = getItem(STORAGE_KEYS.WORKERS);
     const newWorker = {
       id: `w-${Date.now()}`,
@@ -106,6 +184,8 @@ export const apiService = {
   },
 
   updateWorker: async (id, workerData) => {
+    if (isRemoteApiEnabled) return callGas('updateWorker', { id, ...workerData });
+
     const workers = getItem(STORAGE_KEYS.WORKERS);
     const index = workers.findIndex((w) => w.id === id);
     if (index !== -1) {
@@ -116,18 +196,27 @@ export const apiService = {
     throw new Error('Worker not found');
   },
 
-  // DIAMONDS API
+  // ==================== DIAMONDS API ====================
   getDiamonds: async () => {
+    if (isRemoteApiEnabled) return callGas('getDiamonds', null, 'GET');
     return getItem(STORAGE_KEYS.DIAMONDS);
   },
 
   getDiamondByBarcode: async (barcode) => {
+    const cleanBarcode = barcode.trim().toLowerCase();
+    if (isRemoteApiEnabled) {
+      const list = await callGas('getDiamonds', null, 'GET');
+      return list.find((d) => (d.barcode || '').toLowerCase() === cleanBarcode) || null;
+    }
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
-    return diamonds.find((d) => d.barcode.toLowerCase() === barcode.trim().toLowerCase()) || null;
+    return diamonds.find((d) => d.barcode.toLowerCase() === cleanBarcode) || null;
   },
 
-  // RECEIVE NEW BATCH OF DIAMONDS
   receiveDiamondsBatch: async ({ companyId, receivedDate, receivedBy, remarks, diamondsList }) => {
+    if (isRemoteApiEnabled) {
+      return callGas('receiveDiamondsBatch', { companyId, receivedDate, receivedBy, remarks, diamondsList });
+    }
+
     const companies = getItem(STORAGE_KEYS.COMPANIES);
     const company = companies.find((c) => c.id === companyId);
     if (!company) throw new Error('Invalid Company selected');
@@ -141,7 +230,6 @@ export const apiService = {
     for (const item of diamondsList) {
       const barcodeClean = item.barcode.trim().toUpperCase();
 
-      // Check unique barcode rule
       if (existingDiamonds.some((d) => d.barcode === barcodeClean)) {
         throw new Error(`Barcode ${barcodeClean} already exists in the system!`);
       }
@@ -172,7 +260,6 @@ export const apiService = {
       existingDiamonds.push(newDiamond);
       createdDiamonds.push(newDiamond);
 
-      // Log initial history
       histories.push({
         id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         diamondId: newDiamond.id,
@@ -191,8 +278,11 @@ export const apiService = {
     return createdDiamonds;
   },
 
-  // ASSIGN DIAMOND TO WORKER
   assignDiamond: async ({ barcode, workerId, assignedBy }) => {
+    if (isRemoteApiEnabled) {
+      return callGas('assignDiamond', { barcode, workerId, assignedBy });
+    }
+
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
     const workers = getItem(STORAGE_KEYS.WORKERS);
     const histories = getItem(STORAGE_KEYS.HISTORIES);
@@ -231,8 +321,11 @@ export const apiService = {
     return diamond;
   },
 
-  // WORKER ACTIONS
   startWork: async ({ barcode, workerId }) => {
+    if (isRemoteApiEnabled) {
+      return callGas('startWork', { barcode, workerId });
+    }
+
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
     const histories = getItem(STORAGE_KEYS.HISTORIES);
 
@@ -260,6 +353,10 @@ export const apiService = {
   },
 
   markWorkCompleted: async ({ barcode, workerName }) => {
+    if (isRemoteApiEnabled) {
+      return callGas('markWorkCompleted', { barcode, workerName });
+    }
+
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
     const histories = getItem(STORAGE_KEYS.HISTORIES);
 
@@ -290,6 +387,10 @@ export const apiService = {
   },
 
   depositDiamond: async ({ barcode, workerName }) => {
+    if (isRemoteApiEnabled) {
+      return callGas('depositDiamond', { barcode, workerName });
+    }
+
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
     const histories = getItem(STORAGE_KEYS.HISTORIES);
 
@@ -318,8 +419,11 @@ export const apiService = {
     return diamond;
   },
 
-  // SUPERVISOR DEPOSIT VERIFICATION
   verifyDiamond: async ({ barcode, actualWeight, isApproved, verifiedBy, remarks }) => {
+    if (isRemoteApiEnabled) {
+      return callGas('verifyDiamond', { barcode, actualWeight, isApproved, verifiedBy, remarks });
+    }
+
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
     const histories = getItem(STORAGE_KEYS.HISTORIES);
 
@@ -370,8 +474,11 @@ export const apiService = {
     return diamond;
   },
 
-  // DIAMOND HISTORY TIMELINE
   getDiamondHistory: async (diamondIdOrBarcode) => {
+    if (isRemoteApiEnabled) {
+      return callGas('getHistory', { diamondIdOrBarcode }, 'GET');
+    }
+
     const histories = getItem(STORAGE_KEYS.HISTORIES);
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
 

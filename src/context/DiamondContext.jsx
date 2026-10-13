@@ -20,14 +20,10 @@ export const DiamondProvider = ({ children }) => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [cData, wData, dData] = await Promise.all([
-        apiService.getCompanies(),
-        apiService.getWorkers(),
-        apiService.getDiamonds()
-      ]);
-      setCompanies(cData);
-      setWorkers(wData);
-      setDiamonds(dData);
+      const initial = await apiService.getInitialData();
+      setCompanies(initial.companies || []);
+      setWorkers(initial.workers || []);
+      setDiamonds(initial.diamonds || []);
     } catch (err) {
       console.error('Failed loading diamond management data', err);
       showToast('Error loading data', 'danger');
