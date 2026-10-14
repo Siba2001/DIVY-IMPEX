@@ -200,7 +200,7 @@ const Home = () => {
                   Heartful Diamonds: The Heart of Every Diamond
                 </h3>
                 <p className="small mb-0 text-slate-300" style={{ color: '#E2E8F0' }}>
-                  DIVY IMPEX • All Fancy Cut Manufacturer • Surat Facility
+                  DIVY IMPEX • Surat Facility
                 </p>
               </div>
             </div>
@@ -382,7 +382,7 @@ const Home = () => {
                 <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom border-secondary border-opacity-25">
                   <div>
                     <span className="badge bg-warning text-navy font-heading fw-bold px-3 py-1.5 rounded-pill mb-1">Surat Headquarters</span>
-                    <h4 className="font-heading fw-bold gold-gradient-text mb-0">DIVY IMPEX - All Fancy Cut Manufacturer</h4>
+                    <h4 className="font-heading fw-bold gold-gradient-text mb-0">DIVY IMPEX</h4>
                   </div>
                 </div>
 

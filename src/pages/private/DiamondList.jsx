@@ -4,7 +4,7 @@ import PrivateLayout from '../../layouts/PrivateLayout';
 import Badge from '../../components/common/Badge';
 import DiamondTimelineModal from '../../components/timeline/DiamondTimelineModal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Gem, Search, Filter, Eye, ArrowRight, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Gem, Search, Filter, Eye, ArrowRight, RefreshCw, CheckCircle2, Plus } from 'lucide-react';
 
 const DiamondList = () => {
   const { diamonds, companies, workers } = useDiamonds();
@@ -174,18 +174,21 @@ const DiamondList = () => {
 
       {/* Master Inventory Table */}
       <div className="card card-custom p-3 p-sm-4 shadow-sm">
-        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
           <div>
-            <h6 className="font-heading fw-bold text-navy mb-1 mb-sm-0" style={{ color: '#0A192F' }}>
+            <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
               Diamond Records List ({filteredDiamonds.length})
             </h6>
-            <small className="text-muted d-block d-sm-inline">Showing all matched diamonds across stages</small>
+            <small className="text-muted" style={{ fontSize: '0.8rem' }}>Showing all matched diamonds across stages</small>
           </div>
           <button
-            className="btn btn-navy rounded-pill px-3 px-sm-4 py-2 font-heading fw-semibold text-nowrap w-100 w-sm-auto text-center"
+            className="btn btn-navy-gold rounded-pill px-3 py-1.5 font-heading text-nowrap d-inline-flex align-items-center"
+            style={{ fontSize: '0.8rem', gap: '6px' }}
             onClick={() => navigate('/diamond-receiving')}
+            title="Receive New Diamonds"
           >
-            + Receive New Diamonds
+            <Plus size={14} strokeWidth={2.5} style={{ color: '#D4AF37' }} />
+            <span>Receive New Diamonds</span>
           </button>
         </div>
 

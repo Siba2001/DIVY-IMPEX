@@ -37,6 +37,16 @@ graph LR
 2. A new tab will open with the script editor.
 3. Rename the project from *Untitled project* to **`DIVY-IMPEX-BACKEND`** (top left).
 
+> [!WARNING]
+> **Getting "Sorry, unable to open the file at present" error?**
+> This happens because you are logged into multiple Google accounts in the same browser (`authuser=3` in the URL).
+> **Quick Fix (100% Works)**:
+> 1. Open an **Incognito / Private Window** (`Ctrl + Shift + N`).
+> 2. Sign in **only** to the Google account where you created the spreadsheet.
+> 3. Open your Google Sheet and click **Extensions > Apps Script** — it will open smoothly!
+> 
+> *Alternative*: Use a separate Google Chrome Profile or sign out of other Google accounts.
+
 ---
 
 ### Step 3: Paste the Backend Code
@@ -51,6 +61,18 @@ graph LR
 1. In the toolbar at the top of the Apps Script editor, look for the function dropdown (next to "Debug").
 2. Select **`setupDatabase`**.
 3. Click **Run**.
+
+> [!TIP]
+> **Getting `TypeError: Cannot read properties of null (reading 'getSheetByName')`?**
+> This happens if you opened Apps Script directly at `script.google.com` (standalone script) rather than from inside a Google Sheet.
+> **Quick Fix**:
+> 1. Copy your Google Sheet URL from your browser address bar (e.g. `https://docs.google.com/spreadsheets/d/.../edit`).
+> 2. In `Code.gs` at line 28, paste your URL:
+>    ```javascript
+>    var SPREADSHEET_URL_OR_ID = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit';
+>    ```
+> 3. Save (<kbd>Ctrl</kbd> + <kbd>S</kbd>) and click **Run** again!
+
 4. **Authorize permissions**:
    - Google will show an *"Authorization Required"* dialog.
    - Click **Review permissions**.

@@ -133,6 +133,24 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   color: #FFFFFF;
 }
 
+.btn-navy-gold {
+  background: var(--primary-navy);
+  color: #FFFFFF;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(10, 25, 47, 0.15);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-navy-gold:hover {
+  background: var(--primary-navy-light);
+  border-color: #D4AF37;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(10, 25, 47, 0.25);
+}
+
 .text-navy {
   color: #0A192F !important;
 }
@@ -180,27 +198,43 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   width: 72px;
 }
 
+.sidebar-section-title {
+  padding: 0.75rem 1.15rem 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.sidebar-section-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0.5rem 0.75rem;
+}
+
 .sidebar .nav-link {
   color: #94A3B8;
   display: flex;
   align-items: center;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.925rem;
+  padding: 0.62rem 1rem;
+  font-size: 0.88rem;
   font-weight: 500;
   border-radius: 8px;
-  margin: 0.15rem 0.75rem;
-  transition: all 0.2s ease;
+  margin: 0.12rem 0.65rem;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sidebar .nav-link:hover {
   color: #F8FAFC;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar .nav-link.active {
-  color: #FFFFFF;
-  background: rgba(212, 175, 55, 0.15);
-  border-left: 3px solid var(--accent-gold);
+  color: #F5D466;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.08);
 }
 
 .sidebar .nav-link svg {
@@ -210,6 +244,32 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 
 .sidebar.collapsed .nav-link svg {
   margin-right: 0;
+}
+
+/* Live & Active Nav Pill Badges */
+.nav-badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  padding: 0.12rem 0.45rem;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.nav-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #38BDF8;
+  box-shadow: 0 0 6px #38BDF8;
+  display: inline-block;
 }
 
 .main-wrapper {

@@ -15,9 +15,6 @@ const Footer = () => {
             <p className="text-secondary small me-lg-4">
               All fancy cut manufacturer. Pioneering excellence in rough and polished diamond contract manufacturing under the leadership of Owner <strong>Chandrakant Vaghasiya</strong>.
             </p>
-            <div className="d-flex flex-wrap gap-2 text-gold">
-              <span className="badge bg-navy border border-warning text-warning p-2">All Fancy Cut Manufacturer</span>
-            </div>
           </div>
 
           <div className="col-lg-2 col-md-4">

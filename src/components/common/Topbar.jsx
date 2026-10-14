@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useDiamonds } from '../../context/DiamondContext';
-import { Search, Bell, LogOut, RefreshCw, User, ShieldCheck, Menu } from 'lucide-react';
+import { Search, Bell, LogOut, User, ShieldCheck, Menu } from 'lucide-react';
 
 const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
   const { user, logout } = useAuth();
-  const { resetAllData } = useDiamonds();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -34,12 +32,9 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
         >
           <Menu size={22} style={{ color: '#0A192F' }} />
         </button>
-        <h4 className="font-heading fw-bold text-dark mb-0 fs-6 fs-sm-5 text-truncate" style={{ color: '#0A192F', maxWidth: '160px' }}>
+        <h4 className="font-heading fw-bold text-dark mb-0 fs-6 fs-sm-5 text-truncate" style={{ color: '#0A192F', maxWidth: '340px' }}>
           {pageTitle || 'Management System'}
         </h4>
-        <span className="badge bg-light text-navy border fw-medium small ms-2 d-none d-xl-inline-block flex-shrink-0">
-          Surat Manufacturing Hub
-        </span>
       </div>
 
       <div className="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
@@ -54,16 +49,6 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </form>
-
-        {/* Demo Data Reset Button */}
-        <button
-          className="btn btn-sm btn-outline-secondary d-flex align-items-center rounded-pill px-2 py-1"
-          onClick={resetAllData}
-          title="Restore Mock Data to default initial state"
-        >
-          <RefreshCw size={13} className="me-1" />
-          <span className="small d-none d-md-inline">Reset Demo</span>
-        </button>
 
         {/* Notifications Dropdown */}
         <div className="position-relative">

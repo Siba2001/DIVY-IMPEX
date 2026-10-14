@@ -32,24 +32,44 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
 
   const isAdminOrSupervisor = user?.role === 'admin' || user?.role === 'supervisor';
 
-  const adminNavItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/companies', label: 'Companies', icon: Building2 },
-    { path: '/workers', label: 'Workers', icon: Users },
-    { path: '/diamond-receiving', label: 'Diamond Receiving', icon: PackagePlus },
-    { path: '/diamonds-list', label: 'Diamonds List', icon: Gem },
-    { path: '/assignment', label: 'Worker Assignment', icon: UserCheck },
-    { path: '/deposit', label: 'Deposit & QC Verify', icon: ShieldCheck },
-    { path: '/stock', label: 'Stock Overview', icon: Layers },
-    { path: '/reports', label: 'Reports & Analytics', icon: FileBarChart2 },
+  const adminNavGroups = [
+    {
+      title: 'CORE',
+      items: [
+        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/companies', label: 'Companies', icon: Building2 },
+        { path: '/workers', label: 'Workers', icon: Users },
+      ]
+    },
+    {
+      title: 'OPERATIONS',
+      items: [
+        { path: '/diamond-receiving', label: 'Diamond Receiving', icon: PackagePlus },
+        { path: '/diamonds-list', label: 'Diamonds List', icon: Gem },
+        { path: '/assignment', label: 'Worker Assignment', icon: UserCheck },
+        { path: '/deposit', label: 'Deposit & QC Verify', icon: ShieldCheck },
+      ]
+    },
+    {
+      title: 'INVENTORY',
+      items: [
+        { path: '/stock', label: 'Stock Overview', icon: Layers },
+        { path: '/reports', label: 'Reports & Analytics', icon: FileBarChart2 },
+      ]
+    }
   ];
 
-  const workerNavItems = [
-    { path: '/worker-dashboard', label: 'My Assigned Work', icon: HardHat },
-    { path: '/diamonds-list', label: 'Search Diamonds', icon: Gem },
+  const workerNavGroups = [
+    {
+      title: 'CORE',
+      items: [
+        { path: '/worker-dashboard', label: 'My Assigned Work', icon: HardHat },
+        { path: '/diamonds-list', label: 'Search Diamonds', icon: Gem },
+      ]
+    }
   ];
 
-  const navItems = isAdminOrSupervisor ? adminNavItems : workerNavItems;
+  const navGroups = isAdminOrSupervisor ? adminNavGroups : workerNavGroups;
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}>
@@ -72,7 +92,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
           </button>
         ) : (
           <>
-            <div className="d-flex align-items-center overflow-hidden me-2">
+            <div className="d-flex align-items-center me-1">
               <DivyLogo iconSize={36} textClassName="fs-6" />
             </div>
             <div className="d-flex align-items-center flex-shrink-0">
@@ -98,23 +118,34 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
       </div>
 
       {/* Navigation */}
-      <div className="py-3 flex-grow-1 overflow-y-auto">
+      <div className="py-2 flex-grow-1 overflow-y-auto">
         <nav className="nav flex-column">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={closeMobileSidebar}
-                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                title={isCollapsed ? item.label : undefined}
-              >
-                <Icon size={18} />
-                {(!isCollapsed || isMobileOpen) && <span>{item.label}</span>}
-              </NavLink>
-            );
-          })}
+          {navGroups.map((group, gIdx) => (
+            <div key={group.title || gIdx} className="mb-2">
+              {(!isCollapsed || isMobileOpen) ? (
+                <div className="sidebar-section-title">
+                  {group.title}
+                </div>
+              ) : (
+                gIdx > 0 && <div className="sidebar-section-divider" />
+              )}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={closeMobileSidebar}
+                    className={({ isActive }) => `nav-link d-flex align-items-center ${isActive ? 'active' : ''}`}
+                    title={isCollapsed ? item.label : undefined}
+                  >
+                    <Icon size={18} className="flex-shrink-0" />
+                    {(!isCollapsed || isMobileOpen) && <span className="text-truncate">{item.label}</span>}
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
 

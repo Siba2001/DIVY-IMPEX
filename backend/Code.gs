@@ -18,6 +18,38 @@
  * 9. Paste the URL into your project's .env file as VITE_GOOGLE_SCRIPT_URL.
  */
 
+// =========================================================================
+// OPTIONAL GOOGLE SPREADSHEET URL OR ID:
+// - If this script was opened from inside Google Sheets (Extensions > Apps Script),
+//   leave this blank ('').
+// - If this script is standalone (created directly at script.google.com), paste your
+//   Google Sheet URL or ID below:
+//   Example: var SPREADSHEET_URL_OR_ID = 'https://docs.google.com/spreadsheets/d/1abc.../edit';
+// =========================================================================
+var SPREADSHEET_URL_OR_ID = '';
+
+function getSpreadsheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (ss) return ss;
+
+  if (typeof SPREADSHEET_URL_OR_ID !== 'undefined' && SPREADSHEET_URL_OR_ID.trim() !== '') {
+    var raw = SPREADSHEET_URL_OR_ID.trim();
+    if (raw.indexOf('http') === 0) {
+      return SpreadsheetApp.openByUrl(raw);
+    } else {
+      return SpreadsheetApp.openById(raw);
+    }
+  }
+
+  throw new Error(
+    "No linked Google Spreadsheet found!\n\n" +
+    "HOW TO FIX:\n" +
+    "1. Open your Google Sheet, click Extensions > Apps Script, and paste this code.\n" +
+    "OR\n" +
+    "2. Copy your Google Sheet URL and paste it into SPREADSHEET_URL_OR_ID at line 28 of this script."
+  );
+}
+
 // SHEET NAMES
 var SHEETS = {
   COMPANIES: 'Companies',
@@ -44,7 +76,7 @@ var HEADERS = {
  * Run this function once from Apps Script editor to setup sheets and headers.
  */
 function setupDatabase() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
 
   Object.keys(HEADERS).forEach(function (sheetName) {
     var sheet = ss.getSheetByName(sheetName);
@@ -202,7 +234,7 @@ function doPost(e) {
 // ==========================================
 
 function getTableData(sheetName) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) return [];
 
@@ -232,7 +264,7 @@ function getTableData(sheetName) {
 }
 
 function appendRowToSheet(sheetName, obj) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) throw new Error('Sheet ' + sheetName + ' not found');
 
@@ -248,7 +280,7 @@ function appendRowToSheet(sheetName, obj) {
 }
 
 function updateRowInSheet(sheetName, idField, idValue, updateObj) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) throw new Error('Sheet ' + sheetName + ' not found');
 
