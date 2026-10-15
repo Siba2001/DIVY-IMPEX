@@ -115,12 +115,22 @@ function doGet(e) {
 
     switch (action) {
       case 'getInitialData':
+        var cache = CacheService.getScriptCache();
+        var cached = cache.get('divy_initial_data_v1');
+        if (cached) {
+          response = JSON.parse(cached);
+          break;
+        }
+        var ss = getSpreadsheet();
         response = {
-          companies: getTableData(SHEETS.COMPANIES),
-          workers: getTableData(SHEETS.WORKERS),
-          diamonds: getTableData(SHEETS.DIAMONDS),
-          histories: getTableData(SHEETS.HISTORIES)
+          companies: getTableData(SHEETS.COMPANIES, ss),
+          workers: getTableData(SHEETS.WORKERS, ss),
+          diamonds: getTableData(SHEETS.DIAMONDS, ss),
+          histories: getTableData(SHEETS.HISTORIES, ss)
         };
+        try {
+          cache.put('divy_initial_data_v1', JSON.stringify(response), 300);
+        } catch (ce) {}
         break;
 
       case 'getCompanies':
@@ -163,6 +173,11 @@ function doPost(e) {
   }
 
   try {
+    // Invalidate initial data cache on any mutation
+    try {
+      CacheService.getScriptCache().remove('divy_initial_data_v1');
+    } catch (ce) {}
+
     var body = {};
     if (e && e.postData && e.postData.contents) {
       body = JSON.parse(e.postData.contents);
@@ -181,12 +196,20 @@ function doPost(e) {
         result = updateCompany(data.id, data);
         break;
 
+      case 'deleteCompany':
+        result = deleteCompany(data.id || data);
+        break;
+
       case 'addWorker':
         result = addWorker(data);
         break;
 
       case 'updateWorker':
         result = updateWorker(data.id, data);
+        break;
+
+      case 'deleteWorker':
+        result = deleteWorker(data.id || data);
         break;
 
       case 'receiveDiamondsBatch':
@@ -233,16 +256,14 @@ function doPost(e) {
 // DATABASE HELPER FUNCTIONS
 // ==========================================
 
-function getTableData(sheetName) {
-  var ss = getSpreadsheet();
+function getTableData(sheetName, ss) {
+  if (!ss) ss = getSpreadsheet();
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) return [];
 
-  var lastRow = sheet.getLastRow();
-  var lastCol = sheet.getLastColumn();
-  if (lastRow <= 1) return [];
+  var values = sheet.getDataRange().getValues();
+  if (!values || values.length <= 1) return [];
 
-  var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
   var headers = values[0];
   var rows = [];
 
@@ -314,6 +335,35 @@ function updateRowInSheet(sheetName, idField, idValue, updateObj) {
   return true;
 }
 
+function deleteRowFromSheet(sheetName, idField, idValue) {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) throw new Error('Sheet ' + sheetName + ' not found');
+
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastRow <= 1) return false;
+
+  var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  var headers = values[0];
+  var idColIdx = headers.indexOf(idField);
+
+  if (idColIdx === -1) throw new Error('Column ' + idField + ' not found');
+
+  var targetRowIdx = -1;
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][idColIdx]) === String(idValue)) {
+      targetRowIdx = i + 1;
+      break;
+    }
+  }
+
+  if (targetRowIdx === -1) return false;
+
+  sheet.deleteRow(targetRowIdx);
+  return true;
+}
+
 function getFormattedTime() {
   var now = new Date();
   var tz = Session.getScriptTimeZone();
@@ -328,10 +378,25 @@ function getFormattedTime() {
 // ==========================================
 
 function addCompany(data) {
+  var code = (data.code || '').trim().toUpperCase();
+  var name = (data.name || '').trim();
+
+  // Deduplication check: return existing company if code or name matches
+  if (code) {
+    var existingCompanies = getTableData(SHEETS.COMPANIES);
+    for (var i = 0; i < existingCompanies.length; i++) {
+      var c = existingCompanies[i];
+      if ((c.code && c.code.toUpperCase() === code) || (c.name && c.name.toLowerCase() === name.toLowerCase())) {
+        Logger.log('Company already exists: ' + code + '. Skipping duplicate insertion.');
+        return c;
+      }
+    }
+  }
+
   var newCompany = {
     id: data.id || ('comp-' + Date.now()),
-    name: data.name || '',
-    code: (data.code || '').toUpperCase(),
+    name: name,
+    code: code,
     contactPerson: data.contactPerson || '',
     phone: data.phone || '',
     email: data.email || '',
@@ -348,13 +413,35 @@ function updateCompany(id, data) {
   return data;
 }
 
+function deleteCompany(id) {
+  var deleted = deleteRowFromSheet(SHEETS.COMPANIES, 'id', id);
+  return { id: id, deleted: deleted };
+}
+
 function addWorker(data) {
+  var employeeId = (data.employeeId || '').trim();
+  var name = (data.name || '').trim();
+  var phone = (data.phone || '').trim();
+
+  // Deduplication check: return existing worker if employeeId or (phone + name) matches
+  var existingWorkers = getTableData(SHEETS.WORKERS);
+  for (var i = 0; i < existingWorkers.length; i++) {
+    var w = existingWorkers[i];
+    if (
+      (employeeId && w.employeeId && w.employeeId.toUpperCase() === employeeId.toUpperCase()) ||
+      (phone && w.phone && w.phone === phone && w.name.toLowerCase() === name.toLowerCase())
+    ) {
+      Logger.log('Worker already exists: ' + employeeId + '. Skipping duplicate insertion.');
+      return w;
+    }
+  }
+
   var newWorker = {
     id: data.id || ('w-' + Date.now()),
-    employeeId: data.employeeId || ('EMP-' + Date.now().toString().slice(-3)),
-    name: data.name || '',
+    employeeId: employeeId || ('EMP-' + Date.now().toString().slice(-3)),
+    name: name,
     department: data.department || 'General',
-    phone: data.phone || '',
+    phone: phone,
     status: data.status || 'ACTIVE'
   };
 
@@ -365,6 +452,11 @@ function addWorker(data) {
 function updateWorker(id, data) {
   updateRowInSheet(SHEETS.WORKERS, 'id', id, data);
   return data;
+}
+
+function deleteWorker(id) {
+  var deleted = deleteRowFromSheet(SHEETS.WORKERS, 'id', id);
+  return { id: id, deleted: deleted };
 }
 
 function receiveDiamondsBatch(data) {

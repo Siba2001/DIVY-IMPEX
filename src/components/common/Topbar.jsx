@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Bell, LogOut, User, ShieldCheck, Menu } from 'lucide-react';
+import { useDiamonds } from '../../context/DiamondContext';
+import { Search, Bell, LogOut, User, Menu, Cloud, Zap } from 'lucide-react';
 
 const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
   const { user, logout } = useAuth();
+  const { syncMode, toggleSyncMode } = useDiamonds();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -49,6 +51,35 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </form>
+
+        {/* Sync Mode Toggle Button (Turbo Local vs Cloud Sync) */}
+        <button
+          onClick={toggleSyncMode}
+          className={`btn btn-sm d-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill fw-semibold border shadow-none ${
+            syncMode === 'cloud'
+              ? 'btn-outline-success bg-success bg-opacity-10 text-success border-success'
+              : 'btn-outline-warning bg-warning bg-opacity-10 text-dark border-warning'
+          }`}
+          style={{ fontSize: '0.75rem', transition: 'all 0.2s ease', cursor: 'pointer' }}
+          title={
+            syncMode === 'cloud'
+              ? 'Active: Google Sheets Cloud Sync. Click to switch to ⚡ Turbo Local Mode (Instant 0ms demo)'
+              : 'Active: ⚡ Turbo Local Mode (Instant 0ms). Click to switch to ☁️ Google Sheets Cloud Sync'
+          }
+        >
+          {syncMode === 'cloud' ? (
+            <>
+              <Cloud size={14} className="text-success" />
+              <span className="d-none d-sm-inline">Cloud Sync</span>
+              <span className="badge rounded-pill bg-success p-1 ms-0.5" style={{ width: '6px', height: '6px' }}></span>
+            </>
+          ) : (
+            <>
+              <Zap size={14} className="text-warning fill-warning" />
+              <span className="d-none d-sm-inline">⚡ Turbo Local</span>
+            </>
+          )}
+        </button>
 
         {/* Notifications Dropdown */}
         <div className="position-relative">

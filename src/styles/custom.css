@@ -298,38 +298,16 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   flex-grow: 1;
 }
 
-/* Custom Cards & Interactive Micro-Animations */
+/* Custom Cards Baseline */
 .card-custom, .card {
   position: relative;
   background: #FFFFFF;
   border: 1px solid var(--border-color);
   border-radius: 14px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
-  will-change: transform, box-shadow;
 }
 
-.card-custom:hover, .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 32px -8px rgba(10, 25, 47, 0.12), 0 4px 16px -2px rgba(212, 175, 55, 0.2) !important;
-  border-color: rgba(212, 175, 55, 0.45) !important;
-}
-
-/* Card Icon Micro-Animation on Hover */
-.card-custom:hover .bg-navy svg,
-.card:hover .bg-navy svg,
-.stat-kpi-card:hover svg {
-  transform: scale(1.15) rotate(-3deg);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.card-custom .bg-navy svg,
-.card .bg-navy svg,
-.stat-kpi-card svg {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Stat KPI Cards Animation */
+/* Stat KPI Cards Baseline */
 .stat-kpi-card {
   position: relative;
   overflow: hidden;
@@ -337,22 +315,85 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   border: 1px solid var(--border-color);
   background: #FFFFFF;
   padding: 0.75rem 1rem;
+}
+
+/* =========================================================================
+   ANIMATIONS POLICY:
+   Moving / lift animations are ONLY applied on the Dashboard and Stock overview page (.page-animated).
+   On all Form pages, Report pages, and Data tables (.page-static), elements remain solid & static.
+   ========================================================================= */
+
+/* Moving Animations - ONLY ON DASHBOARD & STOCK OVERVIEW */
+.page-animated .card-custom,
+.page-animated .card {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
+  will-change: transform, box-shadow;
+}
+
+.page-animated .card-custom:hover,
+.page-animated .card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px -8px rgba(10, 25, 47, 0.12), 0 4px 16px -2px rgba(212, 175, 55, 0.2) !important;
+  border-color: rgba(212, 175, 55, 0.45) !important;
+}
+
+.page-animated .stat-kpi-card {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
   will-change: transform, box-shadow;
 }
 
-.stat-kpi-card:hover {
+.page-animated .stat-kpi-card:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 10px 24px -4px rgba(10, 25, 47, 0.1) !important;
   border-color: rgba(212, 175, 55, 0.45) !important;
 }
 
-/* Watermark Number Hover Glow */
-.card-custom:hover .display-6.text-muted,
-.card:hover .display-6.text-muted {
+.page-animated .card-custom:hover .bg-navy svg,
+.page-animated .card:hover .bg-navy svg,
+.page-animated .stat-kpi-card:hover svg {
+  transform: scale(1.15) rotate(-3deg);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-animated .card-custom .bg-navy svg,
+.page-animated .card .bg-navy svg,
+.page-animated .stat-kpi-card svg {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-animated .card-custom:hover .display-6.text-muted,
+.page-animated .card:hover .display-6.text-muted {
   color: var(--accent-gold) !important;
   opacity: 0.55 !important;
   transition: all 0.3s ease;
+}
+
+/* Disabled Moving Animations for All Form Pages, Report Pages, and Modals */
+.page-static .card-custom,
+.page-static .card,
+.page-static .stat-kpi-card,
+.modal-dialog,
+.modal-content {
+  transform: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.page-static .card-custom:hover,
+.page-static .card:hover,
+.page-static .stat-kpi-card:hover {
+  transform: none !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+}
+
+.page-static .btn-gold:hover,
+.page-static .btn-navy-gold:hover {
+  transform: none !important;
+}
+
+.page-static .card-custom:hover .bg-navy svg,
+.page-static .card:hover .bg-navy svg,
+.page-static .stat-kpi-card:hover svg {
+  transform: none !important;
 }
 
 .stat-kpi-card::after {

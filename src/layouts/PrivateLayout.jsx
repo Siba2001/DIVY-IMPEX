@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/common/Sidebar';
 import Topbar from '../components/common/Topbar';
@@ -7,12 +7,16 @@ import Toast from '../components/common/Toast';
 
 const PrivateLayout = ({ children, title }) => {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  // Moving animations strictly enabled ONLY for Dashboard and Stock Overview pages
+  const isAnimatedPage = location.pathname === '/dashboard' || location.pathname === '/stock';
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -27,7 +31,7 @@ const PrivateLayout = ({ children, title }) => {
   };
 
   return (
-    <div className="app-container position-relative">
+    <div className={`app-container position-relative ${isAnimatedPage ? 'page-animated' : 'page-static'}`}>
       {/* Backdrop overlay for mobile drawer */}
       <div
         className={`sidebar-backdrop ${isMobileOpen ? 'show' : ''}`}
@@ -42,7 +46,7 @@ const PrivateLayout = ({ children, title }) => {
       />
       <div className="main-wrapper">
         <Topbar pageTitle={title} toggleMobileSidebar={toggleMobileSidebar} />
-        <main className="content-body">{children}</main>
+        <main className={`content-body ${isAnimatedPage ? 'page-animated' : 'page-static'}`}>{children}</main>
       </div>
       <Toast />
     </div>

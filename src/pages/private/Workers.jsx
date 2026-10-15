@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Modal from '../../components/common/Modal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Users, Plus, Eye, Edit, Phone, HardHat, Search } from 'lucide-react';
+import { Users, Plus, Eye, Edit, Phone, HardHat, Search, Trash2 } from 'lucide-react';
 
 const Workers = () => {
-  const { workers, diamonds, addWorker, updateWorker } = useDiamonds();
+  const { workers, diamonds, addWorker, updateWorker, deleteWorker } = useDiamonds();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,6 +21,8 @@ const Workers = () => {
     status: 'ACTIVE'
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleOpenAdd = () => {
     setEditingWorker(null);
     setFormData({
@@ -30,6 +32,7 @@ const Workers = () => {
       phone: '',
       status: 'ACTIVE'
     });
+    setIsSubmitting(false);
     setIsModalOpen(true);
   };
 
@@ -43,19 +46,38 @@ const Workers = () => {
       phone: w.phone,
       status: w.status
     });
+    setIsSubmitting(false);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.employeeId) return;
-
-    if (editingWorker) {
-      await updateWorker(editingWorker.id, formData);
-    } else {
-      await addWorker(formData);
+  const handleDeleteWorker = async (w, e) => {
+    e.stopPropagation();
+    const assignedDiamonds = diamonds.filter((d) => d.assignedWorkerId === w.id);
+    const msg = assignedDiamonds.length > 0
+      ? `Artisan "${w.name}" (${w.employeeId}) currently has ${assignedDiamonds.length} diamonds assigned. Are you sure you want to delete this artisan?`
+      : `Are you sure you want to delete artisan worker "${w.name}" (${w.employeeId})?`;
+    if (window.confirm(msg)) {
+      await deleteWorker(w.id);
     }
-    setIsModalOpen(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.employeeId || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      if (editingWorker) {
+        updateWorker(editingWorker.id, formData);
+      } else {
+        addWorker(formData);
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Failed to save worker', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredWorkers = workers.filter(
@@ -175,6 +197,13 @@ const Workers = () => {
                         >
                           <Edit size={14} />
                         </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger ms-2 rounded-circle p-1.5"
+                          onClick={(e) => handleDeleteWorker(w, e)}
+                          title="Delete Worker"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -257,11 +286,27 @@ const Workers = () => {
           </div>
 
           <div className="d-flex justify-content-end gap-2">
-            <button type="button" className="btn btn-light border px-4" onClick={() => setIsModalOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-light border px-4"
+              onClick={() => setIsModalOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-gold px-4 fw-bold">
-              {editingWorker ? 'Save Changes' : 'Register Worker'}
+            <button
+              type="submit"
+              className="btn btn-gold px-4 fw-bold d-inline-flex align-items-center"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {editingWorker ? 'Saving...' : 'Registering...'}
+                </>
+              ) : (
+                editingWorker ? 'Save Changes' : 'Register Worker'
+              )}
             </button>
           </div>
         </form>

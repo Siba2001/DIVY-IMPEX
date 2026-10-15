@@ -16,6 +16,7 @@ const DiamondReceiving = () => {
   const [receivedBy, setReceivedBy] = useState('Admin Supervisor');
   const [batchRemarks, setBatchRemarks] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [diamondsList, setDiamondsList] = useState([
     { barcode: '', size: '1.00 ct', weight: '', remarks: '' },
@@ -101,6 +102,8 @@ const DiamondReceiving = () => {
     e.preventDefault();
     setError('');
 
+    if (isSubmitting) return;
+
     if (!companyId) {
       setError('Please select a client company.');
       return;
@@ -123,6 +126,7 @@ const DiamondReceiving = () => {
       }
     }
 
+    setIsSubmitting(true);
     try {
       await receiveBatch({
         companyId,
@@ -135,6 +139,8 @@ const DiamondReceiving = () => {
       navigate('/diamonds-list');
     } catch (err) {
       setError(err.message || 'Failed to process receiving batch');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -333,11 +339,25 @@ const DiamondReceiving = () => {
               type="button"
               className="btn btn-light border px-4 rounded-pill w-100 w-sm-auto mb-1 mb-sm-0"
               onClick={() => navigate('/diamonds-list')}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-gold px-4 px-sm-5 rounded-pill font-heading fw-bold shadow-sm w-100 w-sm-auto">
-              <CheckCircle2 size={18} className="me-2" /> Save & Register Diamond Batch
+            <button
+              type="submit"
+              className="btn btn-gold px-4 px-sm-5 rounded-pill font-heading fw-bold shadow-sm w-100 w-sm-auto d-inline-flex align-items-center justify-content-center"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Processing Batch...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={18} className="me-2" /> Save & Register Diamond Batch
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -5,12 +5,12 @@ import StatCard from '../../components/common/StatCard';
 import Badge from '../../components/common/Badge';
 import DiamondTimelineModal from '../../components/timeline/DiamondTimelineModal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { ArrowLeft, HardHat, Gem, CheckCircle2, Clock, Activity, Eye } from 'lucide-react';
+import { ArrowLeft, HardHat, Gem, CheckCircle2, Clock, Activity, Eye, Trash2 } from 'lucide-react';
 
 const WorkerDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { workers, diamonds } = useDiamonds();
+  const { workers, diamonds, deleteWorker } = useDiamonds();
 
   const [selectedDiamond, setSelectedDiamond] = useState(null);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
@@ -41,29 +41,48 @@ const WorkerDetails = () => {
     setIsTimelineOpen(true);
   };
 
+  const handleDeleteWorker = async () => {
+    const msg = totalAssigned > 0
+      ? `Artisan "${worker.name}" (${worker.employeeId}) has ${totalAssigned} diamonds in history. Are you sure you want to delete this artisan?`
+      : `Are you sure you want to delete artisan worker "${worker.name}" (${worker.employeeId})?`;
+    if (window.confirm(msg)) {
+      await deleteWorker(worker.id);
+      navigate('/workers');
+    }
+  };
+
   return (
     <PrivateLayout title={`Artisan Profile - ${worker.name}`}>
       {/* Header Info */}
       <div className="card card-custom p-4 mb-4 shadow-sm">
-        <div className="d-flex align-items-center">
-          <button className="btn btn-light border rounded-circle p-2 me-3" onClick={() => navigate('/workers')}>
-            <ArrowLeft size={18} />
-          </button>
-          <div className="avatar bg-navy text-warning rounded-circle me-3 fw-bold fs-4 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px', backgroundColor: '#0A192F' }}>
-            <HardHat size={24} />
-          </div>
-          <div>
-            <div className="d-flex align-items-center gap-2">
-              <h4 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
-                {worker.name}
-              </h4>
-              <span className="badge bg-light text-navy border font-mono">{worker.employeeId}</span>
-              <span className="badge bg-success-subtle text-success border border-success-subtle ms-1">{worker.status}</span>
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+          <div className="d-flex align-items-center">
+            <button className="btn btn-light border rounded-circle p-2 me-3" onClick={() => navigate('/workers')}>
+              <ArrowLeft size={18} />
+            </button>
+            <div className="avatar bg-navy text-warning rounded-circle me-3 fw-bold fs-4 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px', backgroundColor: '#0A192F' }}>
+              <HardHat size={24} />
             </div>
-            <p className="text-muted small mb-0 mt-1">
-              Department: <strong>{worker.department}</strong> | Phone: {worker.phone}
-            </p>
+            <div>
+              <div className="d-flex align-items-center gap-2">
+                <h4 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
+                  {worker.name}
+                </h4>
+                <span className="badge bg-light text-navy border font-mono">{worker.employeeId}</span>
+                <span className="badge bg-success-subtle text-success border border-success-subtle ms-1">{worker.status}</span>
+              </div>
+              <p className="text-muted small mb-0 mt-1">
+                Department: <strong>{worker.department}</strong> | Phone: {worker.phone}
+              </p>
+            </div>
           </div>
+          <button
+            className="btn btn-outline-danger rounded-pill px-3 py-1.5 font-heading fw-semibold text-nowrap d-inline-flex align-items-center align-self-start align-self-sm-center"
+            onClick={handleDeleteWorker}
+            title="Delete Worker"
+          >
+            <Trash2 size={15} className="me-1.5" /> Delete Artisan
+          </button>
         </div>
       </div>
 

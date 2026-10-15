@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Modal from '../../components/common/Modal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Building2, Plus, Eye, Edit, Phone, Mail, MapPin, Search } from 'lucide-react';
+import { Building2, Plus, Eye, Edit, Phone, Mail, MapPin, Search, Trash2 } from 'lucide-react';
 
 const Companies = () => {
-  const { companies, diamonds, addCompany, updateCompany } = useDiamonds();
+  const { companies, diamonds, addCompany, updateCompany, deleteCompany } = useDiamonds();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,9 +22,12 @@ const Companies = () => {
     address: ''
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleOpenAddModal = () => {
     setEditingCompany(null);
     setFormData({ name: '', code: '', contactPerson: '', phone: '', email: '', address: '' });
+    setIsSubmitting(false);
     setIsModalOpen(true);
   };
 
@@ -39,19 +42,38 @@ const Companies = () => {
       email: comp.email,
       address: comp.address || ''
     });
+    setIsSubmitting(false);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.code) return;
-
-    if (editingCompany) {
-      await updateCompany(editingCompany.id, formData);
-    } else {
-      await addCompany(formData);
+  const handleDeleteCompany = async (comp, e) => {
+    e.stopPropagation();
+    const associatedDiamonds = diamonds.filter((d) => d.companyId === comp.id);
+    const msg = associatedDiamonds.length > 0
+      ? `Company "${comp.name}" (${comp.code}) has ${associatedDiamonds.length} diamonds associated with it. Are you sure you want to delete this company?`
+      : `Are you sure you want to delete "${comp.name}" (${comp.code})?`;
+    if (window.confirm(msg)) {
+      await deleteCompany(comp.id);
     }
-    setIsModalOpen(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.code || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      if (editingCompany) {
+        updateCompany(editingCompany.id, formData);
+      } else {
+        addCompany(formData);
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Failed to save company', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredCompanies = companies.filter(
@@ -169,6 +191,13 @@ const Companies = () => {
                         >
                           <Edit size={14} />
                         </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger ms-2 rounded-circle p-2"
+                          onClick={(e) => handleDeleteCompany(c, e)}
+                          title="Delete Company"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -257,11 +286,27 @@ const Companies = () => {
           </div>
 
           <div className="d-flex justify-content-end gap-2">
-            <button type="button" className="btn btn-light border px-4" onClick={() => setIsModalOpen(false)}>
+            <button
+              type="button"
+              className="btn btn-light border px-4"
+              onClick={() => setIsModalOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn-gold px-4 fw-bold">
-              {editingCompany ? 'Save Changes' : 'Create Company'}
+            <button
+              type="submit"
+              className="btn btn-gold px-4 fw-bold d-inline-flex align-items-center"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {editingCompany ? 'Saving...' : 'Creating...'}
+                </>
+              ) : (
+                editingCompany ? 'Save Changes' : 'Create Company'
+              )}
             </button>
           </div>
         </form>

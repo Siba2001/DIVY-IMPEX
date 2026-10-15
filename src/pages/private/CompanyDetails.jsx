@@ -15,13 +15,14 @@ import {
   Search,
   Calendar,
   Eye,
-  Filter
+  Filter,
+  Trash2
 } from 'lucide-react';
 
 const CompanyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { companies, diamonds } = useDiamonds();
+  const { companies, diamonds, deleteCompany } = useDiamonds();
 
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -103,6 +104,16 @@ const CompanyDetails = () => {
     setIsTimelineOpen(true);
   };
 
+  const handleDeleteCompany = async () => {
+    const msg = companyDiamonds.length > 0
+      ? `Company "${company.name}" (${company.code}) has ${companyDiamonds.length} diamonds registered. Are you sure you want to delete this company?`
+      : `Are you sure you want to delete "${company.name}" (${company.code})?`;
+    if (window.confirm(msg)) {
+      await deleteCompany(company.id);
+      navigate('/companies');
+    }
+  };
+
   return (
     <PrivateLayout title={`Company Profile - ${company.name}`}>
       {/* Header Info Banner */}
@@ -124,12 +135,21 @@ const CompanyDetails = () => {
               </p>
             </div>
           </div>
-          <button
-            className="btn btn-navy rounded-pill px-4"
-            onClick={() => navigate(`/diamond-receiving?company=${company.id}`)}
-          >
-            + Receive New Diamond Batch
-          </button>
+          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
+            <button
+              className="btn btn-navy rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap"
+              onClick={() => navigate(`/diamond-receiving?company=${company.id}`)}
+            >
+              + Receive New Diamond Batch
+            </button>
+            <button
+              className="btn btn-outline-danger rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center"
+              onClick={handleDeleteCompany}
+              title="Delete Company"
+            >
+              <Trash2 size={15} className="me-1.5" /> Delete Company
+            </button>
+          </div>
         </div>
       </div>
 
