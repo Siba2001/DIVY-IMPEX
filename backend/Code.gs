@@ -19,14 +19,31 @@
  */
 
 // =========================================================================
-// OPTIONAL GOOGLE SPREADSHEET URL OR ID:
-// - If this script was opened from inside Google Sheets (Extensions > Apps Script),
-//   leave this blank ('').
-// - If this script is standalone (created directly at script.google.com), paste your
-//   Google Sheet URL or ID below:
-//   Example: var SPREADSHEET_URL_OR_ID = 'https://docs.google.com/spreadsheets/d/1abc.../edit';
+// GOOGLE SPREADSHEET URL OR ID:
+// Standalone script configuration pointing to DIVY IMPEX Database
+var SPREADSHEET_URL_OR_ID = 'https://docs.google.com/spreadsheets/d/1Q_OPmxKK-hNNhZuxxtJJvYAISqKwx1YeUxqxpyCklE4/edit';
+
 // =========================================================================
-var SPREADSHEET_URL_OR_ID = '';
+// SECURITY TOKEN AUTHENTICATION
+// Protects API endpoints against unauthorized access & formula injection
+// =========================================================================
+var API_SECRET = 'DIVY_SECURE_TOKEN_2026';
+
+function isAuthorized(e, body) {
+  if (!API_SECRET) return true;
+  var token = (e && e.parameter && e.parameter.key) || (body && body.key);
+  return token === API_SECRET;
+}
+
+function sanitizeCell(val) {
+  if (typeof val === 'string' && val.length > 0) {
+    var c = val.charAt(0);
+    if (c === '=' || c === '+' || c === '-' || c === '@') {
+      return "'" + val; // Prevent formula injection attacks
+    }
+  }
+  return val;
+}
 
 function getSpreadsheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -34,10 +51,16 @@ function getSpreadsheet() {
 
   if (typeof SPREADSHEET_URL_OR_ID !== 'undefined' && SPREADSHEET_URL_OR_ID.trim() !== '') {
     var raw = SPREADSHEET_URL_OR_ID.trim();
-    if (raw.indexOf('http') === 0) {
-      return SpreadsheetApp.openByUrl(raw);
-    } else {
-      return SpreadsheetApp.openById(raw);
+    // Extract ID if a full URL or any tab URL (with ?gid=...) was pasted
+    var match = raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    var sheetId = match ? match[1] : raw;
+    try {
+      return SpreadsheetApp.openById(sheetId);
+    } catch (e) {
+      if (raw.indexOf('http') === 0) {
+        return SpreadsheetApp.openByUrl(raw);
+      }
+      throw e;
     }
   }
 
@@ -46,7 +69,7 @@ function getSpreadsheet() {
     "HOW TO FIX:\n" +
     "1. Open your Google Sheet, click Extensions > Apps Script, and paste this code.\n" +
     "OR\n" +
-    "2. Copy your Google Sheet URL and paste it into SPREADSHEET_URL_OR_ID at line 28 of this script."
+    "2. Copy your Google Sheet URL and paste it into SPREADSHEET_URL_OR_ID at line 25 of this script."
   );
 }
 
@@ -63,8 +86,8 @@ var HEADERS = {
   Companies: ['id', 'name', 'code', 'contactPerson', 'phone', 'email', 'status', 'address'],
   Workers: ['id', 'employeeId', 'name', 'department', 'phone', 'status'],
   Diamonds: [
-    'id', 'barcode', 'companyId', 'companyCode', 'companyName',
-    'size', 'weight', 'actualWeight', 'receivedDate', 'receivedBy',
+    'id', 'barcode', 'roughCutNo', 'companyId', 'companyCode', 'companyName',
+    'shape', 'size', 'weight', 'scaleWeight', 'targetWeight', 'actualWeight', 'receivedDate', 'receivedBy',
     'assignedWorkerId', 'assignedWorkerName', 'assignedDate',
     'status', 'completedDate', 'completedBy', 'depositedDate',
     'verifiedDate', 'verifiedBy', 'remarks'
@@ -110,6 +133,10 @@ function setupDatabase() {
  */
 function doGet(e) {
   try {
+    if (!isAuthorized(e, null)) {
+      return createJsonResponse({ success: false, error: 'Unauthorized: Invalid or missing API security key.' });
+    }
+
     var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : 'getInitialData';
     var response;
 
@@ -173,15 +200,19 @@ function doPost(e) {
   }
 
   try {
-    // Invalidate initial data cache on any mutation
-    try {
-      CacheService.getScriptCache().remove('divy_initial_data_v1');
-    } catch (ce) {}
-
     var body = {};
     if (e && e.postData && e.postData.contents) {
       body = JSON.parse(e.postData.contents);
     }
+
+    if (!isAuthorized(e, body)) {
+      return createJsonResponse({ success: false, error: 'Unauthorized: Invalid or missing API security key.' });
+    }
+
+    // Invalidate initial data cache on any mutation
+    try {
+      CacheService.getScriptCache().remove('divy_initial_data_v1');
+    } catch (ce) {}
 
     var action = body.action;
     var data = body.data || body;
@@ -236,6 +267,10 @@ function doPost(e) {
         result = verifyDiamond(data);
         break;
 
+      case 'submitDiamondsToCompany':
+        result = submitDiamondsToCompany(data);
+        break;
+
       case 'seedInitialData':
         result = seedInitialData(data);
         break;
@@ -272,9 +307,16 @@ function getTableData(sheetName, ss) {
     for (var j = 0; j < headers.length; j++) {
       var header = headers[j];
       var cellVal = values[i][j];
-      // Normalize dates or null values
+      // Normalize dates, times, or null values
       if (cellVal instanceof Date) {
-        cellVal = Utilities.formatDate(cellVal, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+        var year = cellVal.getFullYear();
+        var hName = String(header || '').toLowerCase();
+        // Google Sheets stores time-only values as Dec 30 1899. If year is 1899/1900 or header is time, format as time!
+        if (year <= 1900 || hName.indexOf('time') !== -1) {
+          cellVal = Utilities.formatDate(cellVal, Session.getScriptTimeZone(), 'hh:mm a');
+        } else {
+          cellVal = Utilities.formatDate(cellVal, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+        }
       }
       rowObj[header] = (cellVal === '' || cellVal === undefined) ? null : cellVal;
     }
@@ -289,11 +331,14 @@ function appendRowToSheet(sheetName, obj) {
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) throw new Error('Sheet ' + sheetName + ' not found');
 
-  var headers = HEADERS[sheetName] || sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var lastCol = sheet.getLastColumn();
+  var sheetHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : null;
+  var headers = (sheetHeaders && sheetHeaders.length > 0 && sheetHeaders[0]) ? sheetHeaders : (HEADERS[sheetName] || []);
   var rowValues = [];
 
   for (var i = 0; i < headers.length; i++) {
     var val = obj[headers[i]];
+    val = sanitizeCell(val);
     rowValues.push(val !== undefined && val !== null ? val : '');
   }
 
@@ -378,30 +423,32 @@ function getFormattedTime() {
 // ==========================================
 
 function addCompany(data) {
-  var code = (data.code || '').trim().toUpperCase();
-  var name = (data.name || '').trim();
+  var code = String(data.code || '').trim().toUpperCase();
+  var name = String(data.name || '').trim();
 
   // Deduplication check: return existing company if code or name matches
   if (code) {
     var existingCompanies = getTableData(SHEETS.COMPANIES);
     for (var i = 0; i < existingCompanies.length; i++) {
       var c = existingCompanies[i];
-      if ((c.code && c.code.toUpperCase() === code) || (c.name && c.name.toLowerCase() === name.toLowerCase())) {
+      if ((c.code && String(c.code).toUpperCase() === code) || (c.name && String(c.name).toLowerCase() === name.toLowerCase())) {
         Logger.log('Company already exists: ' + code + '. Skipping duplicate insertion.');
         return c;
       }
     }
   }
 
+  var cleanPhone = String(data.phone || '').replace(/\D/g, '').slice(0, 10);
+
   var newCompany = {
     id: data.id || ('comp-' + Date.now()),
     name: name,
     code: code,
-    contactPerson: data.contactPerson || '',
-    phone: data.phone || '',
-    email: data.email || '',
+    contactPerson: data.contactPerson ? String(data.contactPerson) : '',
+    phone: cleanPhone,
+    email: data.email ? String(data.email).trim() : '',
     status: data.status || 'ACTIVE',
-    address: data.address || ''
+    address: data.address ? String(data.address).trim() : ''
   };
 
   appendRowToSheet(SHEETS.COMPANIES, newCompany);
@@ -409,8 +456,12 @@ function addCompany(data) {
 }
 
 function updateCompany(id, data) {
-  updateRowInSheet(SHEETS.COMPANIES, 'id', id, data);
-  return data;
+  var updateData = { ...data };
+  if (updateData.phone !== undefined) {
+    updateData.phone = String(updateData.phone || '').replace(/\D/g, '').slice(0, 10);
+  }
+  updateRowInSheet(SHEETS.COMPANIES, 'id', id, updateData);
+  return updateData;
 }
 
 function deleteCompany(id) {
@@ -419,17 +470,17 @@ function deleteCompany(id) {
 }
 
 function addWorker(data) {
-  var employeeId = (data.employeeId || '').trim();
-  var name = (data.name || '').trim();
-  var phone = (data.phone || '').trim();
+  var employeeId = String(data.employeeId || '').trim();
+  var name = String(data.name || '').trim();
+  var phone = String(data.phone || '').replace(/\D/g, '').slice(0, 10);
 
   // Deduplication check: return existing worker if employeeId or (phone + name) matches
   var existingWorkers = getTableData(SHEETS.WORKERS);
   for (var i = 0; i < existingWorkers.length; i++) {
     var w = existingWorkers[i];
     if (
-      (employeeId && w.employeeId && w.employeeId.toUpperCase() === employeeId.toUpperCase()) ||
-      (phone && w.phone && w.phone === phone && w.name.toLowerCase() === name.toLowerCase())
+      (employeeId && w.employeeId && String(w.employeeId).toUpperCase() === employeeId.toUpperCase()) ||
+      (phone && w.phone && String(w.phone) === phone && String(w.name || '').toLowerCase() === name.toLowerCase())
     ) {
       Logger.log('Worker already exists: ' + employeeId + '. Skipping duplicate insertion.');
       return w;
@@ -440,7 +491,7 @@ function addWorker(data) {
     id: data.id || ('w-' + Date.now()),
     employeeId: employeeId || ('EMP-' + Date.now().toString().slice(-3)),
     name: name,
-    department: data.department || 'General',
+    department: data.department ? String(data.department) : 'General',
     phone: phone,
     status: data.status || 'ACTIVE'
   };
@@ -450,8 +501,12 @@ function addWorker(data) {
 }
 
 function updateWorker(id, data) {
-  updateRowInSheet(SHEETS.WORKERS, 'id', id, data);
-  return data;
+  var updateData = { ...data };
+  if (updateData.phone !== undefined) {
+    updateData.phone = String(updateData.phone || '').replace(/\D/g, '').slice(0, 10);
+  }
+  updateRowInSheet(SHEETS.WORKERS, 'id', id, updateData);
+  return updateData;
 }
 
 function deleteWorker(id) {
@@ -493,14 +548,21 @@ function receiveDiamondsBatch(data) {
       throw new Error('Barcode ' + barcode + ' already exists!');
     }
 
+    var shapeVal = item.shape ? String(item.shape).trim() : 'Emperal';
+    var roughCutVal = item.roughCutNo ? String(item.roughCutNo).trim() : '';
+
     var newDiamond = {
       id: 'dia-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       barcode: barcode,
+      roughCutNo: roughCutVal,
       companyId: company.id,
       companyCode: company.code,
       companyName: company.name,
-      size: item.size || '1.0 ct',
+      shape: shapeVal,
+      size: shapeVal || item.size || '-',
       weight: parseFloat(item.weight) || 0,
+      scaleWeight: item.scaleWeight ? (parseFloat(item.scaleWeight) || '') : (parseFloat(item.weight) || 0),
+      targetWeight: item.targetWeight ? (parseFloat(item.targetWeight) || '') : '',
       actualWeight: '',
       receivedDate: data.receivedDate || timeInfo.isoDate,
       receivedBy: receivedBy,
@@ -521,6 +583,11 @@ function receiveDiamondsBatch(data) {
     existingBarcodes[barcode] = true;
 
     // Log History
+    var weightDetail = 'Kacha Wt: ' + newDiamond.weight + ' ct';
+    if (newDiamond.targetWeight) weightDetail += ', Teyar Wt: ' + newDiamond.targetWeight + ' ct';
+    if (roughCutVal) weightDetail += ', Rough No: ' + roughCutVal;
+    if (shapeVal) weightDetail += ', Shape: ' + shapeVal;
+
     appendRowToSheet(SHEETS.HISTORIES, {
       id: 'hist-' + Date.now() + '-' + k,
       diamondId: newDiamond.id,
@@ -529,7 +596,7 @@ function receiveDiamondsBatch(data) {
       performedBy: receivedBy,
       date: timeInfo.dateStr,
       time: timeInfo.timeStr,
-      remarks: 'Received from ' + company.name + '. Weight: ' + newDiamond.weight + ' ct'
+      remarks: 'Received from ' + company.name + '. ' + weightDetail + (item.remarks ? ' [' + item.remarks + ']' : '')
     });
   }
 
@@ -691,6 +758,34 @@ function verifyDiamond(data) {
   });
 
   return updateData;
+}
+
+function submitDiamondsToCompany(data) {
+  var barcodes = (data.barcodes || []).map(function (b) { return String(b).trim().toUpperCase(); });
+  var timeInfo = getFormattedTime();
+  var challanNo = data.challanNo || ('DC-' + Date.now());
+  var receiver = data.receiverName || 'Company Representative';
+  var company = data.companyName || 'Client Company';
+
+  barcodes.forEach(function (bc) {
+    updateRowInSheet(SHEETS.DIAMONDS, 'barcode', bc, {
+      status: 'RETURNED',
+      remarks: 'Returned to ' + company + ' under Challan #' + challanNo
+    });
+
+    appendRowToSheet(SHEETS.HISTORIES, {
+      id: 'hist-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      diamondId: '',
+      barcode: bc,
+      action: 'Submitted to Company',
+      performedBy: data.dispatchedBy || 'Dispatch Supervisor',
+      date: timeInfo.dateStr,
+      time: timeInfo.timeStr,
+      remarks: 'Returned under Challan #' + challanNo + '. Handed over to: ' + receiver
+    });
+  });
+
+  return { success: true, count: barcodes.length, challanNo: challanNo };
 }
 
 function getDiamondHistory(query) {

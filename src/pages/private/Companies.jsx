@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Modal from '../../components/common/Modal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Building2, Plus, Eye, Edit, Phone, Mail, MapPin, Search, Trash2 } from 'lucide-react';
+import { Building2, Plus, Eye, Edit, Phone, Mail, MapPin, Search, Trash2, AlertCircle } from 'lucide-react';
 
 const Companies = () => {
   const { companies, diamonds, addCompany, updateCompany, deleteCompany } = useDiamonds();
@@ -22,11 +22,52 @@ const Companies = () => {
     address: ''
   });
 
+  const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = (data) => {
+    const errs = {};
+    const name = String(data.name || '').trim();
+    if (!name) {
+      errs.name = 'Company Name is required.';
+    } else if (name.length < 2) {
+      errs.name = 'Company Name must be at least 2 characters.';
+    }
+
+    const code = String(data.code || '').trim().toUpperCase();
+    if (!code) {
+      errs.code = 'Company Code is required.';
+    } else if (!/^[A-Z0-9_-]{2,10}$/.test(code)) {
+      errs.code = 'Code must be 2 to 10 characters (letters & numbers only).';
+    } else {
+      // Check duplicate code
+      const duplicate = companies.find(
+        (c) => c.code && String(c.code).toUpperCase() === code && c.id !== editingCompany?.id
+      );
+      if (duplicate) {
+        errs.code = `Company Code "${code}" is already in use by "${duplicate.name}".`;
+      }
+    }
+
+    const phone = String(data.phone || '').trim();
+    if (!phone) {
+      errs.phone = 'Mobile Phone Number is required.';
+    } else if (!/^[0-9]{10}$/.test(phone)) {
+      errs.phone = 'Mobile number must be exactly 10 digits (digits only).';
+    }
+
+    const email = String(data.email || '').trim();
+    if (email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      errs.email = 'Please enter a valid email address (e.g. name@company.com).';
+    }
+
+    return errs;
+  };
 
   const handleOpenAddModal = () => {
     setEditingCompany(null);
     setFormData({ name: '', code: '', contactPerson: '', phone: '', email: '', address: '' });
+    setFormErrors({});
     setIsSubmitting(false);
     setIsModalOpen(true);
   };
@@ -35,13 +76,14 @@ const Companies = () => {
     e.stopPropagation();
     setEditingCompany(comp);
     setFormData({
-      name: comp.name,
-      code: comp.code,
-      contactPerson: comp.contactPerson,
-      phone: comp.phone,
-      email: comp.email,
+      name: comp.name || '',
+      code: comp.code || '',
+      contactPerson: comp.contactPerson || '',
+      phone: comp.phone ? String(comp.phone) : '',
+      email: comp.email || '',
       address: comp.address || ''
     });
+    setFormErrors({});
     setIsSubmitting(false);
     setIsModalOpen(true);
   };
@@ -57,20 +99,36 @@ const Companies = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.code || isSubmitting) return;
+    const errors = validateForm(formData);
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0 || isSubmitting) {
+      return;
+    }
 
     setIsSubmitting(true);
     try {
+      const cleanData = {
+        ...formData,
+        name: formData.name.trim(),
+        code: String(formData.code).trim().toUpperCase(),
+        contactPerson: formData.contactPerson.trim(),
+        phone: String(formData.phone).trim(),
+        email: formData.email.trim(),
+        address: formData.address.trim()
+      };
+
       if (editingCompany) {
-        updateCompany(editingCompany.id, formData);
+        await updateCompany(editingCompany.id, cleanData);
       } else {
-        addCompany(formData);
+        await addCompany(cleanData);
       }
       setIsModalOpen(false);
     } catch (err) {
       console.error('Failed to save company', err);
+      setFormErrors({ submit: err.message || 'Failed to save company.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -78,9 +136,9 @@ const Companies = () => {
 
   const filteredCompanies = companies.filter(
     (c) =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
+      String(c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(c.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(c.contactPerson || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -215,37 +273,53 @@ const Companies = () => {
         title={editingCompany ? 'Edit Client Company' : 'Add New Diamond Client Company'}
         size="md"
       >
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
+          {formErrors.submit && (
+            <div className="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center">
+              <AlertCircle size={16} className="me-2 flex-shrink-0" />
+              <span>{formErrors.submit}</span>
+            </div>
+          )}
+
           <div className="mb-3">
-            <label className="form-label">Company Name *</label>
+            <label className="form-label fw-semibold">Company Name <span className="text-danger">*</span></label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${formErrors.name ? 'is-invalid' : ''}`}
               placeholder="e.g. KGK Diamonds"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (formErrors.name) setFormErrors({ ...formErrors, name: null });
+              }}
             />
+            {formErrors.name && <div className="invalid-feedback d-block">{formErrors.name}</div>}
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Company Code (Short Tag) *</label>
+            <label className="form-label fw-semibold">Company Code (Short Tag) <span className="text-danger">*</span></label>
             <input
               type="text"
-              className="form-control text-uppercase"
-              placeholder="e.g. KGK"
+              className={`form-control text-uppercase font-mono ${formErrors.code ? 'is-invalid' : ''}`}
+              placeholder="e.g. KGK or 101"
+              maxLength={10}
               value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-              required
+              onChange={(e) => {
+                const val = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 10);
+                setFormData({ ...formData, code: val });
+                if (formErrors.code) setFormErrors({ ...formErrors, code: null });
+              }}
             />
+            {formErrors.code && <div className="invalid-feedback d-block">{formErrors.code}</div>}
+            <small className="text-muted d-block mt-1">Short identifier used in barcodes and tracking (letters & numbers only).</small>
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Contact Person</label>
+            <label className="form-label fw-semibold">Contact Person</label>
             <input
               type="text"
               className="form-control"
-              placeholder="Manager Name"
+              placeholder="Manager or Owner Name"
               value={formData.contactPerson}
               onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
             />
@@ -253,29 +327,44 @@ const Companies = () => {
 
           <div className="row g-3 mb-3">
             <div className="col-md-6">
-              <label className="form-label">Phone Number</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="+91 98250 00000"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
+              <label className="form-label fw-semibold">Mobile Phone Number <span className="text-danger">*</span></label>
+              <div className="input-group">
+                <span className="input-group-text bg-light text-muted font-mono">+91</span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  className={`form-control font-mono ${formErrors.phone ? 'is-invalid' : ''}`}
+                  placeholder="10-digit number"
+                  value={formData.phone}
+                  onChange={(e) => {
+                    const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData({ ...formData, phone: onlyDigits });
+                    if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
+                  }}
+                />
+              </div>
+              {formErrors.phone && <div className="invalid-feedback d-block">{formErrors.phone}</div>}
+              <small className="text-muted d-block mt-1">Only numbers allowed (strictly 10 digits).</small>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Email Address</label>
+              <label className="form-label fw-semibold">Email Address</label>
               <input
                 type="email"
-                className="form-control"
+                className={`form-control ${formErrors.email ? 'is-invalid' : ''}`}
                 placeholder="contact@company.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  if (formErrors.email) setFormErrors({ ...formErrors, email: null });
+                }}
               />
+              {formErrors.email && <div className="invalid-feedback d-block">{formErrors.email}</div>}
             </div>
           </div>
 
           <div className="mb-4">
-            <label className="form-label">Address / Bourse Location</label>
+            <label className="form-label fw-semibold">Address / Bourse Location</label>
             <textarea
               className="form-control"
               rows="2"

@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   Scale,
   Barcode,
-  History
+  History,
+  ShieldAlert
 } from 'lucide-react';
 
 const DepositVerification = () => {
@@ -24,7 +25,14 @@ const DepositVerification = () => {
   const [scannedDiamond, setScannedDiamond] = useState(() => {
     const q = searchParams.get('barcode');
     if (q) {
-      return diamonds.find((d) => d.barcode.toLowerCase() === q.toLowerCase()) || null;
+      const found = diamonds.find((d) => String(d.barcode || '').toLowerCase() === q.toLowerCase());
+      if (
+        found &&
+        (found.assignedWorkerId || (found.assignedWorkerName && found.assignedWorkerName.toLowerCase() !== 'unassigned')) &&
+        found.status !== 'RECEIVED'
+      ) {
+        return found;
+      }
     }
     return null;
   });
@@ -45,16 +53,37 @@ const DepositVerification = () => {
     }
 
     const matched = diamonds.find(
-      (d) => d.barcode.toLowerCase() === inputBarcode.trim().toLowerCase()
+      (d) => String(d.barcode || '').toLowerCase() === inputBarcode.trim().toLowerCase()
     );
 
-    if (matched) {
-      setScannedDiamond(matched);
-      setActualWeight(matched.actualWeight ? String(matched.actualWeight) : String((matched.weight - 0.015).toFixed(3)));
-    } else {
+    if (!matched) {
       setScannedDiamond(null);
-      setError(`No diamond found with barcode: "${inputBarcode}"`);
+      setError(`No diamond record found with barcode: "${inputBarcode}"`);
+      return;
     }
+
+    // Business Rule Check: Only diamonds assigned to a worker can be verified in QC
+    const isWorkerAssigned = Boolean(
+      matched.assignedWorkerId ||
+      (matched.assignedWorkerName && matched.assignedWorkerName.toLowerCase() !== 'unassigned')
+    );
+
+    if (!isWorkerAssigned || matched.status === 'RECEIVED') {
+      setScannedDiamond(null);
+      setError(
+        `Barcode "${matched.barcode}" has NOT been assigned to any artisan worker yet (Status: ${matched.status}). Only diamonds that have been assigned to a worker can be verified in QC.`
+      );
+      return;
+    }
+
+    if (matched.status === 'COMPLETED' || matched.status === 'RETURNED') {
+      setScannedDiamond(null);
+      setError(`Diamond "${matched.barcode}" has already been verified (Status: ${matched.status}).`);
+      return;
+    }
+
+    setScannedDiamond(matched);
+    setActualWeight(matched.actualWeight ? String(matched.actualWeight) : String((matched.weight - 0.015).toFixed(3)));
   };
 
   const origW = scannedDiamond ? parseFloat(scannedDiamond.weight) : 0;
@@ -68,8 +97,9 @@ const DepositVerification = () => {
 
   const handleConfirmVerification = async (isApproved) => {
     if (!scannedDiamond) return;
-    if (!actualWeight || isNaN(parseFloat(actualWeight))) {
-      setError('Please enter valid actual scale carat weight.');
+    const weightVal = parseFloat(actualWeight);
+    if (!actualWeight || isNaN(weightVal) || weightVal <= 0) {
+      setError('Please enter a valid positive carat weight from scale (e.g. 0.485 ct).');
       return;
     }
 
@@ -131,6 +161,17 @@ const DepositVerification = () => {
               </div>
             )}
 
+            {/* Business Rule Banner */}
+            <div className="p-2.5 px-3 bg-light rounded-2 border mb-3 d-flex align-items-center justify-content-between">
+              <small className="text-secondary">
+                <ShieldAlert size={14} className="me-1.5 text-warning" />
+                <strong>Workflow Rule:</strong> Only diamonds assigned to an artisan worker can be looked up and verified here.
+              </small>
+              <span className="badge bg-white text-navy border ms-2" style={{ fontSize: '0.7rem' }}>
+                Enforced
+              </span>
+            </div>
+
             {/* Barcode Search Box */}
             <form onSubmit={handleScanOrSearch} className="mb-4">
               <label className="form-label font-heading fw-bold">1. Enter or Scan Barcode</label>
@@ -170,8 +211,8 @@ const DepositVerification = () => {
                     <span className="fw-bold text-dark">{scannedDiamond.companyName} ({scannedDiamond.companyCode})</span>
                   </div>
                   <div className="col-6 col-md-6">
-                    <span className="text-muted small d-block">Diamond Cut / Size</span>
-                    <span className="fw-semibold text-dark">{scannedDiamond.size}</span>
+                    <span className="text-muted small d-block">Diamond Shape</span>
+                    <span className="fw-semibold text-dark">{scannedDiamond.shape || scannedDiamond.size}</span>
                   </div>
                   <div className="col-6 col-md-6">
                     <span className="text-muted small d-block">Original Weight</span>

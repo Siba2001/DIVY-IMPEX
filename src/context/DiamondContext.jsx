@@ -38,10 +38,18 @@ export const DiamondProvider = ({ children }) => {
   const [companies, setCompanies] = useState(initialCache.companies);
   const [workers, setWorkers] = useState(initialCache.workers);
   const [diamonds, setDiamonds] = useState(initialCache.diamonds);
+  const [dispatches, setDispatches] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.DISPATCHES) || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
 
   const hasCachedData = initialCache.companies.length > 0 || initialCache.workers.length > 0 || initialCache.diamonds.length > 0;
   const [loading, setLoading] = useState(!hasCachedData);
   const [toastMessage, setToastMessage] = useState(null);
+  const [syncError, setSyncError] = useState(null);
   const [syncMode, setSyncModeState] = useState(apiService.getSyncMode());
 
   const showToast = (message, type = 'success') => {
@@ -57,6 +65,7 @@ export const DiamondProvider = ({ children }) => {
     setSyncModeState(nextMode);
     if (nextMode === 'local') {
       showToast('⚡ Switched to Turbo Local Mode (Instant 0ms Demo Data)', 'info');
+      setSyncError(null);
     } else {
       showToast('☁️ Switched to Google Sheets Cloud Sync', 'success');
       loadData(false);
@@ -68,19 +77,26 @@ export const DiamondProvider = ({ children }) => {
     if (showLoading && !hasCachedData) setLoading(true);
     try {
       const initial = await apiService.getInitialData(showLoading);
+      if (initial._syncError) {
+        setSyncError(initial._syncError);
+      } else {
+        setSyncError(null);
+      }
+
       const newCompanies = initial.companies || [];
       const newWorkers = initial.workers || [];
       const newDiamonds = initial.diamonds || [];
 
-      setCompanies(newCompanies);
-      setWorkers(newWorkers);
-      setDiamonds(newDiamonds);
-      saveLocalCache(newCompanies, newWorkers, newDiamonds);
+      // Only overwrite local state if sync had no error OR returned real data
+      if (!initial._syncError || newCompanies.length > 0 || newWorkers.length > 0 || newDiamonds.length > 0) {
+        setCompanies(newCompanies);
+        setWorkers(newWorkers);
+        setDiamonds(newDiamonds);
+        saveLocalCache(newCompanies, newWorkers, newDiamonds);
+      }
     } catch (err) {
       console.warn('Sync notice:', err);
-      if (!hasCachedData) {
-        showToast('Running on local cache', 'info');
-      }
+      setSyncError(err.message || 'Error connecting to database');
     } finally {
       setLoading(false);
     }
@@ -226,6 +242,31 @@ export const DiamondProvider = ({ children }) => {
     return res;
   };
 
+  const submitDiamondsToCompany = async (submissionPayload) => {
+    const dispatchRecord = await apiService.submitDiamondsToCompany(submissionPayload);
+    const barcodeSet = new Set((submissionPayload.barcodes || []).map((b) => String(b).toUpperCase()));
+
+    setDiamonds((prev) => {
+      const updated = prev.map((d) =>
+        barcodeSet.has(String(d.barcode || '').toUpperCase())
+          ? {
+              ...d,
+              status: 'RETURNED',
+              dispatchedDate: dispatchRecord.dispatchDate,
+              challanNo: dispatchRecord.challanNo,
+              receiverName: dispatchRecord.receiverName
+            }
+          : d
+      );
+      saveLocalCache(companies, workers, updated);
+      return updated;
+    });
+
+    setDispatches((prev) => [dispatchRecord, ...prev.filter((dp) => dp.id !== dispatchRecord.id)]);
+    showToast(`Successfully returned ${dispatchRecord.diamondsCount} diamonds to ${dispatchRecord.companyName}!`, 'success');
+    return dispatchRecord;
+  };
+
   const resetAllData = async () => {
     await apiService.resetDataToDefault();
     setCompanies([]);
@@ -271,6 +312,7 @@ export const DiamondProvider = ({ children }) => {
         diamonds,
         loading,
         syncMode,
+        syncError,
         toggleSyncMode,
         toastMessage,
         showToast,
@@ -287,6 +329,8 @@ export const DiamondProvider = ({ children }) => {
         markWorkCompleted,
         depositDiamond,
         verifyDiamond,
+        dispatches,
+        submitDiamondsToCompany,
         resetAllData,
         getKpis
       }}

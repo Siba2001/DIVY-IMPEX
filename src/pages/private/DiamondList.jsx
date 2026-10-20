@@ -35,9 +35,9 @@ const DiamondList = () => {
     if (workerFilter && d.assignedWorkerId !== workerFilter) return false;
     if (barcodeSearch) {
       const q = barcodeSearch.toLowerCase();
-      const matchBarcode = d.barcode.toLowerCase().includes(q);
-      const matchComp = d.companyName.toLowerCase().includes(q);
-      const matchWorker = d.assignedWorkerName && d.assignedWorkerName.toLowerCase().includes(q);
+      const matchBarcode = String(d.barcode || '').toLowerCase().includes(q);
+      const matchComp = String(d.companyName || '').toLowerCase().includes(q);
+      const matchWorker = d.assignedWorkerName && String(d.assignedWorkerName).toLowerCase().includes(q);
       if (!matchBarcode && !matchComp && !matchWorker) return false;
     }
     if (fromDate && d.receivedDate < fromDate) return false;
@@ -198,7 +198,7 @@ const DiamondList = () => {
               <tr>
                 <th>Barcode</th>
                 <th>Company</th>
-                <th>Size</th>
+                <th>Shape</th>
                 <th>Orig Weight</th>
                 <th>Actual Weight</th>
                 <th>Received Date</th>
@@ -221,12 +221,17 @@ const DiamondList = () => {
                       <span className="font-heading fw-bold text-navy fs-6" style={{ color: '#0A192F' }}>
                         {d.barcode}
                       </span>
+                      {d.roughCutNo && (
+                        <div className="text-muted small font-mono" style={{ fontSize: '0.75rem' }}>
+                          Cut #{d.roughCutNo}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <span className="fw-semibold text-dark">{d.companyName}</span>
                       <span className="badge bg-light text-navy border ms-2">{d.companyCode}</span>
                     </td>
-                    <td className="small">{d.size}</td>
+                    <td className="small">{d.shape || d.size || '-'}</td>
                     <td className="fw-semibold">{d.weight} ct</td>
                     <td className="small">{d.actualWeight ? `${d.actualWeight} ct` : '-'}</td>
                     <td className="small text-muted">{d.receivedDate}</td>

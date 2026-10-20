@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Modal from '../../components/common/Modal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Users, Plus, Eye, Edit, Phone, HardHat, Search, Trash2 } from 'lucide-react';
+import { Users, Plus, Eye, Edit, Phone, HardHat, Search, Trash2, AlertCircle } from 'lucide-react';
 
 const Workers = () => {
   const { workers, diamonds, addWorker, updateWorker, deleteWorker } = useDiamonds();
@@ -21,7 +21,45 @@ const Workers = () => {
     status: 'ACTIVE'
   });
 
+  const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateWorker = (data) => {
+    const errs = {};
+    const empId = String(data.employeeId || '').trim().toUpperCase();
+    if (!empId) {
+      errs.employeeId = 'Employee ID is required.';
+    } else if (!/^[A-Z0-9_-]{2,12}$/.test(empId)) {
+      errs.employeeId = 'Employee ID must be 2-12 letters/numbers (e.g. EMP-101).';
+    } else {
+      const duplicate = workers.find(
+        (w) => w.employeeId && String(w.employeeId).toUpperCase() === empId && w.id !== editingWorker?.id
+      );
+      if (duplicate) {
+        errs.employeeId = `Employee ID "${empId}" is already assigned to "${duplicate.name}".`;
+      }
+    }
+
+    const name = String(data.name || '').trim();
+    if (!name) {
+      errs.name = 'Worker Name is required.';
+    } else if (name.length < 2) {
+      errs.name = 'Worker Name must be at least 2 characters.';
+    }
+
+    if (!data.department) {
+      errs.department = 'Please select a department.';
+    }
+
+    const phone = String(data.phone || '').trim();
+    if (!phone) {
+      errs.phone = 'Mobile Phone Number is required.';
+    } else if (!/^[0-9]{10}$/.test(phone)) {
+      errs.phone = 'Mobile number must be exactly 10 digits (digits only).';
+    }
+
+    return errs;
+  };
 
   const handleOpenAdd = () => {
     setEditingWorker(null);
@@ -32,6 +70,7 @@ const Workers = () => {
       phone: '',
       status: 'ACTIVE'
     });
+    setFormErrors({});
     setIsSubmitting(false);
     setIsModalOpen(true);
   };
@@ -40,12 +79,13 @@ const Workers = () => {
     e.stopPropagation();
     setEditingWorker(w);
     setFormData({
-      employeeId: w.employeeId,
-      name: w.name,
-      department: w.department,
-      phone: w.phone,
-      status: w.status
+      employeeId: w.employeeId || '',
+      name: w.name || '',
+      department: w.department || 'Polishing',
+      phone: w.phone ? String(w.phone) : '',
+      status: w.status || 'ACTIVE'
     });
+    setFormErrors({});
     setIsSubmitting(false);
     setIsModalOpen(true);
   };
@@ -61,20 +101,35 @@ const Workers = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.employeeId || isSubmitting) return;
+    const errors = validateWorker(formData);
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0 || isSubmitting) {
+      return;
+    }
 
     setIsSubmitting(true);
     try {
+      const cleanData = {
+        ...formData,
+        employeeId: String(formData.employeeId).trim().toUpperCase(),
+        name: formData.name.trim(),
+        department: formData.department,
+        phone: String(formData.phone).trim(),
+        status: formData.status
+      };
+
       if (editingWorker) {
-        updateWorker(editingWorker.id, formData);
+        await updateWorker(editingWorker.id, cleanData);
       } else {
-        addWorker(formData);
+        await addWorker(cleanData);
       }
       setIsModalOpen(false);
     } catch (err) {
       console.error('Failed to save worker', err);
+      setFormErrors({ submit: err.message || 'Failed to save artisan worker.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -82,9 +137,9 @@ const Workers = () => {
 
   const filteredWorkers = workers.filter(
     (w) =>
-      w.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.department.toLowerCase().includes(searchTerm.toLowerCase())
+      String(w.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(w.employeeId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(w.department || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -221,37 +276,56 @@ const Workers = () => {
         title={editingWorker ? 'Edit Artisan Worker Details' : 'Register New Artisan Worker'}
         size="md"
       >
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
+          {formErrors.submit && (
+            <div className="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center">
+              <AlertCircle size={16} className="me-2 flex-shrink-0" />
+              <span>{formErrors.submit}</span>
+            </div>
+          )}
+
           <div className="mb-3">
-            <label className="form-label">Employee ID *</label>
+            <label className="form-label fw-semibold">Employee ID <span className="text-danger">*</span></label>
             <input
               type="text"
-              className="form-control font-mono fw-bold"
+              className={`form-control font-mono fw-bold text-uppercase ${formErrors.employeeId ? 'is-invalid' : ''}`}
               placeholder="e.g. EMP-107"
+              maxLength={12}
               value={formData.employeeId}
-              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-              required
+              onChange={(e) => {
+                const val = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 12);
+                setFormData({ ...formData, employeeId: val });
+                if (formErrors.employeeId) setFormErrors({ ...formErrors, employeeId: null });
+              }}
             />
+            {formErrors.employeeId && <div className="invalid-feedback d-block">{formErrors.employeeId}</div>}
+            <small className="text-muted d-block mt-1">Unique company artisan identifier (e.g. EMP-101).</small>
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Artisan Worker Name *</label>
+            <label className="form-label fw-semibold">Artisan Worker Name <span className="text-danger">*</span></label>
             <input
               type="text"
-              className="form-control"
+              className={`form-control ${formErrors.name ? 'is-invalid' : ''}`}
               placeholder="Full Name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (formErrors.name) setFormErrors({ ...formErrors, name: null });
+              }}
             />
+            {formErrors.name && <div className="invalid-feedback d-block">{formErrors.name}</div>}
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Specialized Department *</label>
+            <label className="form-label fw-semibold">Specialized Department <span className="text-danger">*</span></label>
             <select
-              className="form-select"
+              className={`form-select ${formErrors.department ? 'is-invalid' : ''}`}
               value={formData.department}
-              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, department: e.target.value });
+                if (formErrors.department) setFormErrors({ ...formErrors, department: null });
+              }}
             >
               <option value="Cutting">Cutting</option>
               <option value="Polishing">Polishing</option>
@@ -259,21 +333,33 @@ const Workers = () => {
               <option value="Laser Sawing">Laser Sawing</option>
               <option value="Quality Assurance">Quality Assurance</option>
             </select>
+            {formErrors.department && <div className="invalid-feedback d-block">{formErrors.department}</div>}
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Mobile Phone Number</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="+91 97120 00000"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
+            <label className="form-label fw-semibold">Mobile Phone Number <span className="text-danger">*</span></label>
+            <div className="input-group">
+              <span className="input-group-text bg-light text-muted font-mono">+91</span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                className={`form-control font-mono ${formErrors.phone ? 'is-invalid' : ''}`}
+                placeholder="10-digit number"
+                value={formData.phone}
+                onChange={(e) => {
+                  const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFormData({ ...formData, phone: onlyDigits });
+                  if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
+                }}
+              />
+            </div>
+            {formErrors.phone && <div className="invalid-feedback d-block">{formErrors.phone}</div>}
+            <small className="text-muted d-block mt-1">Only numbers allowed (strictly 10 digits).</small>
           </div>
 
           <div className="mb-4">
-            <label className="form-label">Work Status</label>
+            <label className="form-label fw-semibold">Work Status</label>
             <select
               className="form-select"
               value={formData.status}

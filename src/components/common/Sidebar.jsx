@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Sparkles,
   HardHat,
+  Truck,
   X
 } from 'lucide-react';
 
@@ -48,6 +49,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
         { path: '/diamonds-list', label: 'Diamonds List', icon: Gem },
         { path: '/assignment', label: 'Worker Assignment', icon: UserCheck },
         { path: '/deposit', label: 'Deposit & QC Verify', icon: ShieldCheck },
+        { path: '/company-dispatch', label: 'Company Submission', icon: Truck },
       ]
     },
     {

@@ -118,7 +118,7 @@ const WorkerAssignment = () => {
                   <option value="">-- Select Unassigned Diamond --</option>
                   {assignableDiamonds.map((d) => (
                     <option key={d.id} value={d.barcode}>
-                      {d.barcode} | {d.companyCode} | {d.size} ({d.weight} ct) - Status: {d.status}
+                      {d.barcode} | {d.companyCode} | {d.shape || d.size} ({d.weight} ct) - Status: {d.status}
                     </option>
                   ))}
                 </select>
@@ -155,7 +155,7 @@ const WorkerAssignment = () => {
                 </small>
               </div>
 
-              <button type="submit" className="btn btn-gold w-100 rounded-pill py-2 font-heading fw-bold shadow-sm">
+              <button type="submit" className="btn btn-gold w-100 py-2.5 font-heading fw-semibold">
                 <UserCheck size={18} className="me-2" /> Confirm & Assign Diamond
               </button>
             </form>

@@ -15,10 +15,12 @@ export const STORAGE_KEYS = {
   WORKERS: 'divy_workers_clean',
   DIAMONDS: 'divy_diamonds_clean',
   HISTORIES: 'divy_histories_clean',
+  DISPATCHES: 'divy_dispatches_clean',
   SYNC_MODE: 'divy_sync_mode',
 };
 
 const SCRIPT_URL = (import.meta.env.VITE_GOOGLE_SCRIPT_URL || '').trim();
+const API_SECRET = (import.meta.env.VITE_API_SECRET || 'DIVY_SECURE_TOKEN_2026').trim();
 
 // Get sync mode: 'cloud' (Google Sheets sync) or 'local' (⚡ Turbo demo mode)
 const getStoredSyncMode = () => {
@@ -40,11 +42,14 @@ const activeMutations = new Map();
 
 // Helper: Call Google Apps Script Web App Endpoint
 const callGas = async (action, data = null, method = 'POST') => {
-  if (!SCRIPT_URL || !SCRIPT_URL.startsWith('http')) return null;
+  if (!SCRIPT_URL || !SCRIPT_URL.startsWith('http')) {
+    throw new Error('Google Apps Script URL is missing or invalid in .env (VITE_GOOGLE_SCRIPT_URL).');
+  }
 
   if (method === 'GET') {
     const url = new URL(SCRIPT_URL);
     url.searchParams.set('action', action);
+    if (API_SECRET) url.searchParams.set('key', API_SECRET);
     if (data && typeof data === 'object') {
       Object.entries(data).forEach(([k, v]) => {
         if (v !== undefined && v !== null) {
@@ -52,8 +57,29 @@ const callGas = async (action, data = null, method = 'POST') => {
         }
       });
     }
-    const res = await fetch(url.toString(), { redirect: 'follow' });
-    const json = await res.json();
+
+    let res;
+    try {
+      res = await fetch(url.toString(), { redirect: 'follow' });
+    } catch (netErr) {
+      throw new Error(`Network error connecting to database: ${netErr.message}`);
+    }
+
+    if (res.status === 404) {
+      throw new Error('Google Apps Script Web App returned 404 (Page Not Found). Please verify your Web App URL in .env.');
+    }
+
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (parseErr) {
+      if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+        throw new Error('Google Apps Script returned an HTML page instead of JSON. Ensure "Who has access" is set to "Anyone" and deploy a new version.');
+      }
+      throw new Error(`Invalid response format from database: ${text.slice(0, 100)}`);
+    }
+
     if (!json.success) throw new Error(json.error || 'Failed to fetch from Google Script');
     return json.data;
   } else {
@@ -64,15 +90,33 @@ const callGas = async (action, data = null, method = 'POST') => {
     }
 
     const postPromise = (async () => {
-      const res = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        redirect: 'follow',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
-        body: JSON.stringify({ action, data }),
-      });
-      const json = await res.json();
+      const payload = { action, key: API_SECRET, data };
+      let res;
+      try {
+        res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (netErr) {
+        throw new Error(`Network failure on POST to database: ${netErr.message}`);
+      }
+
+      if (res.status === 404) {
+        throw new Error('Google Apps Script Web App returned 404 (Not Found).');
+      }
+
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error(`Database POST error: ${text.slice(0, 100)}`);
+      }
+
       if (!json.success) throw new Error(json.error || 'Google Script request failed');
       return json.data;
     })();
@@ -110,6 +154,9 @@ const initializeStorage = () => {
   }
   if (!localStorage.getItem(STORAGE_KEYS.HISTORIES)) {
     localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.DISPATCHES)) {
+    localStorage.setItem(STORAGE_KEYS.DISPATCHES, JSON.stringify([]));
   }
 };
 
@@ -196,12 +243,13 @@ export const apiService = {
           if (remoteData.workers) setItem(STORAGE_KEYS.WORKERS, remoteData.workers);
           if (remoteData.diamonds) setItem(STORAGE_KEYS.DIAMONDS, remoteData.diamonds);
           if (remoteData.histories) setItem(STORAGE_KEYS.HISTORIES, remoteData.histories);
-          return remoteData;
+          return { ...remoteData, _syncError: null };
         }
       } catch (err) {
         console.warn('[DIVY Sync] Initial data remote fetch failed, falling back to local cache:', err);
+        return { ...localData, _syncError: err.message };
       }
-      return localData;
+      return { ...localData, _syncError: null };
     }
 
     // Return instant local data in 0ms, revalidate in background silently!
@@ -220,7 +268,7 @@ export const apiService = {
         console.warn('[DIVY Sync] Silent background revalidation error:', e);
       });
 
-    return localData;
+    return { ...localData, _syncError: null };
   },
 
   // Reset demo data to clean empty state or default
@@ -247,7 +295,7 @@ export const apiService = {
   addCompany: async (companyData) => {
     const companies = getItem(STORAGE_KEYS.COMPANIES);
     const existing = companies.find(
-      (c) => c.code && c.code.toUpperCase() === (companyData.code || '').toUpperCase()
+      (c) => c.code && String(c.code).toUpperCase() === String(companyData.code || '').toUpperCase()
     );
     if (existing) return existing;
 
@@ -263,8 +311,8 @@ export const apiService = {
       cachedInitialData.companies = companies;
     }
 
-    // Fire remote Google Sheets update non-blockingly
-    fireGasBackground('addCompany', companyData);
+    // Fire remote Google Sheets update non-blockingly with complete company record
+    fireGasBackground('addCompany', newCompany);
 
     return newCompany;
   },
@@ -308,7 +356,7 @@ export const apiService = {
   addWorker: async (workerData) => {
     const workers = getItem(STORAGE_KEYS.WORKERS);
     const existing = workers.find(
-      (w) => w.employeeId && w.employeeId.toUpperCase() === (workerData.employeeId || '').toUpperCase()
+      (w) => w.employeeId && String(w.employeeId).toUpperCase() === String(workerData.employeeId || '').toUpperCase()
     );
     if (existing) return existing;
 
@@ -324,7 +372,7 @@ export const apiService = {
       cachedInitialData.workers = workers;
     }
 
-    fireGasBackground('addWorker', workerData);
+    fireGasBackground('addWorker', newWorker);
 
     return newWorker;
   },
@@ -384,14 +432,21 @@ export const apiService = {
         throw new Error(`Barcode ${barcodeClean} already exists in the system!`);
       }
 
+      const shapeVal = item.shape ? item.shape.trim() : 'Emperal';
+      const roughCutVal = item.roughCutNo ? String(item.roughCutNo).trim() : '';
+
       const newDiamond = {
         id: `dia-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         barcode: barcodeClean,
+        roughCutNo: roughCutVal,
         companyId: company.id,
         companyCode: company.code,
         companyName: company.name,
-        size: item.size,
+        shape: shapeVal,
+        size: shapeVal || item.size || '-',
         weight: parseFloat(item.weight),
+        scaleWeight: item.scaleWeight ? parseFloat(item.scaleWeight) : parseFloat(item.weight),
+        targetWeight: item.targetWeight ? parseFloat(item.targetWeight) : null,
         actualWeight: null,
         receivedDate: receivedDate || new Date().toISOString().split('T')[0],
         receivedBy: receivedBy || 'Supervisor',
@@ -410,6 +465,11 @@ export const apiService = {
       existingDiamonds.unshift(newDiamond);
       createdDiamonds.push(newDiamond);
 
+      const weightLog = `Kacha Wt: ${newDiamond.weight} ct` +
+        (newDiamond.targetWeight ? `, Teyar Wt: ${newDiamond.targetWeight} ct` : '') +
+        (roughCutVal ? `, Rough No: ${roughCutVal}` : '') +
+        (shapeVal ? `, Shape: ${shapeVal}` : '');
+
       histories.unshift({
         id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         diamondId: newDiamond.id,
@@ -418,7 +478,7 @@ export const apiService = {
         performedBy: receivedBy || 'Supervisor',
         date: dateStr,
         time: timeStr,
-        remarks: `Received from ${company.name}. Weight: ${newDiamond.weight} ct, Size: ${newDiamond.size}`
+        remarks: `Received from ${company.name}. ${weightLog}${item.remarks ? ` [${item.remarks}]` : ''}`
       });
     }
 
@@ -652,6 +712,23 @@ export const apiService = {
   },
 
   getDiamondHistory: async (diamondIdOrBarcode) => {
+    const sanitizeHistoryItem = (h) => {
+      if (!h) return h;
+      let cleanTime = h.time;
+      if (!cleanTime || String(cleanTime).includes('1899') || String(cleanTime).includes('1900')) {
+        const match = String(h.id || '').match(/\d{12,13}/);
+        if (match) {
+          try {
+            const dt = new Date(parseInt(match[0], 10));
+            if (!isNaN(dt.getTime())) {
+              cleanTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+          } catch (e) {}
+        }
+      }
+      return { ...h, time: cleanTime };
+    };
+
     const histories = getItem(STORAGE_KEYS.HISTORIES);
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
 
@@ -664,7 +741,8 @@ export const apiService = {
     if (matchedDiamond) {
       const localMatches = histories
         .filter((h) => h.diamondId === matchedDiamond.id || (h.barcode && h.barcode.toLowerCase() === matchedDiamond.barcode.toLowerCase()))
-        .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
+        .map(sanitizeHistoryItem)
+        .sort((a, b) => new Date(a.date + ' ' + (a.time || '')) - new Date(b.date + ' ' + (b.time || '')));
 
       if (localMatches.length > 0) {
         return localMatches;
@@ -676,13 +754,14 @@ export const apiService = {
       try {
         const remoteHistory = await callGas('getHistory', { diamondIdOrBarcode }, 'GET');
         if (Array.isArray(remoteHistory) && remoteHistory.length > 0) {
+          const sanitizedRemote = remoteHistory.map(sanitizeHistoryItem);
           const existing = getItem(STORAGE_KEYS.HISTORIES);
           const existingIds = new Set(existing.map((h) => h.id));
-          remoteHistory.forEach((rh) => {
+          sanitizedRemote.forEach((rh) => {
             if (!existingIds.has(rh.id)) existing.push(rh);
           });
           setItem(STORAGE_KEYS.HISTORIES, existing);
-          return remoteHistory;
+          return sanitizedRemote;
         }
       } catch (e) {
         console.warn('[DIVY Sync] Remote history fetch failed:', e);
@@ -690,5 +769,101 @@ export const apiService = {
     }
 
     return [];
+  },
+
+  // ==================== COMPANY SUBMISSION & DISPATCH API ====================
+  getDispatches: async () => {
+    return getItem(STORAGE_KEYS.DISPATCHES) || [];
+  },
+
+  submitDiamondsToCompany: async ({ companyId, barcodes, challanNo, dispatchDate, receiverName, remarks, dispatchedBy }) => {
+    const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
+    const companies = getItem(STORAGE_KEYS.COMPANIES);
+    const histories = getItem(STORAGE_KEYS.HISTORIES);
+    const dispatches = getItem(STORAGE_KEYS.DISPATCHES) || [];
+    const { dateStr, timeStr, isoDate } = getFormattedCurrentTime();
+
+    const company = companies.find((c) => c.id === companyId);
+    const effectiveDispatchDate = dispatchDate || isoDate;
+    const effectiveChallanNo = (challanNo || '').trim() || `DC-${company?.code || 'DIVY'}-${Date.now().toString().slice(-6)}`;
+    const effectiveDispatchedBy = dispatchedBy || 'Dispatch Supervisor';
+    const effectiveReceiver = (receiverName || '').trim() || (company?.contactPerson || 'Authorized Representative');
+
+    const barcodeSet = new Set((barcodes || []).map((b) => String(b).toUpperCase()));
+    const targetDiamonds = diamonds.filter((d) => barcodeSet.has(String(d.barcode || '').toUpperCase()));
+
+    if (targetDiamonds.length === 0) {
+      throw new Error('No valid diamonds selected for company submission');
+    }
+
+    let totalOrigWeight = 0;
+    let totalActWeight = 0;
+    const snapshots = [];
+
+    targetDiamonds.forEach((d) => {
+      d.status = 'RETURNED';
+      d.dispatchedDate = effectiveDispatchDate;
+      d.challanNo = effectiveChallanNo;
+      d.receiverName = effectiveReceiver;
+      d.dispatchRemarks = remarks || '';
+
+      const origW = parseFloat(d.weight) || 0;
+      const actW = parseFloat(d.actualWeight || d.weight) || 0;
+      totalOrigWeight += origW;
+      totalActWeight += actW;
+
+      snapshots.push({
+        id: d.id,
+        barcode: d.barcode,
+        size: d.size,
+        weight: origW,
+        actualWeight: actW,
+        workerName: d.assignedWorkerName || '-'
+      });
+
+      histories.unshift({
+        id: `hist-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        diamondId: d.id,
+        barcode: d.barcode,
+        action: 'Submitted to Company',
+        performedBy: effectiveDispatchedBy,
+        date: dateStr,
+        time: timeStr,
+        remarks: `Returned to ${company?.name || d.companyName || 'Company'} under Challan #${effectiveChallanNo}. Receiver: ${effectiveReceiver}`
+      });
+    });
+
+    const newDispatch = {
+      id: `disp-${Date.now()}`,
+      challanNo: effectiveChallanNo,
+      companyId: company?.id || targetDiamonds[0]?.companyId,
+      companyCode: company?.code || targetDiamonds[0]?.companyCode,
+      companyName: company?.name || targetDiamonds[0]?.companyName,
+      dispatchDate: effectiveDispatchDate,
+      dispatchTime: timeStr,
+      diamondsCount: targetDiamonds.length,
+      totalOriginalWeight: parseFloat(totalOrigWeight.toFixed(3)),
+      totalActualWeight: parseFloat(totalActWeight.toFixed(3)),
+      receiverName: effectiveReceiver,
+      dispatchedBy: effectiveDispatchedBy,
+      remarks: remarks || '',
+      barcodes: targetDiamonds.map((d) => d.barcode),
+      diamonds: snapshots
+    };
+
+    dispatches.unshift(newDispatch);
+    setItem(STORAGE_KEYS.DISPATCHES, dispatches);
+    setItem(STORAGE_KEYS.DIAMONDS, diamonds);
+    setItem(STORAGE_KEYS.HISTORIES, histories);
+
+    if (cachedInitialData) {
+      cachedInitialData.diamonds = diamonds;
+      cachedInitialData.histories = histories;
+      cachedInitialData.dispatches = dispatches;
+    }
+
+    fireGasBackground('submitDiamondsToCompany', newDispatch);
+
+    return newDispatch;
   }
 };

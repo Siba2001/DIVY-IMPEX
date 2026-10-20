@@ -35,9 +35,9 @@ const Stock = () => {
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       return (
-        d.barcode.toLowerCase().includes(q) ||
-        d.companyName.toLowerCase().includes(q) ||
-        (d.assignedWorkerName && d.assignedWorkerName.toLowerCase().includes(q))
+        String(d.barcode || '').toLowerCase().includes(q) ||
+        String(d.companyName || '').toLowerCase().includes(q) ||
+        (d.assignedWorkerName && String(d.assignedWorkerName).toLowerCase().includes(q))
       );
     }
     return true;
@@ -149,7 +149,7 @@ const Stock = () => {
               <tr>
                 <th>Barcode</th>
                 <th>Company</th>
-                <th>Cut Spec</th>
+                <th>Shape</th>
                 <th>Orig Weight</th>
                 <th>Actual Weight</th>
                 <th>Worker</th>
@@ -174,7 +174,7 @@ const Stock = () => {
                       <span className="fw-semibold text-dark">{d.companyName}</span>
                       <span className="badge bg-light text-navy border ms-2">{d.companyCode}</span>
                     </td>
-                    <td className="small">{d.size}</td>
+                    <td className="small">{d.shape || d.size || '-'}</td>
                     <td className="fw-semibold">{d.weight} ct</td>
                     <td className="small">{d.actualWeight ? `${d.actualWeight} ct` : '-'}</td>
                     <td>{d.assignedWorkerName || <span className="text-muted small">Unassigned</span>}</td>

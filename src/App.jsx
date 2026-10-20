@@ -24,6 +24,7 @@ import WorkerDashboard from './pages/private/WorkerDashboard';
 import DepositVerification from './pages/private/DepositVerification';
 import Stock from './pages/private/Stock';
 import Reports from './pages/private/Reports';
+import CompanySubmission from './pages/private/CompanySubmission';
 
 // Auto Scroll To Top Component on Route Change
 const ScrollToTop = () => {
@@ -67,6 +68,8 @@ function App() {
             <Route path="/workers/:id" element={<WorkerDetails />} />
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
             <Route path="/deposit" element={<DepositVerification />} />
+            <Route path="/company-dispatch" element={<CompanySubmission />} />
+            <Route path="/company-submission" element={<CompanySubmission />} />
             <Route path="/stock" element={<Stock />} />
             <Route path="/reports" element={<Reports />} />
 

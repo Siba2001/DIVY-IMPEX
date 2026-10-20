@@ -172,7 +172,7 @@ const Dashboard = () => {
       <div className="row g-4 mb-4">
         {/* Chart 1: Date-wise Received vs Completed */}
         <div className="col-lg-8">
-          <div className="card card-custom p-3 p-md-4 h-100">
+          <div className="card card-custom card-static p-3 p-md-4 h-100">
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
               <div>
                 <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
@@ -208,7 +208,7 @@ const Dashboard = () => {
 
         {/* Chart 2: Company-wise Diamond Share */}
         <div className="col-lg-4">
-          <div className="card card-custom p-3 p-md-4 h-100">
+          <div className="card card-custom card-static p-3 p-md-4 h-100">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
@@ -251,7 +251,7 @@ const Dashboard = () => {
       </div>
 
       {/* Company Summary Table Section */}
-      <div className="card card-custom p-3 p-md-4 shadow-sm">
+      <div className="card card-custom card-static p-3 p-md-4 shadow-sm">
         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
           <div>
             <h6 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>

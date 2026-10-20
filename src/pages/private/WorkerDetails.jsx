@@ -113,7 +113,7 @@ const WorkerDetails = () => {
               <tr>
                 <th>Barcode</th>
                 <th>Company</th>
-                <th>Size</th>
+                <th>Shape</th>
                 <th>Weight</th>
                 <th>Assigned Date</th>
                 <th>Completed Date</th>
@@ -138,7 +138,7 @@ const WorkerDetails = () => {
                       <span className="fw-semibold text-dark">{d.companyName}</span>
                       <span className="badge bg-light text-navy border ms-2">{d.companyCode}</span>
                     </td>
-                    <td className="small">{d.size}</td>
+                    <td className="small">{d.shape || d.size || '-'}</td>
                     <td className="fw-semibold">{d.weight} ct</td>
                     <td className="small text-muted">{d.assignedDate || d.receivedDate}</td>
                     <td className="small text-muted">{d.completedDate || '-'}</td>

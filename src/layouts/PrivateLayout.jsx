@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useDiamonds } from '../context/DiamondContext';
 import Sidebar from '../components/common/Sidebar';
 import Topbar from '../components/common/Topbar';
 import Toast from '../components/common/Toast';
+import { AlertTriangle } from 'lucide-react';
 
 const PrivateLayout = ({ children, title }) => {
   const { isAuthenticated } = useAuth();
+  const { syncError, loadData } = useDiamonds();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -46,7 +49,26 @@ const PrivateLayout = ({ children, title }) => {
       />
       <div className="main-wrapper">
         <Topbar pageTitle={title} toggleMobileSidebar={toggleMobileSidebar} />
-        <main className={`content-body ${isAnimatedPage ? 'page-animated' : 'page-static'}`}>{children}</main>
+        <main className={`content-body ${isAnimatedPage ? 'page-animated' : 'page-static'}`}>
+          {syncError && (
+            <div className="alert alert-danger border-danger d-flex align-items-center justify-content-between mb-4 p-3 rounded-3 shadow-sm bg-danger bg-opacity-10">
+              <div className="d-flex align-items-start small text-dark">
+                <AlertTriangle size={18} className="text-danger me-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <strong className="text-danger d-block mb-0.5">Database Connection Notice:</strong>
+                  <span className="text-dark font-monospace" style={{ fontSize: '0.8rem' }}>{syncError}</span>
+                </div>
+              </div>
+              <button
+                className="btn btn-sm btn-outline-danger ms-3 text-nowrap fw-semibold px-3 py-1"
+                onClick={() => loadData(true)}
+              >
+                Retry Sync
+              </button>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
       <Toast />
     </div>

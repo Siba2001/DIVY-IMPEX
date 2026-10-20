@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Search, Bell, LogOut, User, Menu, Cloud, Zap } from 'lucide-react';
+import { Search, Bell, LogOut, User, Menu, Cloud, Zap, AlertTriangle } from 'lucide-react';
 
 const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
   const { user, logout } = useAuth();
-  const { syncMode, toggleSyncMode } = useDiamonds();
+  const { syncMode, toggleSyncMode, syncError } = useDiamonds();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -56,18 +56,28 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
         <button
           onClick={toggleSyncMode}
           className={`btn btn-sm d-flex align-items-center gap-1.5 px-2.5 py-1 rounded-pill fw-semibold border shadow-none ${
-            syncMode === 'cloud'
+            syncError
+              ? 'btn-outline-danger bg-danger bg-opacity-10 text-danger border-danger'
+              : syncMode === 'cloud'
               ? 'btn-outline-success bg-success bg-opacity-10 text-success border-success'
               : 'btn-outline-warning bg-warning bg-opacity-10 text-dark border-warning'
           }`}
           style={{ fontSize: '0.75rem', transition: 'all 0.2s ease', cursor: 'pointer' }}
           title={
-            syncMode === 'cloud'
+            syncError
+              ? `Database Error: ${syncError}`
+              : syncMode === 'cloud'
               ? 'Active: Google Sheets Cloud Sync. Click to switch to ⚡ Turbo Local Mode (Instant 0ms demo)'
               : 'Active: ⚡ Turbo Local Mode (Instant 0ms). Click to switch to ☁️ Google Sheets Cloud Sync'
           }
         >
-          {syncMode === 'cloud' ? (
+          {syncError ? (
+            <>
+              <AlertTriangle size={14} className="text-danger" />
+              <span className="d-none d-sm-inline">Sync Error</span>
+              <span className="badge rounded-pill bg-danger p-1 ms-0.5" style={{ width: '6px', height: '6px' }}></span>
+            </>
+          ) : syncMode === 'cloud' ? (
             <>
               <Cloud size={14} className="text-success" />
               <span className="d-none d-sm-inline">Cloud Sync</span>

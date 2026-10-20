@@ -16,7 +16,8 @@ import {
   Calendar,
   Eye,
   Filter,
-  Trash2
+  Trash2,
+  FileBarChart2
 } from 'lucide-react';
 
 const CompanyDetails = () => {
@@ -48,11 +49,10 @@ const CompanyDetails = () => {
   // Filter diamonds belonging to this company
   let companyDiamonds = diamonds.filter((d) => d.companyId === company.id);
 
-  // Apply Search & Date Filters
   if (searchTerm) {
     companyDiamonds = companyDiamonds.filter((d) =>
-      d.barcode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (d.assignedWorkerName && d.assignedWorkerName.toLowerCase().includes(searchTerm.toLowerCase()))
+      String(d.barcode || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (d.assignedWorkerName && String(d.assignedWorkerName).toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }
 
@@ -135,7 +135,14 @@ const CompanyDetails = () => {
               </p>
             </div>
           </div>
-          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
+          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 flex-wrap">
+            <button
+              className="btn btn-outline-dark rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center shadow-sm"
+              onClick={() => navigate(`/reports?company=${company.id}&type=1`)}
+              title="View Monthly Stock & Shape Matrix Report"
+            >
+              <FileBarChart2 size={16} className="me-1.5 text-primary" /> Monthly Stock Report
+            </button>
             <button
               className="btn btn-navy rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap"
               onClick={() => navigate(`/diamond-receiving?company=${company.id}`)}
@@ -255,7 +262,7 @@ const CompanyDetails = () => {
             <thead>
               <tr>
                 <th>Barcode</th>
-                <th>Size</th>
+                <th>Shape</th>
                 <th>Weight (ct)</th>
                 <th>Received Date</th>
                 <th>Assigned Worker</th>
@@ -275,7 +282,7 @@ const CompanyDetails = () => {
                     <td>
                       <span className="font-heading fw-bold text-navy" style={{ color: '#0A192F' }}>{d.barcode}</span>
                     </td>
-                    <td className="small">{d.size}</td>
+                    <td className="small">{d.shape || d.size || '-'}</td>
                     <td className="fw-semibold">{d.weight} ct</td>
                     <td className="small text-muted">{d.receivedDate}</td>
                     <td>{d.assignedWorkerName || <span className="text-muted small">Unassigned</span>}</td>

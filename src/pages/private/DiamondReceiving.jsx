@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import { useDiamonds } from '../../context/DiamondContext';
-import { PackagePlus, Plus, Trash2, CheckCircle2, Sparkles, AlertCircle } from 'lucide-react';
+import { PackagePlus, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const DiamondReceiving = () => {
-  const { companies, receiveBatch, showToast } = useDiamonds();
+  const { companies, diamonds, receiveBatch, showToast } = useDiamonds();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -19,7 +19,7 @@ const DiamondReceiving = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [diamondsList, setDiamondsList] = useState([
-    { barcode: '', size: '1.00 ct', weight: '', remarks: '' },
+    { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: 'Emeral', remarks: '' },
   ]);
   const [totalItemsInput, setTotalItemsInput] = useState('');
 
@@ -27,9 +27,11 @@ const DiamondReceiving = () => {
     if (targetCount > currentList.length) {
       const diff = targetCount - currentList.length;
       const newRows = Array.from({ length: diff }, () => ({
+        roughCutNo: '',
         barcode: '',
-        size: '1.00 ct',
         weight: '',
+        targetWeight: '',
+        shape: 'Emeral',
         remarks: ''
       }));
       setDiamondsList([...currentList, ...newRows]);
@@ -39,7 +41,10 @@ const DiamondReceiving = () => {
   };
 
   const handleAddRow = () => {
-    const updated = [...diamondsList, { barcode: '', size: '1.00 ct', weight: '', remarks: '' }];
+    const updated = [
+      ...diamondsList,
+      { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: 'Emerald', remarks: '' }
+    ];
     setDiamondsList(updated);
     setTotalItemsInput(updated.length.toString());
   };
@@ -73,30 +78,22 @@ const DiamondReceiving = () => {
 
   const handleRowChange = (index, field, value) => {
     const updated = [...diamondsList];
-    updated[index][field] = value;
+    if (field === 'barcode') {
+      updated[index][field] = value.toUpperCase().replace(/\s+/g, '');
+    } else if (field === 'roughCutNo') {
+      updated[index][field] = value.trim();
+    } else if (field === 'weight' || field === 'targetWeight') {
+      // Allow only numbers and a single decimal point
+      const sanitized = value.replace(/[^0-9.]/g, '');
+      const parts = sanitized.split('.');
+      const formatted = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : sanitized;
+      updated[index][field] = formatted;
+    } else {
+      updated[index][field] = value;
+    }
     setDiamondsList(updated);
   };
 
-  // Quick Auto Generator for Bulk Barcodes
-  const handleAutoGenerateBarcodes = () => {
-    const company = companies.find((c) => c.id === companyId);
-    if (!company) {
-      setError('Please select a company first!');
-      return;
-    }
-
-    const prefix = company.code;
-    const randomStart = Math.floor(100 + Math.random() * 800);
-
-    const generated = diamondsList.map((item, idx) => ({
-      ...item,
-      barcode: `${prefix}${randomStart + idx}`,
-      weight: item.weight || (0.75 + Math.random() * 1.5).toFixed(3)
-    }));
-
-    setDiamondsList(generated);
-    setError('');
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,20 +106,47 @@ const DiamondReceiving = () => {
       return;
     }
 
+    if (!receivedBy.trim()) {
+      setError('Received By supervisor name is required.');
+      return;
+    }
+
     // Validation check for individual rows
+    const seenBarcodes = new Set();
     for (let i = 0; i < diamondsList.length; i++) {
       const d = diamondsList[i];
-      if (!d.barcode.trim()) {
-        setError(`Barcode is required for item #${i + 1}`);
+      const barcode = String(d.barcode || '').trim().toUpperCase();
+      if (!barcode) {
+        setError(`Barcode Number is required for diamond #${i + 1}`);
         return;
       }
-      if (!d.size.trim()) {
-        setError(`Size is required for item #${i + 1}`);
+      if (seenBarcodes.has(barcode)) {
+        setError(`Duplicate barcode "${barcode}" entered multiple times in this batch (item #${i + 1}).`);
         return;
       }
-      if (!d.weight || isNaN(parseFloat(d.weight)) || parseFloat(d.weight) <= 0) {
-        setError(`Valid weight in carats is required for item #${i + 1}`);
+      seenBarcodes.add(barcode);
+
+      // Check against existing diamonds
+      const existing = diamonds.find(
+        (dia) => dia.barcode && String(dia.barcode).toUpperCase() === barcode
+      );
+      if (existing) {
+        setError(`Barcode "${barcode}" (item #${i + 1}) already exists in the database. Barcodes must be unique.`);
         return;
+      }
+
+      const weightNum = parseFloat(d.weight);
+      if (!d.weight || isNaN(weightNum) || weightNum <= 0 || weightNum > 500) {
+        setError(`Valid Rough Weight (carat weight) is required for item #${i + 1}`);
+        return;
+      }
+
+      if (d.targetWeight) {
+        const targetNum = parseFloat(d.targetWeight);
+        if (isNaN(targetNum) || targetNum <= 0 || targetNum > 500) {
+          setError(`Polished Weight (target carat weight) must be a valid number if entered (item #${i + 1})`);
+          return;
+        }
       }
     }
 
@@ -144,28 +168,31 @@ const DiamondReceiving = () => {
     }
   };
 
+  const totalBatchWeight = diamondsList
+    .reduce((sum, d) => sum + (parseFloat(d.weight) || 0), 0)
+    .toFixed(3);
+
+  const totalTargetWeight = diamondsList
+    .reduce((sum, d) => sum + (parseFloat(d.targetWeight) || 0), 0)
+    .toFixed(3);
+
   return (
     <PrivateLayout title="Physical Diamond Inward Receiving">
       <div className="card card-custom p-3 p-sm-4 mb-4 shadow-sm">
-        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4 pb-3 border-bottom">
           <div className="d-flex align-items-center">
             <div className="p-2.5 p-sm-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
-              <PackagePlus size={22} />
+              <PackagePlus size={24} />
             </div>
             <div>
-              <h5 className="font-heading fw-bold text-navy mb-1 mb-sm-0" style={{ color: '#0A192F' }}>
+              <h5 className="font-heading fw-bold text-navy mb-1" style={{ color: '#0A192F' }}>
                 New Diamond Parcel Receiving Entry
               </h5>
-              <small className="text-muted d-block d-sm-inline">Enter batch inward details and list individual diamonds with barcode and weight.</small>
+              <small className="text-muted d-block">
+                Enter batch inward details and list individual diamonds with barcode and carat weight.
+              </small>
             </div>
           </div>
-          <button
-            type="button"
-            className="btn btn-outline-warning text-dark font-heading fw-semibold d-flex align-items-center justify-content-center text-nowrap w-100 w-sm-auto"
-            onClick={handleAutoGenerateBarcodes}
-          >
-            <Sparkles size={16} className="me-2 text-warning" /> Auto-Fill Test Barcodes
-          </button>
         </div>
 
         {error && (
@@ -177,11 +204,13 @@ const DiamondReceiving = () => {
 
         <form onSubmit={handleSubmit}>
           {/* Batch Master Info Header */}
-          <div className="bg-light p-3 rounded-3 border mb-4">
-            <h6 className="fw-bold text-navy mb-3">1. Batch Inward Master Details</h6>
+          <div className="bg-light p-3 p-sm-4 rounded-3 border mb-4">
+            <h6 className="fw-bold text-navy mb-3" style={{ color: '#0A192F' }}>
+              1. Batch Inward Master Details
+            </h6>
             <div className="row g-3">
               <div className="col-12 col-md-4">
-                <label className="form-label">Client Company *</label>
+                <label className="form-label fw-semibold">Client Company <span className="text-danger">*</span></label>
                 <select
                   className="form-select"
                   value={companyId}
@@ -198,7 +227,7 @@ const DiamondReceiving = () => {
               </div>
 
               <div className="col-12 col-sm-6 col-md-3">
-                <label className="form-label">Received Date *</label>
+                <label className="form-label fw-semibold">Received Date <span className="text-danger">*</span></label>
                 <input
                   type="date"
                   className="form-control"
@@ -209,32 +238,36 @@ const DiamondReceiving = () => {
               </div>
 
               <div className="col-12 col-sm-6 col-md-3">
-                <label className="form-label">Received By (Supervisor)</label>
+                <label className="form-label fw-semibold">Received By (Supervisor)</label>
                 <input
                   type="text"
                   className="form-control"
+                  placeholder="Supervisor name"
                   value={receivedBy}
                   onChange={(e) => setReceivedBy(e.target.value)}
                 />
               </div>
 
               <div className="col-12 col-md-2">
-                <label className="form-label">Total Items *</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  className="form-control bg-white fw-bold text-navy"
-                  value={totalItemsInput}
-                  onChange={handleTotalItemsInputChange}
-                  onBlur={handleTotalItemsInputBlur}
-                  placeholder="e.g. 5"
-                  title="Type a number to set the total items count"
-                />
+                <label className="form-label fw-semibold">Total Items *</label>
+                <div className="input-group">
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    className="form-control bg-white fw-bold text-navy font-mono"
+                    value={totalItemsInput}
+                    onChange={handleTotalItemsInputChange}
+                    onBlur={handleTotalItemsInputBlur}
+                    placeholder="e.g. 5"
+                    title="Type a number to set the total items count"
+                  />
+                  <span className="input-group-text bg-white text-muted px-2 small">pcs</span>
+                </div>
               </div>
 
               <div className="col-12">
-                <label className="form-label">Batch Inward Remarks</label>
+                <label className="form-label fw-semibold">Batch Inward Remarks</label>
                 <input
                   type="text"
                   className="form-control"
@@ -248,80 +281,175 @@ const DiamondReceiving = () => {
 
           {/* Individual Diamonds Table */}
           <div className="mb-4">
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-              <h6 className="fw-bold text-navy mb-0">2. Individual Diamond Records</h6>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+              <div className="d-flex align-items-center gap-2 flex-wrap">
+                <h6 className="fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
+                  2. Individual Diamond Records
+                </h6>
+                <span className="badge rounded-pill bg-white text-navy border px-2.5 py-1.5 fw-semibold shadow-xs">
+                  {diamondsList.length} {diamondsList.length === 1 ? 'Diamond' : 'Diamonds'}
+                </span>
+                <span className="badge rounded-pill px-2.5 py-1.5 fw-semibold" style={{ backgroundColor: 'rgba(212, 175, 55, 0.15)', color: '#9A7B1C', border: '1px solid rgba(212, 175, 55, 0.35)' }}>
+                  Total Rough Wt: {totalBatchWeight} ct
+                </span>
+                {parseFloat(totalTargetWeight) > 0 && (
+                  <span className="badge rounded-pill px-2.5 py-1.5 fw-semibold bg-white text-primary border shadow-xs">
+                    Total Polished Wt: {totalTargetWeight} ct
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
-                className="btn btn-sm btn-outline-primary rounded-pill px-3 text-nowrap"
+                className="btn btn-sm btn-gold rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center shadow-xs"
                 onClick={handleAddRow}
               >
-                <Plus size={14} className="me-1" /> Add Diamond Row
+                <Plus size={15} className="me-1" /> Add Diamond Row
               </button>
             </div>
 
-            <div className="table-responsive rounded border">
-              <table className="table table-custom align-middle mb-0" style={{ minWidth: '680px' }}>
-                <thead>
+            {/* Datalist for Diamond Cut Shapes */}
+            <datalist id="diamondShapesList">
+              <option value="Emerald" />
+              <option value="Round" />
+              <option value="Princess" />
+              <option value="Oval" />
+              <option value="Marquise" />
+              <option value="Pear" />
+              <option value="Cushion" />
+              <option value="Radiant" />
+              <option value="Heart" />
+              <option value="Asscher" />
+            </datalist>
+
+            <div className="table-responsive rounded-3 border shadow-xs bg-white">
+              <table className="table table-bordered table-hover align-middle mb-0" style={{ minWidth: '980px', borderColor: '#E2E8F0' }}>
+                <thead style={{ backgroundColor: '#F1F5F9', borderBottom: '2px solid #CBD5E1' }}>
                   <tr>
-                    <th style={{ width: '50px' }}>#</th>
-                    <th style={{ width: '180px' }}>Diamond Barcode *</th>
-                    <th style={{ width: '160px' }}>Size (Geometry) *</th>
-                    <th style={{ width: '160px' }}>Weight (Carats) *</th>
-                    <th>Individual Remarks</th>
-                    <th className="text-end" style={{ width: '60px' }}>Action</th>
+                    <th className="text-center py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '46px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#475569', backgroundColor: '#F1F5F9' }}>
+                      #
+                    </th>
+                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '160px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
+                      Rough.No / Cut.No
+                    </th>
+                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '190px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
+                      Barcode Number <span className="text-danger">*</span>
+                    </th>
+                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '160px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
+                      Rough Weight <span className="text-danger">*</span>
+                    </th>
+                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '160px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
+                      Polished Weight
+                    </th>
+                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '160px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
+                      Diamond Shape
+                    </th>
+                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ minWidth: '180px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
+                      Individual Remarks
+                    </th>
+                    <th className="text-center py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '50px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#475569', backgroundColor: '#F1F5F9' }}>
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {diamondsList.map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="fw-semibold text-muted">{idx + 1}</td>
-                      <td>
+                    <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FAFCFE' }}>
+                      <td className="text-center fw-bold text-muted py-2 bg-light">
+                        <span className="badge rounded-circle bg-white text-navy border" style={{ width: '24px', height: '24px', lineHeight: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem' }}>
+                          {idx + 1}
+                        </span>
+                      </td>
+                      <td className="py-2">
                         <input
                           type="text"
-                          className="form-control form-control-sm text-uppercase fw-bold text-navy"
-                          placeholder="e.g. KGK009"
+                          className="form-control form-control-sm font-mono fw-semibold shadow-none"
+                          placeholder="e.g. 369265"
+                          value={item.roughCutNo || ''}
+                          onChange={(e) => handleRowChange(idx, 'roughCutNo', e.target.value)}
+                          style={{ height: '36px', borderColor: '#CBD5E1' }}
+                        />
+                      </td>
+                      <td className="py-2">
+                        <input
+                          type="text"
+                          className="form-control form-control-sm text-uppercase font-mono fw-bold text-navy shadow-none"
+                          placeholder="e.g. 45223761"
                           value={item.barcode}
                           onChange={(e) => handleRowChange(idx, 'barcode', e.target.value)}
+                          style={{ height: '36px', borderColor: '#CBD5E1' }}
                           required
                         />
                       </td>
-                      <td>
+                      <td className="py-2">
+                        <div className="input-group input-group-sm">
+                          <input
+                            type="number"
+                            step="0.001"
+                            inputMode="decimal"
+                            className="form-control form-control-sm fw-bold shadow-none font-mono"
+                            placeholder="0.54"
+                            value={item.weight}
+                            onChange={(e) => handleRowChange(idx, 'weight', e.target.value)}
+                            style={{ height: '36px', borderColor: '#CBD5E1' }}
+                            required
+                          />
+                          <span className="input-group-text bg-light text-muted px-2 small fw-medium" style={{ height: '36px', borderColor: '#CBD5E1' }}>
+                            ct
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2">
+                        <div className="input-group input-group-sm">
+                          <input
+                            type="number"
+                            step="0.001"
+                            inputMode="decimal"
+                            className="form-control form-control-sm fw-semibold shadow-none font-mono"
+                            placeholder="0.32"
+                            value={item.targetWeight}
+                            onChange={(e) => handleRowChange(idx, 'targetWeight', e.target.value)}
+                            style={{ height: '36px', borderColor: '#CBD5E1' }}
+                          />
+                          <span className="input-group-text bg-light text-muted px-2 small fw-medium" style={{ height: '36px', borderColor: '#CBD5E1' }}>
+                            ct
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2">
                         <input
                           type="text"
-                          className="form-control form-control-sm"
-                          placeholder="e.g. 1.25 ct Ideal"
-                          value={item.size}
-                          onChange={(e) => handleRowChange(idx, 'size', e.target.value)}
-                          required
+                          list="diamondShapesList"
+                          className="form-control form-control-sm shadow-none fw-medium"
+                          placeholder="e.g. Emerald"
+                          value={item.shape || ''}
+                          onChange={(e) => handleRowChange(idx, 'shape', e.target.value)}
+                          style={{ height: '36px', borderColor: '#CBD5E1' }}
                         />
                       </td>
-                      <td>
-                        <input
-                          type="number"
-                          step="0.001"
-                          className="form-control form-control-sm fw-semibold"
-                          placeholder="Weight in Carats"
-                          value={item.weight}
-                          onChange={(e) => handleRowChange(idx, 'weight', e.target.value)}
-                          required
-                        />
-                      </td>
-                      <td>
+                      <td className="py-2">
                         <input
                           type="text"
-                          className="form-control form-control-sm"
-                          placeholder="Optional notes"
+                          className="form-control form-control-sm shadow-none"
+                          placeholder="Marks / notes..."
                           value={item.remarks}
                           onChange={(e) => handleRowChange(idx, 'remarks', e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && idx === diamondsList.length - 1) {
+                              e.preventDefault();
+                              handleAddRow();
+                            }
+                          }}
+                          style={{ height: '36px', borderColor: '#CBD5E1' }}
                         />
                       </td>
-                      <td className="text-end">
+                      <td className="text-center py-2">
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-danger border-0 rounded-circle p-1"
+                          className="btn btn-sm btn-outline-danger border-0 rounded-circle p-1.5 transition-all"
                           onClick={() => handleRemoveRow(idx)}
                           disabled={diamondsList.length === 1}
-                          title="Remove Row"
+                          title={diamondsList.length === 1 ? 'At least one diamond row is required' : 'Remove row'}
+                          style={{ opacity: diamondsList.length === 1 ? 0.35 : 1 }}
                         >
                           <Trash2 size={16} />
                         </button>
