@@ -52,7 +52,18 @@ export const exportToExcel = (filename, rows) => {
   if (!rows || !rows.length) return;
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Data');
+
+  // Auto-fit column widths so data is never squashed in Google Sheets / Excel
+  const keys = Object.keys(rows[0]);
+  ws['!cols'] = keys.map((key) => {
+    const maxLen = rows.reduce((max, r) => {
+      const val = r[key] !== null && r[key] !== undefined ? String(r[key]) : '';
+      return Math.max(max, val.length);
+    }, key.length);
+    return { wch: Math.max(maxLen + 3, 12) };
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Report_Data');
   XLSX.writeFile(wb, `${filename}.xlsx`);
 };
 
@@ -70,58 +81,122 @@ export const exportShapeMatrixExcel = (
   const wb = XLSX.utils.book_new();
 
   // 1. SHEET 1: MONTHLY STOCK SHAPE MATRIX
-  const matrixRows = rows.map((r, idx) => {
-    const rowObj = {
-      'Sr No': idx + 1,
-      'Date': r.date,
-      'Total Pcs': r.totalPcs,
-    };
-    shapes.forEach((s) => {
-      const shapeData = r.shapes[s];
-      rowObj[`${s} (Pcs / Wt)`] = shapeData ? `${shapeData.pcs} / ${shapeData.weight.toFixed(3)} ct` : '-';
-    });
-    rowObj['Total Weight (ct)'] = parseFloat(r.totalWeight.toFixed(3));
-    return rowObj;
+  const matrixAoa = [
+    ['DIVY IMPEX — DIAMOND MANAGEMENT SYSTEM'],
+    ['MONTHLY STOCK & SHAPE MATRIX LEDGER'],
+    [
+      `Client Company: ${companyName}   |   Date Scope: ${fromDate || 'All Time'} to ${toDate || 'Present'}   |   Generated: ${new Date().toLocaleDateString('en-GB')}`
+    ],
+    [], // Blank visual separator
+    [
+      'Sr No',
+      'Date',
+      'Total Pcs',
+      ...shapes.map((s) => `${s.toUpperCase()} (Pcs / Carats)`),
+      'Total Weight (ct)'
+    ]
+  ];
+
+  rows.forEach((r, idx) => {
+    matrixAoa.push([
+      idx + 1,
+      r.date,
+      r.totalPcs,
+      ...shapes.map((s) => {
+        const shapeData = r.shapes[s];
+        return shapeData ? `${shapeData.pcs} pcs / ${shapeData.weight.toFixed(3)} ct` : '—';
+      }),
+      parseFloat(r.totalWeight.toFixed(3))
+    ]);
   });
 
-  // Grand Total Row
-  const totalRow = {
-    'Sr No': 'TOTAL',
-    'Date': 'GRAND TOTAL',
-    'Total Pcs': grandTotal.totalPcs || 0,
-  };
-  shapes.forEach((s) => {
-    const sTot = grandTotal.shapes ? grandTotal.shapes[s] : null;
-    totalRow[`${s} (Pcs / Wt)`] = sTot ? `${sTot.pcs} / ${sTot.weight.toFixed(3)} ct` : '-';
-  });
-  totalRow['Total Weight (ct)'] = parseFloat((grandTotal.totalWeight || 0).toFixed(3));
-  matrixRows.push(totalRow);
+  // Grand Total Summary Row
+  matrixAoa.push([
+    'TOTAL',
+    'GRAND TOTAL SUMMARY',
+    grandTotal.totalPcs || 0,
+    ...shapes.map((s) => {
+      const sTot = grandTotal.shapes ? grandTotal.shapes[s] : null;
+      return sTot ? `${sTot.pcs} pcs / ${sTot.weight.toFixed(3)} ct` : '—';
+    }),
+    parseFloat((grandTotal.totalWeight || 0).toFixed(3))
+  ]);
 
-  const wsMatrix = XLSX.utils.json_to_sheet(matrixRows);
+  const wsMatrix = XLSX.utils.aoa_to_sheet(matrixAoa);
+  const totalCols = 3 + shapes.length;
+  wsMatrix['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: totalCols } }
+  ];
+  wsMatrix['!cols'] = [
+    { wch: 8 },  // Sr No
+    { wch: 16 }, // Date
+    { wch: 14 }, // Total Pcs
+    ...shapes.map(() => ({ wch: 25 })), // Shape columns
+    { wch: 20 }  // Total Weight
+  ];
   XLSX.utils.book_append_sheet(wb, wsMatrix, 'Monthly_Stock_Matrix');
 
   // 2. SHEET 2: ITEMIZED DIAMOND RECORDS
-  const itemRows = [];
+  const itemAoa = [
+    ['DIVY IMPEX — DIAMOND MANAGEMENT SYSTEM'],
+    ['DETAILED DIAMOND ITEMIZATION AUDIT REGISTER'],
+    [
+      `Company: ${companyName}   |   Total Diamonds: ${grandTotal.totalPcs || 0} pcs   |   Generated: ${new Date().toLocaleDateString('en-GB')}`
+    ],
+    [],
+    [
+      'Sr No',
+      'Received Date',
+      'Barcode Number',
+      'Rough Cut No',
+      'Client Company',
+      'Diamond Shape',
+      'Rough Weight (ct)',
+      'Polished Weight (ct)',
+      'Assigned Artisan',
+      'Current Status'
+    ]
+  ];
+
+  let itemIdx = 1;
   rows.forEach((r) => {
-    (r.diamonds || []).forEach((d, dIdx) => {
-      itemRows.push({
-        'Date': r.date,
-        'Barcode': d.barcode,
-        'Rough Cut No': d.roughCutNo || '-',
-        'Company': d.companyName,
-        'Shape': d.shape || d.size || '-',
-        'Weight (ct)': parseFloat((parseFloat(d.weight) || 0).toFixed(3)),
-        'Polished Wt (ct)': d.targetWeight ? parseFloat((parseFloat(d.targetWeight) || 0).toFixed(3)) : '-',
-        'Worker': d.assignedWorkerName || 'Unassigned',
-        'Status': d.status || '-'
-      });
+    (r.diamonds || []).forEach((d) => {
+      itemAoa.push([
+        itemIdx++,
+        r.date,
+        d.barcode,
+        d.roughCutNo || '—',
+        d.companyName,
+        d.shape || d.size || 'Emeral',
+        parseFloat((parseFloat(d.weight) || 0).toFixed(3)),
+        d.targetWeight ? parseFloat((parseFloat(d.targetWeight) || 0).toFixed(3)) : '—',
+        d.assignedWorkerName || 'Unassigned',
+        d.status || 'Received'
+      ]);
     });
   });
 
-  if (itemRows.length > 0) {
-    const wsItems = XLSX.utils.json_to_sheet(itemRows);
-    XLSX.utils.book_append_sheet(wb, wsItems, 'Itemized_Diamonds');
-  }
+  const wsItems = XLSX.utils.aoa_to_sheet(itemAoa);
+  wsItems['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } }
+  ];
+  wsItems['!cols'] = [
+    { wch: 8 },
+    { wch: 16 },
+    { wch: 20 },
+    { wch: 16 },
+    { wch: 24 },
+    { wch: 16 },
+    { wch: 18 },
+    { wch: 20 },
+    { wch: 22 },
+    { wch: 16 }
+  ];
+  XLSX.utils.book_append_sheet(wb, wsItems, 'Itemized_Diamonds');
 
   XLSX.writeFile(wb, `${filename}.xlsx`);
 };
@@ -129,7 +204,7 @@ export const exportShapeMatrixExcel = (
 /**
  * Generates a clean, simple, and professional native Excel (.xlsx) workbook for Company Deliveries.
  * Includes cleanly separated sheets:
- * Sheet 1: "Delivery_Dispatches" - Chronological delivery register with auto-fitted columns
+ * Sheet 1: "Delivery_Dispatches" - Chronological delivery register with corporate header and auto-fitted columns
  * Sheet 2: "Company_Summary" - Delivery totals grouped by each client company
  * Sheet 3: "Executive_Totals" - Grand delivery statistics & yield metrics
  * Sheet 4: "Diamond_Itemization" - Full item-by-item barcode breakdown
@@ -143,59 +218,93 @@ export const exportDispatchHistoryExcel = (
   const wb = XLSX.utils.book_new();
 
   // 1. SHEET 1: DATE-BY-DATE DISPATCH REGISTER (Main Sheet)
-  const dispatchRows = dispatches.map((dp, idx) => {
-    const origW = parseFloat(dp.totalOriginalWeight) || 0;
+  const dispatchAoa = [
+    ['DIVY IMPEX — DIAMOND MANAGEMENT SYSTEM'],
+    ['FINISHED GOODS DELIVERY & DISPATCH REGISTER'],
+    [
+      `Generated: ${new Date().toLocaleString('en-GB')}   |   Scope: ${filters.scope || 'All Active Delivery Logs'}   |   Batches: ${dispatches.length} Challans`
+    ],
+    [], // Blank separator
+    [
+      'Sr No',
+      'Dispatch Date',
+      'Challan No',
+      'Company Name',
+      'Company Code',
+      'Receiver Representative',
+      'Dispatched By',
+      'Diamonds (pcs)',
+      'Orig Weight (ct)',
+      'Handed Weight (ct)',
+      'Weight Loss (ct)',
+      'Remarks / Seal',
+      'Barcodes'
+    ]
+  ];
+
+  dispatches.forEach((dp, idx) => {
+    let origW = parseFloat(dp.totalOriginalWeight) || 0;
     const actW = parseFloat(dp.totalActualWeight) || 0;
+    // Fallback if orig weight was unrecorded on legacy dispatches
+    if (origW === 0 && actW > 0) origW = actW;
     const lossW = actW - origW;
-    return {
-      'Sr No': idx + 1,
-      'Dispatch Date': dp.dispatchDate,
-      'Challan No': dp.challanNo,
-      'Company Name': dp.companyName,
-      'Company Code': dp.companyCode,
-      'Receiver Representative': dp.receiverName || '-',
-      'Dispatched By': dp.dispatchedBy || '-',
-      'Diamonds (pcs)': parseInt(dp.diamondsCount, 10) || 0,
-      'Orig Weight (ct)': parseFloat(origW.toFixed(3)),
-      'Handed Weight (ct)': parseFloat(actW.toFixed(3)),
-      'Weight Loss (ct)': parseFloat(lossW.toFixed(3)),
-      'Remarks / Seal': dp.remarks || '-',
-      'Barcodes': (dp.barcodes || []).join(', ')
-    };
+
+    dispatchAoa.push([
+      idx + 1,
+      dp.dispatchDate,
+      dp.challanNo,
+      dp.companyName,
+      dp.companyCode,
+      dp.receiverName || '—',
+      dp.dispatchedBy || '—',
+      parseInt(dp.diamondsCount, 10) || 0,
+      parseFloat(origW.toFixed(3)),
+      parseFloat(actW.toFixed(3)),
+      parseFloat(lossW.toFixed(3)),
+      dp.remarks || '—',
+      (dp.barcodes || []).join(', ')
+    ]);
   });
 
-  // Add Summary Total Row to Sheet 1
-  dispatchRows.push({
-    'Sr No': 'TOTAL',
-    'Dispatch Date': '',
-    'Challan No': `${dispatches.length} Batches`,
-    'Company Name': '',
-    'Company Code': '',
-    'Receiver Representative': '',
-    'Dispatched By': '',
-    'Diamonds (pcs)': overallTotals.totalPieces || 0,
-    'Orig Weight (ct)': parseFloat((overallTotals.totalOriginalWeight || 0).toFixed(3)),
-    'Handed Weight (ct)': parseFloat((overallTotals.totalActualWeight || 0).toFixed(3)),
-    'Weight Loss (ct)': parseFloat((overallTotals.totalLoss || 0).toFixed(3)),
-    'Remarks / Seal': '',
-    'Barcodes': ''
-  });
+  // Summary Totals Row
+  const totOrig = parseFloat((overallTotals.totalOriginalWeight || 0).toFixed(3));
+  const totAct = parseFloat((overallTotals.totalActualWeight || 0).toFixed(3));
+  const totLoss = parseFloat((overallTotals.totalLoss || 0).toFixed(3));
 
-  const wsDispatches = XLSX.utils.json_to_sheet(dispatchRows);
+  dispatchAoa.push([
+    'TOTAL',
+    'GRAND TOTAL',
+    `${dispatches.length} Batches`,
+    '',
+    '',
+    '',
+    '',
+    overallTotals.totalPieces || 0,
+    totOrig > 0 ? totOrig : totAct,
+    totAct,
+    totLoss,
+    'OFFICIAL DISPATCH REGISTER',
+    ''
+  ]);
 
-  // Auto-fit column widths for Sheet 1
+  const wsDispatches = XLSX.utils.aoa_to_sheet(dispatchAoa);
+  wsDispatches['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 12 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 12 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 12 } }
+  ];
   wsDispatches['!cols'] = [
     { wch: 8 },  // Sr No
-    { wch: 14 }, // Dispatch Date
-    { wch: 22 }, // Challan No
-    { wch: 22 }, // Company Name
-    { wch: 14 }, // Company Code
-    { wch: 24 }, // Receiver
-    { wch: 20 }, // Dispatched By
+    { wch: 16 }, // Dispatch Date
+    { wch: 25 }, // Challan No
+    { wch: 24 }, // Company Name
+    { wch: 16 }, // Company Code
+    { wch: 28 }, // Receiver Representative
+    { wch: 22 }, // Dispatched By
     { wch: 16 }, // Diamonds (pcs)
     { wch: 18 }, // Orig Weight (ct)
-    { wch: 18 }, // Handed Weight (ct)
-    { wch: 16 }, // Weight Loss (ct)
+    { wch: 20 }, // Handed Weight (ct)
+    { wch: 18 }, // Weight Loss (ct)
     { wch: 25 }, // Remarks
     { wch: 35 }  // Barcodes
   ];

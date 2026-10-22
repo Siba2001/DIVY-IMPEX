@@ -113,7 +113,12 @@ const Reports = () => {
     const dateMap = {};
 
     reportData.forEach((d) => {
-      const shape = d.shape || d.size || 'Other';
+      let shape = (d.shape || d.size || '').trim();
+      const lower = shape.toLowerCase();
+      // Normalize 'emerald', legacy carat text (e.g. '1.0 ct', '1.00 ct', '1.0'), or missing values to 'Emeral'
+      if (!shape || lower === 'emerald' || lower.includes('ct') || /^\d+(\.\d+)?$/.test(shape)) {
+        shape = 'Emeral';
+      }
       shapeSet.add(shape);
 
       const dDate = d.receivedDate || 'Undated';
@@ -402,9 +407,12 @@ const Reports = () => {
       {/* Report Container */}
       <div className="card card-custom p-3 p-sm-4 shadow-sm border">
         {/* Report Header Title & Mode Switcher */}
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4 pb-3 border-bottom">
           <div>
-            <div className="d-flex align-items-center gap-2 flex-wrap mb-1">
+            <div className="d-flex align-items-center gap-2 flex-wrap mb-1.5">
+              <div className="p-2 rounded bg-navy text-warning flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
+                <FileSpreadsheet size={18} />
+              </div>
               <h5 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
                 {activeReportType === '1'
                   ? selectedCompany
@@ -413,44 +421,63 @@ const Reports = () => {
                   : `DIVY IMPEX - ${reportTypes.find((r) => r.id === activeReportType)?.name}`}
               </h5>
               {selectedCompany && (
-                <span className="badge bg-light text-navy border px-2.5 py-1 fw-bold">
+                <span className="badge font-mono fw-bold px-2 py-1" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
                   {selectedCompany.code}
                 </span>
               )}
             </div>
-            <span className="text-muted small">
-              {fromDate && toDate
-                ? `Period: ${fromDate} to ${toDate}`
-                : fromDate
-                ? `Period: From ${fromDate}`
-                : toDate
-                ? `Period: Up to ${toDate}`
-                : 'All Recorded Time'}
-              {' '}| Total Diamonds: <strong>{reportData.length} pcs</strong>
-              {' '}| Total Carat Weight: <strong>{matrixData.grandTotal.totalWeight.toFixed(3)} ct</strong>
-            </span>
+            <div className="d-flex align-items-center gap-2 flex-wrap text-muted small">
+              <span>
+                <Calendar size={13} className="me-1 text-secondary" />
+                {fromDate && toDate
+                  ? `${fromDate} to ${toDate}`
+                  : fromDate
+                  ? `From ${fromDate}`
+                  : toDate
+                  ? `Up to ${toDate}`
+                  : 'All Recorded Time'}
+              </span>
+              <span className="text-muted opacity-50">•</span>
+              <span className="badge rounded-pill fw-bold px-2.5 py-1" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
+                {reportData.length} Total Diamonds
+              </span>
+              <span className="badge rounded-pill fw-bold px-2.5 py-1" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
+                {matrixData.grandTotal.totalWeight.toFixed(3)} ct Total Weight
+              </span>
+            </div>
           </div>
 
-          {/* Toggle between Matrix Ledger and Itemized List (for Report 1) */}
+          {/* Controls: View Toggle & Direct Download Matrix Button */}
           {activeReportType === '1' && (
-            <div className="btn-group rounded-pill p-1 bg-light border btn-print-hide" role="group">
+            <div className="d-flex flex-wrap align-items-center gap-2 btn-print-hide">
+              <div className="btn-group rounded-pill p-1 bg-light border" role="group">
+                <button
+                  type="button"
+                  className={`btn btn-sm rounded-pill px-3 fw-semibold ${
+                    viewMode === 'matrix' ? 'btn-gold shadow-xs' : 'btn-light text-secondary border-0'
+                  }`}
+                  onClick={() => setViewMode('matrix')}
+                >
+                  <Table size={14} className="me-1.5" /> Shape Matrix Ledger
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-sm rounded-pill px-3 fw-semibold ${
+                    viewMode === 'itemized' ? 'btn-gold shadow-xs' : 'btn-light text-secondary border-0'
+                  }`}
+                  onClick={() => setViewMode('itemized')}
+                >
+                  <ListOrdered size={14} className="me-1.5" /> Itemized Diamonds ({reportData.length})
+                </button>
+              </div>
+
               <button
                 type="button"
-                className={`btn btn-sm rounded-pill px-3 fw-semibold ${
-                  viewMode === 'matrix' ? 'btn-gold shadow-xs' : 'btn-light text-secondary border-0'
-                }`}
-                onClick={() => setViewMode('matrix')}
+                className="btn btn-sm btn-outline-success rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center shadow-xs"
+                onClick={handleExportExcel}
+                title="Download formatted professional Excel workbook for this matrix"
               >
-                <Table size={14} className="me-1.5" /> Shape Matrix Ledger
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm rounded-pill px-3 fw-semibold ${
-                  viewMode === 'itemized' ? 'btn-gold shadow-xs' : 'btn-light text-secondary border-0'
-                }`}
-                onClick={() => setViewMode('itemized')}
-              >
-                <ListOrdered size={14} className="me-1.5" /> Itemized Diamonds ({reportData.length})
+                <FileSpreadsheet size={14} className="me-1.5" /> Download Matrix (.xlsx)
               </button>
             </div>
           )}
@@ -468,34 +495,39 @@ const Reports = () => {
                 <small>Try selecting a different date range or company filter above.</small>
               </div>
             ) : (
-              <div className="table-responsive rounded-3 border shadow-xs bg-white">
-                <table className="table table-bordered table-hover align-middle mb-0" style={{ minWidth: '880px', borderColor: '#CBD5E1' }}>
-                  {/* Table Header matching the handwritten notebook ledger */}
-                  <thead style={{ backgroundColor: '#0A192F', color: '#FFFFFF' }}>
+              <div className="table-responsive rounded-3 border bg-white shadow-xs">
+                <table className="table table-custom table-hover align-middle mb-0">
+                  {/* Clean Modern Table Header */}
+                  <thead style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
                     <tr>
-                      <th className="py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '130px', fontSize: '0.78rem', letterSpacing: '0.04em', color: '#FFFFFF' }}>
+                      <th className="py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '130px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
                         Date
                       </th>
-                      <th className="text-center py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '110px', fontSize: '0.78rem', letterSpacing: '0.04em', color: '#D4AF37' }}>
+                      <th className="text-center py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '100px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
                         Total Pcs
                       </th>
                       {/* Dynamic Shape Columns from the company's diamonds */}
                       {matrixData.shapes.map((shapeName) => (
                         <th
                           key={shapeName}
-                          className="text-center py-3 px-3 text-uppercase fw-bold text-nowrap"
-                          style={{ minWidth: '130px', fontSize: '0.78rem', letterSpacing: '0.04em', color: '#FFFFFF' }}
+                          className="text-center py-2.5 px-3 text-nowrap"
+                          style={{ minWidth: '130px' }}
                         >
-                          <div>{shapeName}</div>
-                          <span style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 500, letterSpacing: '0.02em' }}>
-                            (Pcs / Weight)
+                          <div className="d-flex align-items-center justify-content-center gap-1.5 mb-0.5">
+                            <Gem size={13} style={{ color: '#D4AF37' }} />
+                            <span className="fw-bold text-uppercase" style={{ color: '#0A192F', fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                              {shapeName}
+                            </span>
+                          </div>
+                          <span className="text-muted" style={{ fontSize: '0.68rem', fontWeight: 500 }}>
+                            (pcs / weight)
                           </span>
                         </th>
                       ))}
-                      <th className="text-end py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '140px', fontSize: '0.78rem', letterSpacing: '0.04em', color: '#D4AF37' }}>
+                      <th className="text-end py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '130px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
                         Total Weight
                       </th>
-                      <th className="text-center py-3 px-2 text-uppercase fw-bold text-nowrap btn-print-hide" style={{ width: '60px', fontSize: '0.72rem', color: '#CBD5E1' }}>
+                      <th className="text-center py-3 px-2 text-uppercase fw-bold text-nowrap btn-print-hide" style={{ width: '60px', color: '#94A3B8', fontSize: '0.72rem' }}>
                         Inspect
                       </th>
                     </tr>
@@ -506,15 +538,18 @@ const Reports = () => {
                       const isExpanded = !!expandedDates[rowItem.date];
                       return (
                         <React.Fragment key={rowItem.date}>
-                          <tr style={{ backgroundColor: '#FFFFFF' }}>
+                          <tr
+                            style={{ cursor: 'pointer', transition: 'background-color 0.15s ease' }}
+                            onClick={() => toggleDateExpanded(rowItem.date)}
+                          >
                             {/* Date */}
-                            <td className="py-2.5 px-3 fw-bold text-navy font-mono" style={{ color: '#0A192F' }}>
+                            <td className="py-2.5 px-3 fw-bold font-mono text-nowrap" style={{ color: '#0A192F' }}>
                               {rowItem.date}
                             </td>
 
                             {/* Total Pcs */}
                             <td className="text-center py-2.5 px-3">
-                              <span className="badge rounded-pill bg-light text-navy border px-2.5 py-1 fw-bold fs-7">
+                              <span className="badge rounded-pill fw-bold px-2.5 py-1" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
                                 {rowItem.totalPcs}
                               </span>
                             </td>
@@ -525,34 +560,38 @@ const Reports = () => {
                               return (
                                 <td key={shapeName} className="text-center py-2.5 px-3 font-mono">
                                   {shapeVal ? (
-                                    <div className="d-inline-flex align-items-center justify-content-center px-2 py-1 rounded bg-light border" style={{ minWidth: '85px' }}>
-                                      <span className="fw-bold text-navy me-1">{shapeVal.pcs}</span>
+                                    <div
+                                      className="d-inline-flex align-items-center justify-content-center px-2.5 py-1 rounded-2 bg-light border"
+                                      style={{ minWidth: '85px', fontSize: '0.82rem' }}
+                                    >
+                                      <span className="fw-bold me-1" style={{ color: '#0A192F' }}>{shapeVal.pcs}</span>
                                       <span className="text-muted mx-1">/</span>
                                       <span className="fw-semibold text-dark">{shapeVal.weight.toFixed(2)}</span>
                                       <span className="text-muted small ms-0.5" style={{ fontSize: '0.7rem' }}>ct</span>
                                     </div>
                                   ) : (
-                                    <span className="text-muted opacity-30">—</span>
+                                    <span className="text-muted opacity-25">—</span>
                                   )}
                                 </td>
                               );
                             })}
 
                             {/* Total Weight for this Date */}
-                            <td className="text-end py-2.5 px-3 fw-bold text-navy font-mono" style={{ fontSize: '0.92rem' }}>
+                            <td className="text-end py-2.5 px-3 fw-bold font-mono" style={{ color: '#0A192F', fontSize: '0.88rem' }}>
                               {rowItem.totalWeight.toFixed(2)}{' '}
                               <span className="text-muted small fw-normal">ct</span>
                             </td>
 
                             {/* Row Expand Toggle */}
-                            <td className="text-center py-2.5 px-2 btn-print-hide">
+                            <td className="text-center py-2.5 px-2 btn-print-hide" onClick={(e) => e.stopPropagation()}>
                               <button
                                 type="button"
-                                className="btn btn-sm btn-light border-0 rounded-circle p-1"
+                                className="btn btn-sm btn-light border rounded-circle p-1"
                                 onClick={() => toggleDateExpanded(rowItem.date)}
                                 title={isExpanded ? 'Hide diamond items' : 'View diamond items'}
+                                style={{ width: '28px', height: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                               >
-                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                {isExpanded ? <ChevronDown size={14} className="text-navy" /> : <ChevronRight size={14} className="text-secondary" />}
                               </button>
                             </td>
                           </tr>
@@ -563,10 +602,10 @@ const Reports = () => {
                               <td colSpan={matrixData.shapes.length + 4} className="p-3 bg-light">
                                 <div className="card shadow-xs border p-3 bg-white rounded-3">
                                   <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 className="fw-bold text-navy mb-0 small">
+                                    <h6 className="fw-bold text-navy mb-0 small" style={{ color: '#0A192F' }}>
                                       Diamond Barcode Entries for Date: {rowItem.date} ({rowItem.diamonds.length} stones)
                                     </h6>
-                                    <span className="badge bg-gold text-dark fw-bold">
+                                    <span className="badge px-2.5 py-1 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
                                       Total: {rowItem.totalWeight.toFixed(3)} ct
                                     </span>
                                   </div>
@@ -589,7 +628,7 @@ const Reports = () => {
                                         {rowItem.diamonds.map((dia, dIdx) => (
                                           <tr key={dia.id || dIdx}>
                                             <td>{dIdx + 1}</td>
-                                            <td className="fw-bold font-mono text-navy">{dia.barcode}</td>
+                                            <td className="fw-bold font-mono" style={{ color: '#0A192F' }}>{dia.barcode}</td>
                                             <td className="font-mono text-muted">{dia.roughCutNo || '-'}</td>
                                             <td>{dia.companyName}</td>
                                             <td>
@@ -616,13 +655,13 @@ const Reports = () => {
                   </tbody>
 
                   {/* Grand Summary Total Row at Bottom */}
-                  <tfoot style={{ backgroundColor: '#0A192F', color: '#FFFFFF', borderTop: '2px solid #D4AF37' }}>
+                  <tfoot style={{ backgroundColor: '#F8FAFC', borderTop: '2px solid #CBD5E1' }}>
                     <tr>
-                      <td className="py-3 px-3 text-uppercase fw-extrabold" style={{ color: '#D4AF37', fontSize: '0.82rem', letterSpacing: '0.04em' }}>
-                        TOTAL
+                      <td className="py-3 px-3 text-uppercase fw-bold" style={{ color: '#0A192F', fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                        Total Summary
                       </td>
                       <td className="text-center py-3 px-3">
-                        <span className="badge bg-warning text-dark px-3 py-1.5 fw-bold fs-7 shadow-xs">
+                        <span className="badge rounded-pill font-mono fw-bold px-3 py-1.5" style={{ backgroundColor: '#0A192F', color: '#FFFFFF', fontSize: '0.78rem' }}>
                           {matrixData.grandTotal.totalPcs} pcs
                         </span>
                       </td>
@@ -631,11 +670,11 @@ const Reports = () => {
                       {matrixData.shapes.map((shapeName) => {
                         const sTot = matrixData.grandTotal.shapes[shapeName];
                         return (
-                          <td key={shapeName} className="text-center py-3 px-3 font-mono" style={{ color: '#FFFFFF' }}>
-                            <div className="fw-bold fs-7" style={{ color: '#D4AF37' }}>
+                          <td key={shapeName} className="text-center py-3 px-3 font-mono">
+                            <div className="fw-bold" style={{ color: '#0A192F', fontSize: '0.82rem' }}>
                               {sTot.pcs} pcs
                             </div>
-                            <div className="small" style={{ color: '#E2E8F0', fontSize: '0.74rem' }}>
+                            <div className="text-muted small" style={{ fontSize: '0.74rem' }}>
                               {sTot.weight.toFixed(2)} ct
                             </div>
                           </td>
@@ -643,9 +682,9 @@ const Reports = () => {
                       })}
 
                       {/* Grand Total Weight */}
-                      <td className="text-end py-3 px-3 font-mono fw-extrabold fs-6" style={{ color: '#D4AF37' }}>
+                      <td className="text-end py-3 px-3 font-mono fw-bold" style={{ color: '#0A192F', fontSize: '0.92rem' }}>
                         {matrixData.grandTotal.totalWeight.toFixed(2)}{' '}
-                        <span className="small text-white opacity-75 fw-normal">ct</span>
+                        <span className="small text-muted fw-normal">ct</span>
                       </td>
                       <td className="btn-print-hide"></td>
                     </tr>
