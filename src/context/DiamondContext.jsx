@@ -25,14 +25,14 @@ const getInitialLocalCache = () => {
     const d = JSON.parse(localStorage.getItem(STORAGE_KEYS.DIAMONDS) || '[]');
     const h = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORIES) || '[]');
     return { companies: c, workers: w, diamonds: d, histories: h };
-  } catch (e) {}
+  } catch (e) { }
   return { companies: [], workers: [], diamonds: [], histories: [] };
 };
 
 const saveLocalCache = (companies, workers, diamonds, histories = []) => {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ companies, workers, diamonds, histories }));
-  } catch (e) {}
+  } catch (e) { }
 };
 
 export const DiamondProvider = ({ children }) => {
@@ -91,7 +91,7 @@ export const DiamondProvider = ({ children }) => {
         if (newHistories.length > 0) {
           try {
             localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify(newHistories));
-          } catch (e) {}
+          } catch (e) { }
         }
         saveLocalCache(newCompanies, newWorkers, newDiamonds, newHistories);
       }
@@ -274,12 +274,12 @@ export const DiamondProvider = ({ children }) => {
       const updated = prev.map((d) =>
         barcodeSet.has(String(d.barcode || '').toUpperCase())
           ? {
-              ...d,
-              status: 'RETURNED',
-              dispatchedDate: dispatchRecord.dispatchDate,
-              challanNo: dispatchRecord.challanNo,
-              receiverName: dispatchRecord.receiverName
-            }
+            ...d,
+            status: 'RETURNED',
+            dispatchedDate: dispatchRecord.dispatchDate,
+            challanNo: dispatchRecord.challanNo,
+            receiverName: dispatchRecord.receiverName
+          }
           : d
       );
       saveLocalCache(companies, workers, updated);
@@ -304,10 +304,10 @@ export const DiamondProvider = ({ children }) => {
   const getKpis = () => {
     const totalCompanies = companies.length;
     const totalDiamonds = diamonds.length;
-    
+
     const today = new Date().toISOString().split('T')[0];
     const todaysReceived = diamonds.filter((d) => d.receivedDate === today).length;
-    
+
     const completed = diamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
     const inProduction = diamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
     const pending = diamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;

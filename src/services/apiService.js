@@ -8,7 +8,7 @@ try {
   ['divy_companies_v1', 'divy_workers_v1', 'divy_diamonds_v1', 'divy_histories_v1'].forEach((k) => {
     localStorage.removeItem(k);
   });
-} catch (e) {}
+} catch (e) { }
 
 export const STORAGE_KEYS = {
   COMPANIES: 'divy_companies_clean',
@@ -165,7 +165,7 @@ const getItem = (key) => {
 const setItem = (key, data) => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
-  } catch (e) {}
+  } catch (e) { }
 };
 
 // Date helper
@@ -251,7 +251,7 @@ export const apiService = {
           if (remoteData.histories) setItem(STORAGE_KEYS.HISTORIES, remoteData.histories);
           try {
             window.dispatchEvent(new CustomEvent('divy_remote_sync', { detail: remoteData }));
-          } catch (e) {}
+          } catch (e) { }
         }
       })
       .catch((e) => {
@@ -811,7 +811,7 @@ export const apiService = {
             if (!isNaN(dt.getTime())) {
               cleanTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       }
       return { ...h, time: cleanTime };
@@ -833,8 +833,8 @@ export const apiService = {
         const hBarcode = String(h.barcode || '').trim().toLowerCase();
         const hDiamondId = String(h.diamondId || '').trim().toLowerCase();
         return (targetBarcode && hBarcode === targetBarcode) ||
-               (targetId && hDiamondId === targetId) ||
-               (cleanQuery && (hBarcode === cleanQuery || hDiamondId === cleanQuery));
+          (targetId && hDiamondId === targetId) ||
+          (cleanQuery && (hBarcode === cleanQuery || hDiamondId === cleanQuery));
       })
       .map(sanitizeHistoryItem)
       .sort((a, b) => new Date(a.date + ' ' + (a.time || '')) - new Date(b.date + ' ' + (b.time || '')));
@@ -886,7 +886,7 @@ export const apiService = {
                   if (!isNaN(dt.getTime())) {
                     cleanTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
                   }
-                } catch (e) {}
+                } catch (e) { }
               }
             }
             return { ...h, time: cleanTime };
