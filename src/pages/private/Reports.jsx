@@ -659,7 +659,7 @@ const Reports = () => {
           /* VIEW 2: ITEMIZED DIAMONDS AUDIT TABLE (Row-by-Row List) */
           /* ========================================================================= */
           <div className="table-responsive rounded-3 border">
-            <table className="table table-custom table-hover table-bordered align-middle mb-0" style={{ minWidth: '850px' }}>
+            <table className="table table-custom table-hover table-bordered align-middle mb-0">
               <thead className="table-light">
                 <tr>
                   <th style={{ width: '40px' }}>#</th>

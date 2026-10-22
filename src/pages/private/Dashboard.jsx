@@ -31,6 +31,86 @@ import {
   Legend
 } from 'recharts';
 
+// Custom Tooltip for Pie Chart (guarantees clear visible white text on all slices, including dark navy)
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    const item = data.payload || {};
+    const sliceColor = item.fill || data.fill || '#D4AF37';
+
+    return (
+      <div
+        className="px-3 py-2 rounded-3 shadow-lg"
+        style={{
+          backgroundColor: '#0A192F',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          color: '#FFFFFF',
+          fontSize: '0.82rem',
+          minWidth: '130px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
+        }}
+      >
+        <div className="d-flex align-items-center gap-2 mb-1">
+          <span
+            className="rounded-circle d-inline-block flex-shrink-0"
+            style={{
+              width: '10px',
+              height: '10px',
+              backgroundColor: sliceColor,
+              border: '1px solid rgba(255, 255, 255, 0.7)'
+            }}
+          />
+          <span className="fw-bold text-white text-truncate" style={{ color: '#FFFFFF' }}>
+            {item.companyName || `Company ${data.name}`}
+          </span>
+        </div>
+        <div className="d-flex justify-content-between align-items-center gap-2 pt-1 border-top border-secondary border-opacity-25">
+          <span className="small" style={{ color: '#94A3B8' }}>Diamonds:</span>
+          <span className="fw-bold fs-6" style={{ color: '#D4AF37' }}>
+            {data.value}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Custom Tooltip for Date Trends Bar Chart
+const CustomBarTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div
+        className="px-3 py-2 rounded-3 shadow-lg"
+        style={{
+          backgroundColor: '#0A192F',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          color: '#FFFFFF',
+          fontSize: '0.82rem',
+          minWidth: '140px',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
+        }}
+      >
+        <div className="fw-bold text-white mb-1 pb-1 border-bottom border-secondary border-opacity-25" style={{ color: '#FFFFFF' }}>
+          Date: {label}
+        </div>
+        {payload.map((entry, index) => (
+          <div key={`bar-tt-${index}`} className="d-flex align-items-center justify-content-between gap-3 py-0.5">
+            <span className="d-flex align-items-center gap-1.5" style={{ color: entry.color }}>
+              <span className="rounded-circle d-inline-block" style={{ width: '8px', height: '8px', backgroundColor: entry.color }} />
+              {entry.name}:
+            </span>
+            <span className="fw-bold text-white" style={{ color: '#FFFFFF' }}>
+              {entry.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 const Dashboard = () => {
   const { companies, diamonds, getKpis } = useDiamonds();
   const navigate = useNavigate();
@@ -65,10 +145,15 @@ const Dashboard = () => {
   });
 
   const pieColors = ['#0A192F', '#D4AF37', '#0284C7', '#10B981', '#8B5CF6', '#F59E0B'];
-  const companyPieData = Object.keys(companyDataMap).map((code) => ({
-    name: code,
-    value: companyDataMap[code]
-  }));
+  const companyPieData = Object.keys(companyDataMap).map((code, idx) => {
+    const matchedComp = companies.find((c) => String(c.code) === String(code));
+    return {
+      name: code,
+      companyName: matchedComp ? `${matchedComp.name} (${code})` : `Company ${code}`,
+      value: companyDataMap[code],
+      fill: pieColors[idx % pieColors.length]
+    };
+  });
 
   // Company summary table calculations
   const companySummaries = companies.map((c) => {
@@ -189,7 +274,7 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                     <XAxis dataKey="date" stroke="#64748B" fontSize={11} />
                     <YAxis stroke="#64748B" fontSize={11} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0A192F', color: '#fff', borderRadius: '8px' }} />
+                    <Tooltip content={<CustomBarTooltip />} />
                     <Legend />
                     <Bar dataKey="received" name="Received" fill="#0284C7" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="completed" name="Completed" fill="#10B981" radius={[4, 4, 0, 0]} />
@@ -234,7 +319,7 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#0A192F', color: '#fff', borderRadius: '8px' }} />
+                    <Tooltip content={<CustomPieTooltip />} />
                     <Legend verticalAlign="bottom" height={36} />
                   </PieChart>
                 </ResponsiveContainer>

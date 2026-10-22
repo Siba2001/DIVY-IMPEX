@@ -53,13 +53,45 @@ const DiamondTimelineModal = ({ isOpen, onClose, diamond }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (isOpen && diamond) {
-      setLoading(true);
-      apiService.getDiamondHistory(diamond.barcode).then((res) => {
-        setHistory(res);
+      // 1. Instantly load available local or synthesized milestone history in 0ms!
+      const initialHistory = apiService.getLocalHistory(diamond.barcode || diamond.id, diamond);
+      if (initialHistory && initialHistory.length > 0) {
+        setHistory(initialHistory);
         setLoading(false);
-      });
+      } else {
+        setLoading(true);
+      }
+
+      // 2. Background check with timeout protection (never hangs)
+      apiService
+        .getDiamondHistory(diamond.barcode || diamond.id, diamond)
+        .then((res) => {
+          if (isMounted && res && res.length > 0) {
+            setHistory(res);
+          }
+        })
+        .catch((err) => {
+          console.warn('[Timeline] Remote history check notice:', err);
+          if (isMounted && (!initialHistory || initialHistory.length === 0)) {
+            setHistory(apiService.generateSynthesizedHistory(diamond));
+          }
+        })
+        .finally(() => {
+          if (isMounted) {
+            setLoading(false);
+          }
+        });
+    } else {
+      setHistory([]);
+      setLoading(false);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, diamond]);
 
   if (!diamond) return null;

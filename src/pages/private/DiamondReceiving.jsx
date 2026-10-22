@@ -43,7 +43,7 @@ const DiamondReceiving = () => {
   const handleAddRow = () => {
     const updated = [
       ...diamondsList,
-      { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: 'Emerald', remarks: '' }
+      { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: 'Emeral', remarks: '' }
     ];
     setDiamondsList(updated);
     setTotalItemsInput(updated.length.toString());
@@ -309,7 +309,7 @@ const DiamondReceiving = () => {
 
             {/* Datalist for Diamond Cut Shapes */}
             <datalist id="diamondShapesList">
-              <option value="Emerald" />
+              <option value="Emeral" />
               <option value="Round" />
               <option value="Princess" />
               <option value="Oval" />
@@ -420,7 +420,7 @@ const DiamondReceiving = () => {
                           type="text"
                           list="diamondShapesList"
                           className="form-control form-control-sm shadow-none fw-medium"
-                          placeholder="e.g. Emerald"
+                          placeholder="e.g. Emeral"
                           value={item.shape || ''}
                           onChange={(e) => handleRowChange(idx, 'shape', e.target.value)}
                           style={{ height: '36px', borderColor: '#CBD5E1' }}

@@ -51,11 +51,21 @@ const Workers = () => {
       errs.department = 'Please select a department.';
     }
 
-    const phone = String(data.phone || '').trim();
+    const phone = String(data.phone || '').trim().replace(/\D/g, '');
     if (!phone) {
       errs.phone = 'Mobile Phone Number is required.';
-    } else if (!/^[0-9]{10}$/.test(phone)) {
-      errs.phone = 'Mobile number must be exactly 10 digits (digits only).';
+    } else if (phone.length !== 10) {
+      errs.phone = `Mobile number must be exactly 10 digits (currently ${phone.length} digits).`;
+    } else if (!/^[6-9]\d{9}$/.test(phone)) {
+      errs.phone = 'Mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.';
+    } else {
+      // Check duplicate mobile number
+      const duplicatePhone = workers.find(
+        (w) => w.phone && String(w.phone).replace(/\D/g, '') === phone && w.id !== editingWorker?.id
+      );
+      if (duplicatePhone) {
+        errs.phone = `Mobile number "${phone}" is already registered for "${duplicatePhone.name}" (${duplicatePhone.employeeId}).`;
+      }
     }
 
     return errs;
@@ -117,7 +127,7 @@ const Workers = () => {
         employeeId: String(formData.employeeId).trim().toUpperCase(),
         name: formData.name.trim(),
         department: formData.department,
-        phone: String(formData.phone).trim(),
+        phone: String(formData.phone).trim().replace(/\D/g, '').slice(0, 10),
         status: formData.status
       };
 
@@ -161,20 +171,20 @@ const Workers = () => {
         </button>
       </div>
 
-      <div className="card card-custom p-3 p-md-4 shadow-sm">
+      <div className="card card-custom p-3 shadow-sm">
         <div className="table-responsive">
-          <table className="table table-custom table-hover align-middle">
+          <table className="table table-custom table-sticky-first table-hover align-middle mb-0">
             <thead>
               <tr>
-                <th className="text-nowrap">Emp ID</th>
+                <th className="text-nowrap text-center">Emp ID</th>
                 <th className="text-nowrap">Artisan Name</th>
                 <th className="text-nowrap">Department</th>
-                <th className="text-nowrap">Mobile Contact</th>
-                <th className="text-nowrap">Total Assigned</th>
-                <th className="text-nowrap">In Progress</th>
-                <th className="text-nowrap">Completed</th>
-                <th className="text-nowrap">Pending</th>
-                <th className="text-nowrap">Status</th>
+                <th className="text-nowrap">Mobile</th>
+                <th className="text-nowrap text-center">Assigned</th>
+                <th className="text-nowrap text-center">In Progress</th>
+                <th className="text-nowrap text-center">Completed</th>
+                <th className="text-nowrap text-center">Pending</th>
+                <th className="text-nowrap text-center">Status</th>
                 <th className="text-end text-nowrap">Actions</th>
               </tr>
             </thead>
@@ -201,61 +211,64 @@ const Workers = () => {
                       style={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/workers/${w.id}`)}
                     >
-                      <td>
-                        <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
+                      <td className="text-center">
+                        <span className="badge font-mono fw-bold px-2 py-1" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
                           {w.employeeId}
                         </span>
                       </td>
                       <td>
                         <div className="d-flex align-items-center text-nowrap">
-                          <div className="avatar text-warning rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#0A192F' }}>
-                            <HardHat size={16} />
+                          <div className="avatar text-warning rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '30px', height: '30px', backgroundColor: '#0A192F' }}>
+                            <HardHat size={15} />
                           </div>
                           <span className="fw-bold" style={{ color: '#0A192F' }}>{w.name}</span>
                         </div>
                       </td>
                       <td className="fw-medium text-dark text-nowrap">{w.department}</td>
                       <td className="small text-muted text-nowrap">{w.phone}</td>
-                      <td className="fw-bold text-nowrap" style={{ color: '#0A192F' }}>{totalAssigned}</td>
-                      <td>
+                      <td className="fw-bold text-center text-nowrap" style={{ color: '#0A192F' }}>{totalAssigned}</td>
+                      <td className="text-center">
                         <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
                           {inProgress}
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
                           {completed}
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>
                           {pending}
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <span className={`badge px-2.5 py-1.5 fw-bold ${w.status === 'ACTIVE' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle'}`}>
                           {w.status}
                         </span>
                       </td>
                       <td className="text-end text-nowrap" onClick={(e) => e.stopPropagation()}>
                         <button
-                          className="btn btn-sm btn-outline-primary me-1 rounded-circle p-1.5"
+                          className="btn btn-sm btn-outline-primary me-1 rounded-circle"
                           onClick={() => navigate(`/workers/${w.id}`)}
                           title="View Work History"
+                          style={{ width: '30px', height: '30px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <Eye size={14} />
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-secondary rounded-circle p-1.5"
+                          className="btn btn-sm btn-outline-secondary rounded-circle"
                           onClick={(e) => handleOpenEdit(w, e)}
                           title="Edit Worker Info"
+                          style={{ width: '30px', height: '30px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <Edit size={14} />
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-danger ms-2 rounded-circle p-1.5"
+                          className="btn btn-sm btn-outline-danger ms-1 rounded-circle"
                           onClick={(e) => handleDeleteWorker(w, e)}
                           title="Delete Worker"
+                          style={{ width: '30px', height: '30px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -339,13 +352,13 @@ const Workers = () => {
           <div className="mb-3">
             <label className="form-label fw-semibold">Mobile Phone Number <span className="text-danger">*</span></label>
             <div className="input-group">
-              <span className="input-group-text bg-light text-muted font-mono">+91</span>
+              <span className="input-group-text bg-light text-muted font-mono fw-semibold">+91</span>
               <input
                 type="tel"
                 inputMode="numeric"
                 maxLength={10}
                 className={`form-control font-mono ${formErrors.phone ? 'is-invalid' : ''}`}
-                placeholder="10-digit number"
+                placeholder="10-digit mobile number (e.g. 9879452045)"
                 value={formData.phone}
                 onChange={(e) => {
                   const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -354,8 +367,11 @@ const Workers = () => {
                 }}
               />
             </div>
-            {formErrors.phone && <div className="invalid-feedback d-block">{formErrors.phone}</div>}
-            <small className="text-muted d-block mt-1">Only numbers allowed (strictly 10 digits).</small>
+            {formErrors.phone ? (
+              <div className="invalid-feedback d-block">{formErrors.phone}</div>
+            ) : (
+              <small className="text-muted d-block mt-1">10-digit mobile number starting with 6, 7, 8, or 9 (unique per artisan).</small>
+            )}
           </div>
 
           <div className="mb-4">

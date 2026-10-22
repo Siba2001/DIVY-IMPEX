@@ -117,44 +117,44 @@ const CompanyDetails = () => {
   return (
     <PrivateLayout title={`Company Profile - ${company.name}`}>
       {/* Header Info Banner */}
-      <div className="card card-custom p-4 mb-4 shadow-sm">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-          <div className="d-flex align-items-center">
-            <button className="btn btn-light border rounded-circle p-2 me-3" onClick={() => navigate('/companies')}>
+      <div className="card card-custom p-3 p-md-4 mb-4 shadow-sm">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+          <div className="d-flex align-items-start align-items-sm-center">
+            <button className="btn btn-light border rounded-circle p-2 me-3 flex-shrink-0" onClick={() => navigate('/companies')}>
               <ArrowLeft size={18} />
             </button>
             <div>
-              <div className="d-flex align-items-center gap-2 mb-1">
+              <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <h4 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
                   {company.name}
                 </h4>
                 <span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>{company.code}</span>
               </div>
               <p className="text-muted small mb-0">
-                Contact: <strong>{company.contactPerson}</strong> | Phone: {company.phone} | Location: {company.address}
+                Contact: <strong>{company.contactPerson || '-'}</strong> {company.phone && <>| Phone: <a href={`tel:${company.phone}`} className="text-decoration-none">{company.phone}</a></>} {company.address && `| Location: ${company.address}`}
               </p>
             </div>
           </div>
-          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 flex-wrap">
+          <div className="d-flex align-items-center gap-2 flex-wrap w-100 w-lg-auto">
             <button
-              className="btn btn-outline-dark rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center shadow-sm"
+              className="btn btn-outline-dark rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center justify-content-center shadow-sm flex-grow-1 flex-lg-grow-0"
               onClick={() => navigate(`/reports?company=${company.id}&type=1`)}
               title="View Monthly Stock & Shape Matrix Report"
             >
               <FileBarChart2 size={16} className="me-1.5 text-primary" /> Monthly Stock Report
             </button>
             <button
-              className="btn btn-navy rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap"
+              className="btn btn-navy rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center justify-content-center flex-grow-1 flex-lg-grow-0"
               onClick={() => navigate(`/diamond-receiving?company=${company.id}`)}
             >
-              + Receive New Diamond Batch
+              + Receive Batch
             </button>
             <button
-              className="btn btn-outline-danger rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center"
+              className="btn btn-outline-danger rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center justify-content-center flex-grow-1 flex-lg-grow-0"
               onClick={handleDeleteCompany}
               title="Delete Company"
             >
-              <Trash2 size={15} className="me-1.5" /> Delete Company
+              <Trash2 size={15} className="me-1.5" /> Delete
             </button>
           </div>
         </div>
@@ -162,24 +162,24 @@ const CompanyDetails = () => {
 
       {/* KPI Cards */}
       <div className="row g-3 mb-4">
-        <div className="col-md-3">
+        <div className="col-6 col-lg-3">
           <StatCard title="Total Received" value={totalReceived} icon={Gem} colorType="total" />
         </div>
-        <div className="col-md-3">
+        <div className="col-6 col-lg-3">
           <StatCard title="Total Completed" value={completed} icon={CheckCircle2} colorType="completed" />
         </div>
-        <div className="col-md-3">
+        <div className="col-6 col-lg-3">
           <StatCard title="Total Pending" value={pending} icon={Clock} colorType="pending" />
         </div>
-        <div className="col-md-3">
+        <div className="col-6 col-lg-3">
           <StatCard title="In Production" value={inProduction} icon={Activity} colorType="production" />
         </div>
       </div>
 
       {/* Date Filter & Search Section */}
-      <div className="card card-custom p-4 mb-4 shadow-sm">
+      <div className="card card-custom p-3 p-md-4 mb-4 shadow-sm">
         <div className="row g-3 align-items-end">
-          <div className="col-md-4">
+          <div className="col-12 col-sm-6 col-lg-4">
             <label className="form-label">From Date</label>
             <input
               type="date"
@@ -188,7 +188,7 @@ const CompanyDetails = () => {
               onChange={(e) => setFromDate(e.target.value)}
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-12 col-sm-6 col-lg-4">
             <label className="form-label">To Date</label>
             <input
               type="date"
@@ -197,7 +197,7 @@ const CompanyDetails = () => {
               onChange={(e) => setToDate(e.target.value)}
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-12 col-lg-4">
             <label className="form-label">Search Diamond / Worker</label>
             <div className="position-relative">
               <Search size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
@@ -214,20 +214,20 @@ const CompanyDetails = () => {
       </div>
 
       {/* Date-Wise Summary Table */}
-      <div className="card card-custom p-4 mb-4 shadow-sm">
+      <div className="card card-custom p-3 p-md-4 mb-4 shadow-sm">
         <h6 className="font-heading fw-bold text-navy mb-3 d-flex align-items-center" style={{ color: '#0A192F' }}>
           <Calendar size={18} className="me-2 text-warning" /> Date-Wise Batch Production Summary
         </h6>
         <div className="table-responsive">
-          <table className="table table-custom text-center align-middle">
+          <table className="table table-custom table-sticky-first text-center align-middle mb-0">
             <thead>
               <tr>
                 <th className="text-start text-nowrap">Received Date</th>
-                <th className="text-nowrap">Received</th>
-                <th className="text-nowrap">Assigned</th>
-                <th className="text-nowrap">In Progress</th>
-                <th className="text-nowrap">Completed</th>
-                <th className="text-nowrap">Pending</th>
+                <th className="text-nowrap text-center">Received</th>
+                <th className="text-nowrap text-center">Assigned</th>
+                <th className="text-nowrap text-center">In Progress</th>
+                <th className="text-nowrap text-center">Completed</th>
+                <th className="text-nowrap text-center">Pending</th>
               </tr>
             </thead>
             <tbody>
@@ -238,7 +238,7 @@ const CompanyDetails = () => {
               ) : (
                 dateWiseSummary.map((row) => (
                   <tr key={row.date}>
-                    <td className="text-start fw-bold text-navy" style={{ color: '#0A192F' }}>{row.date}</td>
+                    <td className="text-start fw-bold text-navy text-nowrap" style={{ color: '#0A192F' }}>{row.date}</td>
                     <td className="fw-semibold">{row.received}</td>
                     <td><span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>{row.assigned}</span></td>
                     <td><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>{row.inProgress}</span></td>
@@ -253,22 +253,22 @@ const CompanyDetails = () => {
       </div>
 
       {/* Individual Diamond Records Table */}
-      <div className="card card-custom p-4 shadow-sm">
+      <div className="card card-custom p-3 p-md-4 shadow-sm">
         <h6 className="font-heading fw-bold text-navy mb-3 d-flex align-items-center" style={{ color: '#0A192F' }}>
           <Gem size={18} className="me-2 text-warning" /> Individual Diamond Records
         </h6>
         <div className="table-responsive">
-          <table className="table table-custom table-hover align-middle">
+          <table className="table table-custom table-sticky-first table-hover align-middle mb-0">
             <thead>
               <tr>
-                <th>Barcode</th>
-                <th>Shape</th>
-                <th>Weight (ct)</th>
-                <th>Received Date</th>
-                <th>Assigned Worker</th>
-                <th>Status</th>
-                <th>Completed Date</th>
-                <th className="text-end">Actions</th>
+                <th className="text-nowrap">Barcode</th>
+                <th className="text-nowrap">Shape</th>
+                <th className="text-nowrap">Weight (ct)</th>
+                <th className="text-nowrap">Received Date</th>
+                <th className="text-nowrap">Assigned Worker</th>
+                <th className="text-nowrap">Status</th>
+                <th className="text-nowrap">Completed Date</th>
+                <th className="text-end text-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody>

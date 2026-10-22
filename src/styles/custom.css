@@ -398,21 +398,6 @@ h6,
   background-color: #0A192F !important;
 }
 
-.table-custom th {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748B;
-  font-weight: 600;
-  border-bottom: 2px solid #E2E8F0;
-  padding: 0.75rem 1rem;
-}
-
-.table-custom td {
-  padding: 0.85rem 1rem;
-  vertical-align: middle;
-}
-
 /* Dashboard Layout */
 .app-container {
   display: flex;
@@ -757,30 +742,53 @@ h6,
 
 /* Table Styling */
 .table-custom {
+  width: 100%;
   margin-bottom: 0;
 }
 
 .table-custom th {
   background-color: #F8FAFC;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.025em;
   font-weight: 600;
   border-bottom: 1px solid var(--border-color);
-  padding: 0.85rem 1rem;
+  padding: 0.6rem 0.5rem;
 }
 
 .table-custom td {
-  padding: 0.85rem 1rem;
+  padding: 0.6rem 0.5rem;
   vertical-align: middle;
   border-bottom: 1px solid var(--border-color);
-  font-size: 0.875rem;
+  font-size: 0.84rem;
 }
 
 .table-custom tbody tr:hover {
   background-color: #F1F5F9;
 }
+
+/* Sticky First Column for Wide Tables on Responsive/Mobile Screens ONLY (<992px) */
+@media (max-width: 991.98px) {
+  .table-sticky-first th:first-child,
+  .table-sticky-first td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background-color: #FFFFFF;
+    box-shadow: 2px 0 6px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  .table-sticky-first thead th:first-child {
+    background-color: #F8FAFC;
+    z-index: 6;
+  }
+
+  .table-sticky-first tbody tr:hover td:first-child {
+    background-color: #F1F5F9;
+  }
+}
+
 
 /* Timeline Vertical */
 .timeline {
@@ -833,9 +841,12 @@ h6,
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
-/* Responsive Layout Utilities (Mobile, Tablet, Laptop, iOS & Android) */
-html,
-body {
+/* ==========================================================================
+   RESPONSIVE SYSTEM — ALL BREAKPOINTS
+   XS: <375px | SM: 375-575px | MD: 576-767px | LG: 768-991px | XL: 992-1199px | XXL: 1200px+
+   ========================================================================== */
+
+html, body {
   max-width: 100vw;
   overflow-x: clip;
 }
@@ -848,7 +859,6 @@ body {
 
 /* Prevent auto-zoom on iOS inputs */
 @media (max-width: 767.98px) {
-
   input[type="text"],
   input[type="password"],
   input[type="email"],
@@ -861,7 +871,43 @@ body {
   }
 }
 
-/* Mobile Sidebar Drawer (< 992px) */
+/* ==========================================================================
+   DESKTOP & LAPTOP (>=992px)
+   ========================================================================== */
+@media (min-width: 992px) {
+  .sidebar-backdrop { display: none !important; }
+  .content-body { padding: 1.5rem; }
+  .topbar { padding: 0 1.5rem; height: 64px; }
+
+  /* Desktop tables: ensure table fits 100% of container without triggering horizontal scrollbar */
+  .table-custom {
+    width: 100% !important;
+    table-layout: auto;
+  }
+
+  .table-custom th {
+    padding: 0.55rem 0.45rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .table-custom td {
+    padding: 0.55rem 0.45rem;
+    font-size: 0.82rem;
+  }
+
+  /* Unpin sticky first column on desktop so table uses natural auto-layout */
+  .table-sticky-first th:first-child,
+  .table-sticky-first td:first-child {
+    position: static !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ==========================================================================
+   TABLET & MOBILE SIDEBAR (<992px) — Off-canvas sidebar drawer
+   ========================================================================== */
 @media (max-width: 991.98px) {
   .public-navbar .navbar-collapse {
     background: rgba(10, 25, 47, 0.98);
@@ -878,11 +924,8 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  .public-navbar .nav-link:last-child {
-    border-bottom: none;
-  }
+  .public-navbar .nav-link:last-child { border-bottom: none; }
 
-  /* Off-canvas sidebar for private layout */
   .sidebar {
     position: fixed;
     top: 0;
@@ -895,16 +938,11 @@ body {
     box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
   }
 
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
+  .sidebar.mobile-open { transform: translateX(0); }
 
   .sidebar-backdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(7, 18, 36, 0.65);
     backdrop-filter: blur(4px);
     z-index: 1055;
@@ -913,77 +951,134 @@ body {
     transition: opacity 0.3s ease;
   }
 
-  .sidebar-backdrop.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
 
-  .topbar {
-    padding: 0 1rem;
-  }
+  .topbar { padding: 0 1rem; height: 58px; }
+  .content-body { padding: 1rem; }
 
-  .content-body {
-    padding: 1rem;
+  .table-responsive { overflow-x: auto; }
+
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem) !important;
   }
 }
 
-/* Small phones (iPhone SE, Galaxy S, 320px - 575px) */
-@media (max-width: 575.98px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
+/* ==========================================================================
+   TABLET (768px-991px)
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .content-body { padding: 1.25rem; }
+  .topbar { height: 60px; padding: 0 1.25rem; }
+}
 
-  .display-3 {
-    font-size: 2.1rem !important;
-  }
+/* ==========================================================================
+   MOBILE (<768px)
+   ========================================================================== */
+@media (max-width: 767.98px) {
+  .content-body { padding: 0.85rem; }
+  .topbar { height: 56px; padding: 0 0.85rem; }
 
-  .display-4 {
-    font-size: 1.8rem !important;
-  }
+  .modal-dialog { margin: 0; max-width: 100vw !important; }
+  .modal-content { border-radius: 16px 16px 0 0; max-height: 92vh; overflow-y: auto; }
 
-  .display-5 {
-    font-size: 1.5rem !important;
-  }
+  .card-custom, .card { border-radius: 12px; }
+  .stat-kpi-card { padding: 0.85rem !important; border-radius: 10px; }
 
-  .display-6 {
-    font-size: 1.35rem !important;
-  }
-
-  .btn-lg {
-    padding: 0.75rem 1.25rem !important;
-    font-size: 0.92rem !important;
-  }
-
-  .stat-kpi-card {
-    padding: 0.85rem !important;
-  }
-
-  .table-custom th,
-  .table-custom td {
-    padding: 0.65rem 0.75rem;
+  .table-custom th, .table-custom td {
+    padding: 0.6rem 0.75rem;
     font-size: 0.8rem;
+    white-space: nowrap;
   }
+
+  .topbar h4, .topbar h5 { font-size: 0.95rem !important; max-width: 160px !important; }
+  .topbar form.d-none.d-md-block { display: none !important; }
+
+  .btn { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+  .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.78rem; }
+
+  .row.g-4 { --bs-gutter-x: 0.75rem; --bs-gutter-y: 0.75rem; }
+  .row.g-3 { --bs-gutter-x: 0.6rem; --bs-gutter-y: 0.6rem; }
+  .row.g-2 { --bs-gutter-x: 0.5rem; --bs-gutter-y: 0.5rem; }
+
+  .display-3 { font-size: 2rem !important; }
+  .display-4 { font-size: 1.75rem !important; }
+  .display-5 { font-size: 1.5rem !important; }
+  .display-6 { font-size: 1.25rem !important; }
+
+  .alert.d-flex { flex-direction: column; gap: 0.5rem; }
+  .alert .btn { align-self: flex-start; }
 }
 
-/* Extra small devices (< 375px) */
+/* ==========================================================================
+   SMALL PHONE (< 576px)
+   ========================================================================== */
+@media (max-width: 575.98px) {
+  .content-body { padding: 0.75rem; }
+  .topbar { padding: 0 0.75rem; height: 52px; }
+  .topbar h4, .topbar h5 { font-size: 0.88rem !important; max-width: 120px !important; }
+
+  .stat-kpi-card { padding: 0.7rem 0.8rem !important; }
+
+  h1, .h1 { font-size: 1.4rem !important; }
+  h2, .h2 { font-size: 1.2rem !important; }
+  h3, .h3 { font-size: 1.1rem !important; }
+  h4, .h4 { font-size: 1rem !important; }
+  h5, h6, .h5, .h6 { font-size: 0.9rem !important; }
+
+  .table-custom th, .table-custom td { padding: 0.55rem 0.6rem; font-size: 0.75rem; }
+
+  .btn { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+  .btn-sm { padding: 0.28rem 0.55rem; font-size: 0.75rem; }
+  .btn-lg { padding: 0.65rem 1.1rem !important; font-size: 0.88rem !important; }
+
+  .modal-dialog { margin: 0 !important; max-width: 100vw !important; }
+  .modal-content { border-radius: 14px 14px 0 0; max-height: 95vh; overflow-y: auto; }
+
+  .alert { padding: 0.75rem 0.85rem; font-size: 0.82rem; }
+  .form-label { font-size: 0.78rem; }
+  .form-control, .form-select { padding: 0.45rem 0.7rem; }
+
+  .badge { font-size: 0.65rem !important; }
+  .badge-status { font-size: 0.68rem !important; }
+
+  .gap-3 { gap: 0.5rem !important; }
+  .gap-4 { gap: 0.75rem !important; }
+
+  .card-custom, .card { padding: 0.75rem !important; }
+}
+
+/* ==========================================================================
+   EXTRA SMALL (< 375px) — iPhone 4/5/SE, old Androids
+   ========================================================================== */
 @media (max-width: 374.98px) {
-  .display-3 {
-    font-size: 1.75rem !important;
-  }
+  .content-body { padding: 0.6rem; }
+  .topbar { padding: 0 0.6rem; height: 50px; }
+  .topbar h4, .topbar h5 { font-size: 0.82rem !important; max-width: 100px !important; }
 
-  .display-4 {
-    font-size: 1.55rem !important;
-  }
+  .stat-kpi-card { padding: 0.65rem !important; }
 
-  .content-body {
-    padding: 0.65rem;
-  }
+  h1, .h1 { font-size: 1.2rem !important; }
+  h4, .h4 { font-size: 0.9rem !important; }
+  h5, h6 { font-size: 0.82rem !important; }
+
+  .btn { font-size: 0.78rem; }
+  .btn-sm { font-size: 0.72rem; padding: 0.25rem 0.5rem; }
 }
 
-/* Print Styles for Reports */
-@media print {
+/* ==========================================================================
+   LARGE DESKTOP (>= 1400px)
+   ========================================================================== */
+@media (min-width: 1400px) {
+  .content-body { padding: 2rem; }
+  .topbar { height: 68px; padding: 0 2rem; }
+  .stat-kpi-card { padding: 1.1rem 1.25rem; }
+}
 
+/* ==========================================================================
+   PRINT
+   ========================================================================== */
+@media print {
   .sidebar,
   .topbar,
   .btn-print-hide,
@@ -993,18 +1088,16 @@ body {
     display: none !important;
   }
 
-  .main-wrapper {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
+  .main-wrapper { margin: 0 !important; padding: 0 !important; background: white !important; }
+  .content-body { padding: 0 !important; }
+  .card-custom { border: none !important; box-shadow: none !important; }
+
+  .table-custom th, .table-custom td {
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.5rem !important;
   }
 
-  .content-body {
-    padding: 0 !important;
-  }
-
-  .card-custom {
-    border: none !important;
-    box-shadow: none !important;
-  }
+  .badge-status { font-size: 0.65rem !important; }
 }
+
+

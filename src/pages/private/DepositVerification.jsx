@@ -12,8 +12,7 @@ import {
   AlertTriangle,
   Scale,
   Barcode,
-  History,
-  ShieldAlert
+  History
 } from 'lucide-react';
 
 const DepositVerification = () => {
@@ -160,17 +159,6 @@ const DepositVerification = () => {
                 <div>{successMsg}</div>
               </div>
             )}
-
-            {/* Business Rule Banner */}
-            <div className="p-2.5 px-3 bg-light rounded-2 border mb-3 d-flex align-items-center justify-content-between">
-              <small className="text-secondary">
-                <ShieldAlert size={14} className="me-1.5 text-warning" />
-                <strong>Workflow Rule:</strong> Only diamonds assigned to an artisan worker can be looked up and verified here.
-              </small>
-              <span className="badge bg-white text-navy border ms-2" style={{ fontSize: '0.7rem' }}>
-                Enforced
-              </span>
-            </div>
 
             {/* Barcode Search Box */}
             <form onSubmit={handleScanOrSearch} className="mb-4">
@@ -323,7 +311,7 @@ const DepositVerification = () => {
             </h6>
 
             <div className="table-responsive rounded border">
-              <table className="table table-custom table-hover align-middle mb-0" style={{ minWidth: '420px' }}>
+              <table className="table table-custom table-hover align-middle mb-0">
                 <thead>
                   <tr>
                     <th>Barcode</th>

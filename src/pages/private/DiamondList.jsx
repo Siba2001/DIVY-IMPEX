@@ -193,7 +193,7 @@ const DiamondList = () => {
         </div>
 
         <div className="table-responsive rounded border">
-          <table className="table table-custom table-hover align-middle mb-0" style={{ minWidth: '780px' }}>
+          <table className="table table-custom table-hover align-middle mb-0">
             <thead>
               <tr>
                 <th>Barcode</th>

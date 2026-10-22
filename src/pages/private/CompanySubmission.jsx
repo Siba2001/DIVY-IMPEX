@@ -613,7 +613,7 @@ const CompanySubmission = () => {
 
           {/* Diamonds Table */}
           <div className="table-responsive rounded border mb-3">
-            <table className="table table-custom table-hover align-middle mb-0" style={{ minWidth: '850px' }}>
+            <table className="table table-custom table-hover align-middle mb-0">
               <thead>
                 <tr>
                   <th style={{ width: '40px' }} className="text-center">

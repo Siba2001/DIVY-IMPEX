@@ -14,7 +14,8 @@ const getInitialLocalCache = () => {
         return {
           companies: parsed.companies || [],
           workers: parsed.workers || [],
-          diamonds: parsed.diamonds || []
+          diamonds: parsed.diamonds || [],
+          histories: parsed.histories || []
         };
       }
     }
@@ -22,14 +23,15 @@ const getInitialLocalCache = () => {
     const c = JSON.parse(localStorage.getItem(STORAGE_KEYS.COMPANIES) || '[]');
     const w = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORKERS) || '[]');
     const d = JSON.parse(localStorage.getItem(STORAGE_KEYS.DIAMONDS) || '[]');
-    return { companies: c, workers: w, diamonds: d };
+    const h = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORIES) || '[]');
+    return { companies: c, workers: w, diamonds: d, histories: h };
   } catch (e) {}
-  return { companies: [], workers: [], diamonds: [] };
+  return { companies: [], workers: [], diamonds: [], histories: [] };
 };
 
-const saveLocalCache = (companies, workers, diamonds) => {
+const saveLocalCache = (companies, workers, diamonds, histories = []) => {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ companies, workers, diamonds }));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ companies, workers, diamonds, histories }));
   } catch (e) {}
 };
 
@@ -50,27 +52,20 @@ export const DiamondProvider = ({ children }) => {
   const [loading, setLoading] = useState(!hasCachedData);
   const [toastMessage, setToastMessage] = useState(null);
   const [syncError, setSyncError] = useState(null);
-  const [syncMode, setSyncModeState] = useState(apiService.getSyncMode());
+  const [toastTimer, setToastTimer] = useState(null);
 
-  const showToast = (message, type = 'success') => {
-    setToastMessage({ message, type });
-    setTimeout(() => {
+  const hideToast = useCallback(() => {
+    setToastMessage(null);
+  }, []);
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToastMessage({ message, type, timestamp: Date.now() });
+    if (toastTimer) clearTimeout(toastTimer);
+    const timer = setTimeout(() => {
       setToastMessage(null);
-    }, 4000);
-  };
-
-  const toggleSyncMode = () => {
-    const nextMode = syncMode === 'cloud' ? 'local' : 'cloud';
-    apiService.setSyncMode(nextMode);
-    setSyncModeState(nextMode);
-    if (nextMode === 'local') {
-      showToast('⚡ Switched to Turbo Local Mode (Instant 0ms Demo Data)', 'info');
-      setSyncError(null);
-    } else {
-      showToast('☁️ Switched to Google Sheets Cloud Sync', 'success');
-      loadData(false);
-    }
-  };
+    }, 4500);
+    setToastTimer(timer);
+  }, [toastTimer]);
 
   // High performance SWR data loader
   const loadData = useCallback(async (showLoading = false) => {
@@ -86,13 +81,19 @@ export const DiamondProvider = ({ children }) => {
       const newCompanies = initial.companies || [];
       const newWorkers = initial.workers || [];
       const newDiamonds = initial.diamonds || [];
+      const newHistories = initial.histories || [];
 
       // Only overwrite local state if sync had no error OR returned real data
       if (!initial._syncError || newCompanies.length > 0 || newWorkers.length > 0 || newDiamonds.length > 0) {
         setCompanies(newCompanies);
         setWorkers(newWorkers);
         setDiamonds(newDiamonds);
-        saveLocalCache(newCompanies, newWorkers, newDiamonds);
+        if (newHistories.length > 0) {
+          try {
+            localStorage.setItem(STORAGE_KEYS.HISTORIES, JSON.stringify(newHistories));
+          } catch (e) {}
+        }
+        saveLocalCache(newCompanies, newWorkers, newDiamonds, newHistories);
       }
     } catch (err) {
       console.warn('Sync notice:', err);
@@ -311,11 +312,10 @@ export const DiamondProvider = ({ children }) => {
         workers,
         diamonds,
         loading,
-        syncMode,
         syncError,
-        toggleSyncMode,
         toastMessage,
         showToast,
+        hideToast,
         loadData,
         addCompany,
         updateCompany,

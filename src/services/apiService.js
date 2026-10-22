@@ -22,19 +22,11 @@ export const STORAGE_KEYS = {
 const SCRIPT_URL = (import.meta.env.VITE_GOOGLE_SCRIPT_URL || '').trim();
 const API_SECRET = (import.meta.env.VITE_API_SECRET || 'DIVY_SECURE_TOKEN_2026').trim();
 
-// Get sync mode: 'cloud' (Google Sheets sync) or 'local' (⚡ Turbo demo mode)
-const getStoredSyncMode = () => {
-  try {
-    const val = localStorage.getItem(STORAGE_KEYS.SYNC_MODE);
-    if (val === 'local' || val === 'cloud') return val;
-  } catch (e) {}
-  return 'cloud';
-};
-
-let currentSyncMode = getStoredSyncMode();
+// Production: always use Google Sheets cloud sync
+const currentSyncMode = 'cloud';
 
 const isRemoteApiEnabled = () => {
-  return currentSyncMode === 'cloud' && Boolean(SCRIPT_URL && SCRIPT_URL.startsWith('http'));
+  return Boolean(SCRIPT_URL && SCRIPT_URL.startsWith('http'));
 };
 
 // In-flight mutation cache to absorb rapid multiple clicks/submissions
@@ -193,13 +185,8 @@ export const apiService = {
 
   getSyncMode: () => currentSyncMode,
 
-  setSyncMode: (mode) => {
-    currentSyncMode = mode;
-    try {
-      localStorage.setItem(STORAGE_KEYS.SYNC_MODE, mode);
-    } catch (e) {}
-    cachedInitialData = null;
-    lastInitialDataFetchTime = 0;
+  setSyncMode: (_mode) => {
+    // No-op in production — always cloud
   },
 
   clearCache: () => {
@@ -711,7 +698,105 @@ export const apiService = {
     return diamond;
   },
 
-  getDiamondHistory: async (diamondIdOrBarcode) => {
+  generateSynthesizedHistory: (diamond) => {
+    if (!diamond) return [];
+    const events = [];
+
+    if (diamond.receivedDate) {
+      events.push({
+        id: `synth-rec-${diamond.id || diamond.barcode}`,
+        diamondId: diamond.id || '',
+        barcode: diamond.barcode,
+        action: 'Diamond Received',
+        performedBy: diamond.receivedBy || 'Admin Supervisor',
+        date: diamond.receivedDate,
+        time: '09:00 AM',
+        remarks: `Received from ${diamond.companyName || 'Client Company'}. Weight: ${diamond.weight} ct`
+      });
+    }
+
+    if (diamond.assignedWorkerName || diamond.assignedDate) {
+      events.push({
+        id: `synth-asg-${diamond.id || diamond.barcode}`,
+        diamondId: diamond.id || '',
+        barcode: diamond.barcode,
+        action: `Assigned to ${diamond.assignedWorkerName || 'Worker'}`,
+        performedBy: 'Supervisor',
+        date: diamond.assignedDate || diamond.receivedDate,
+        time: '10:00 AM',
+        remarks: 'Assigned for diamond processing work'
+      });
+    }
+
+    if (['IN PROGRESS', 'WORK COMPLETED', 'DEPOSITED', 'VERIFIED', 'COMPLETED', 'RETURNED'].includes(diamond.status)) {
+      events.push({
+        id: `synth-prog-${diamond.id || diamond.barcode}`,
+        diamondId: diamond.id || '',
+        barcode: diamond.barcode,
+        action: 'Work Started',
+        performedBy: diamond.assignedWorkerName || 'Worker',
+        date: diamond.assignedDate || diamond.receivedDate,
+        time: '11:00 AM',
+        remarks: 'Artisan processing work started'
+      });
+    }
+
+    if (['WORK COMPLETED', 'DEPOSITED', 'VERIFIED', 'COMPLETED', 'RETURNED'].includes(diamond.status)) {
+      events.push({
+        id: `synth-comp-${diamond.id || diamond.barcode}`,
+        diamondId: diamond.id || '',
+        barcode: diamond.barcode,
+        action: 'Work Completed',
+        performedBy: diamond.completedBy || diamond.assignedWorkerName || 'Worker',
+        date: diamond.completedDate || diamond.assignedDate || diamond.receivedDate,
+        time: '04:00 PM',
+        remarks: 'Artisan finished processing, diamond ready for safe deposit'
+      });
+    }
+
+    if (['DEPOSITED', 'VERIFIED', 'COMPLETED', 'RETURNED'].includes(diamond.status)) {
+      events.push({
+        id: `synth-dep-${diamond.id || diamond.barcode}`,
+        diamondId: diamond.id || '',
+        barcode: diamond.barcode,
+        action: 'Diamond Deposited',
+        performedBy: diamond.assignedWorkerName || 'Worker',
+        date: diamond.depositedDate || diamond.completedDate || diamond.receivedDate,
+        time: '05:00 PM',
+        remarks: 'Returned to safe vault for verification'
+      });
+    }
+
+    if (['VERIFIED', 'COMPLETED', 'RETURNED'].includes(diamond.status)) {
+      events.push({
+        id: `synth-ver-${diamond.id || diamond.barcode}`,
+        diamondId: diamond.id || '',
+        barcode: diamond.barcode,
+        action: 'Barcode & Weight Verified',
+        performedBy: diamond.verifiedBy || 'QC Supervisor',
+        date: diamond.verifiedDate || diamond.completedDate || diamond.receivedDate,
+        time: '05:30 PM',
+        remarks: `Weight verified: ${diamond.actualWeight || diamond.weight} ct`
+      });
+    }
+
+    if (diamond.status === 'RETURNED') {
+      events.push({
+        id: `synth-ret-${diamond.id || diamond.barcode}`,
+        diamondId: diamond.id || '',
+        barcode: diamond.barcode,
+        action: 'Submitted to Company',
+        performedBy: diamond.receiverName || 'Dispatch Supervisor',
+        date: diamond.dispatchedDate || diamond.verifiedDate || diamond.receivedDate,
+        time: '06:00 PM',
+        remarks: `Returned to ${diamond.companyName || 'Company'}${diamond.challanNo ? ` under Challan #${diamond.challanNo}` : ''}`
+      });
+    }
+
+    return events;
+  },
+
+  getLocalHistory: (diamondIdOrBarcode, diamondObj = null) => {
     const sanitizeHistoryItem = (h) => {
       if (!h) return h;
       let cleanTime = h.time;
@@ -731,30 +816,80 @@ export const apiService = {
 
     const histories = getItem(STORAGE_KEYS.HISTORIES);
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
+    const cleanQuery = String(diamondIdOrBarcode || '').trim().toLowerCase();
 
-    const cleanQuery = (diamondIdOrBarcode || '').toString().toLowerCase();
-
-    const matchedDiamond = diamonds.find(
-      (d) => d.id === diamondIdOrBarcode || (d.barcode && d.barcode.toLowerCase() === cleanQuery)
+    const diamond = diamondObj || diamonds.find(
+      (d) => String(d.id || '').toLowerCase() === cleanQuery || String(d.barcode || '').trim().toLowerCase() === cleanQuery
     );
 
-    if (matchedDiamond) {
-      const localMatches = histories
-        .filter((h) => h.diamondId === matchedDiamond.id || (h.barcode && h.barcode.toLowerCase() === matchedDiamond.barcode.toLowerCase()))
-        .map(sanitizeHistoryItem)
-        .sort((a, b) => new Date(a.date + ' ' + (a.time || '')) - new Date(b.date + ' ' + (b.time || '')));
+    const targetBarcode = String(diamond?.barcode || diamondIdOrBarcode || '').trim().toLowerCase();
+    const targetId = String(diamond?.id || '').trim().toLowerCase();
 
-      if (localMatches.length > 0) {
-        return localMatches;
-      }
+    const localMatches = histories
+      .filter((h) => {
+        const hBarcode = String(h.barcode || '').trim().toLowerCase();
+        const hDiamondId = String(h.diamondId || '').trim().toLowerCase();
+        return (targetBarcode && hBarcode === targetBarcode) ||
+               (targetId && hDiamondId === targetId) ||
+               (cleanQuery && (hBarcode === cleanQuery || hDiamondId === cleanQuery));
+      })
+      .map(sanitizeHistoryItem)
+      .sort((a, b) => new Date(a.date + ' ' + (a.time || '')) - new Date(b.date + ' ' + (b.time || '')));
+
+    if (localMatches.length > 0) {
+      return localMatches;
     }
 
-    // Try remote fetch only if not available locally
-    if (isRemoteApiEnabled()) {
-      try {
-        const remoteHistory = await callGas('getHistory', { diamondIdOrBarcode }, 'GET');
-        if (Array.isArray(remoteHistory) && remoteHistory.length > 0) {
-          const sanitizedRemote = remoteHistory.map(sanitizeHistoryItem);
+    if (diamond) {
+      return apiService.generateSynthesizedHistory(diamond);
+    }
+
+    return [];
+  },
+
+  getDiamondHistory: async (diamondIdOrBarcode, diamondObj = null) => {
+    // 1. Immediately get local or synthesized history (0ms)
+    const immediate = apiService.getLocalHistory(diamondIdOrBarcode, diamondObj);
+
+    // 2. If remote API is not configured or disabled, return immediate
+    if (!isRemoteApiEnabled()) {
+      return immediate;
+    }
+
+    // 3. Quick bounded remote fetch (never hangs: 4.5 second hard timeout)
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+      const url = new URL(SCRIPT_URL);
+      url.searchParams.set('action', 'getHistory');
+      url.searchParams.set('diamondIdOrBarcode', diamondIdOrBarcode);
+      if (API_SECRET) url.searchParams.set('key', API_SECRET);
+
+      const res = await fetch(url.toString(), { redirect: 'follow', signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const sanitizeHistoryItem = (h) => {
+            if (!h) return h;
+            let cleanTime = h.time;
+            if (!cleanTime || String(cleanTime).includes('1899') || String(cleanTime).includes('1900')) {
+              const match = String(h.id || '').match(/\d{12,13}/);
+              if (match) {
+                try {
+                  const dt = new Date(parseInt(match[0], 10));
+                  if (!isNaN(dt.getTime())) {
+                    cleanTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                  }
+                } catch (e) {}
+              }
+            }
+            return { ...h, time: cleanTime };
+          };
+
+          const sanitizedRemote = json.data.map(sanitizeHistoryItem);
           const existing = getItem(STORAGE_KEYS.HISTORIES);
           const existingIds = new Set(existing.map((h) => h.id));
           sanitizedRemote.forEach((rh) => {
@@ -763,12 +898,12 @@ export const apiService = {
           setItem(STORAGE_KEYS.HISTORIES, existing);
           return sanitizedRemote;
         }
-      } catch (e) {
-        console.warn('[DIVY Sync] Remote history fetch failed:', e);
       }
+    } catch (e) {
+      console.warn('[DIVY Sync] Remote history quick-fetch notice:', e.message);
     }
 
-    return [];
+    return immediate;
   },
 
   // ==================== COMPANY SUBMISSION & DISPATCH API ====================
