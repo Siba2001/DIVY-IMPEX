@@ -104,8 +104,31 @@ export const DiamondProvider = ({ children }) => {
   }, [hasCachedData]);
 
   useEffect(() => {
-    loadData(false);
-  }, [loadData]);
+    // If local cache is empty (e.g. fresh session or pulled code), force refresh to fetch directly from Google Sheet
+    loadData(!hasCachedData);
+  }, [loadData, hasCachedData]);
+
+  // Listen for background remote sync updates from apiService
+  useEffect(() => {
+    const handleRemoteSync = (e) => {
+      const data = e.detail;
+      if (data) {
+        if (Array.isArray(data.companies)) setCompanies(data.companies);
+        if (Array.isArray(data.workers)) setWorkers(data.workers);
+        if (Array.isArray(data.diamonds)) setDiamonds(data.diamonds);
+        saveLocalCache(
+          data.companies || [],
+          data.workers || [],
+          data.diamonds || [],
+          data.histories || []
+        );
+        setSyncError(null);
+      }
+    };
+
+    window.addEventListener('divy_remote_sync', handleRemoteSync);
+    return () => window.removeEventListener('divy_remote_sync', handleRemoteSync);
+  }, []);
 
   // ==================== FAST OPTIMISTIC ACTIONS (0ms) ====================
   const addCompany = async (companyData) => {

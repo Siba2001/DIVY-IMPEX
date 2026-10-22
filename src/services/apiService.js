@@ -19,8 +19,11 @@ export const STORAGE_KEYS = {
   SYNC_MODE: 'divy_sync_mode',
 };
 
-const SCRIPT_URL = (import.meta.env.VITE_GOOGLE_SCRIPT_URL || '').trim();
-const API_SECRET = (import.meta.env.VITE_API_SECRET || 'DIVY_SECURE_TOKEN_2026').trim();
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxK3giDdjOqGwSJAm5M28l8SlgGwENHKbU0PDfka0ZMdEVDoJJ2LyKp2Oa3aDeU6pcz-A/exec';
+const DEFAULT_API_SECRET = 'DIVY_SECURE_TOKEN_2026';
+
+const SCRIPT_URL = (import.meta.env.VITE_GOOGLE_SCRIPT_URL || DEFAULT_SCRIPT_URL).trim();
+const API_SECRET = (import.meta.env.VITE_API_SECRET || DEFAULT_API_SECRET).trim();
 
 // Production: always use Google Sheets cloud sync
 const currentSyncMode = 'cloud';
@@ -249,6 +252,9 @@ export const apiService = {
           if (remoteData.workers) setItem(STORAGE_KEYS.WORKERS, remoteData.workers);
           if (remoteData.diamonds) setItem(STORAGE_KEYS.DIAMONDS, remoteData.diamonds);
           if (remoteData.histories) setItem(STORAGE_KEYS.HISTORIES, remoteData.histories);
+          try {
+            window.dispatchEvent(new CustomEvent('divy_remote_sync', { detail: remoteData }));
+          } catch (e) {}
         }
       })
       .catch((e) => {
