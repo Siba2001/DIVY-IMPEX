@@ -673,6 +673,21 @@ const CompanySubmission = () => {
                         </td>
                         <td>
                           <span className="font-heading fw-bold text-navy fs-6">{d.barcode}</span>
+                          {d.roughCutNo ? (
+                            <div className="mt-0.5">
+                              <span
+                                className="badge font-mono rounded-pill px-2 py-0.5"
+                                style={{
+                                  backgroundColor: '#F1F5F9',
+                                  color: '#334155',
+                                  border: '1px solid #CBD5E1',
+                                  fontSize: '0.7rem'
+                                }}
+                              >
+                                Rough: #{d.roughCutNo}
+                              </span>
+                            </div>
+                          ) : null}
                         </td>
                         <td>
                           <span className="fw-semibold text-dark">{d.companyName}</span>

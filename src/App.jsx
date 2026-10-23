@@ -25,6 +25,7 @@ import DepositVerification from './pages/private/DepositVerification';
 import Stock from './pages/private/Stock';
 import Reports from './pages/private/Reports';
 import CompanySubmission from './pages/private/CompanySubmission';
+import AdminCredentials from './pages/private/AdminCredentials';
 
 // Auto Scroll To Top Component on Route Change
 const ScrollToTop = () => {
@@ -72,6 +73,7 @@ function App() {
             <Route path="/company-submission" element={<CompanySubmission />} />
             <Route path="/stock" element={<Stock />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/admin" element={<AdminCredentials />} />
 
             {/* Fallback Catch-All */}
             <Route path="*" element={<Navigate to="/" replace />} />

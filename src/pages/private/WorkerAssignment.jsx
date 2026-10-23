@@ -118,7 +118,7 @@ const WorkerAssignment = () => {
                   <option value="">-- Select Unassigned Diamond --</option>
                   {assignableDiamonds.map((d) => (
                     <option key={d.id} value={d.barcode}>
-                      {d.barcode} | {d.companyCode} | {d.shape || d.size} ({d.weight} ct) - Status: {d.status}
+                      {d.barcode}{d.roughCutNo ? ` [Rough #${d.roughCutNo}]` : ''} | {d.companyCode} | {d.shape || d.size} ({d.weight} ct) - Status: {d.status}
                     </option>
                   ))}
                 </select>

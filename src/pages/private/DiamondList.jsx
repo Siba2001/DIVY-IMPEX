@@ -36,9 +36,10 @@ const DiamondList = () => {
     if (barcodeSearch) {
       const q = barcodeSearch.toLowerCase();
       const matchBarcode = String(d.barcode || '').toLowerCase().includes(q);
+      const matchRough = d.roughCutNo && String(d.roughCutNo).toLowerCase().includes(q);
       const matchComp = String(d.companyName || '').toLowerCase().includes(q);
       const matchWorker = d.assignedWorkerName && String(d.assignedWorkerName).toLowerCase().includes(q);
-      if (!matchBarcode && !matchComp && !matchWorker) return false;
+      if (!matchBarcode && !matchRough && !matchComp && !matchWorker) return false;
     }
     if (fromDate && d.receivedDate < fromDate) return false;
     if (toDate && d.receivedDate > toDate) return false;
@@ -221,11 +222,22 @@ const DiamondList = () => {
                       <span className="font-heading fw-bold text-navy fs-6" style={{ color: '#0A192F' }}>
                         {d.barcode}
                       </span>
-                      {d.roughCutNo && (
-                        <div className="text-muted small font-mono" style={{ fontSize: '0.75rem' }}>
-                          Cut #{d.roughCutNo}
+                      {d.roughCutNo ? (
+                        <div className="mt-1">
+                          <span
+                            className="badge font-mono rounded-pill px-2.5 py-1"
+                            style={{
+                              backgroundColor: '#F1F5F9',
+                              color: '#334155',
+                              border: '1px solid #CBD5E1',
+                              fontSize: '0.72rem',
+                              fontWeight: 600
+                            }}
+                          >
+                            Rough: #{d.roughCutNo}
+                          </span>
                         </div>
-                      )}
+                      ) : null}
                     </td>
                     <td>
                       <span className="fw-semibold text-dark">{d.companyName}</span>

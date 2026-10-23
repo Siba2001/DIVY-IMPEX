@@ -36,6 +36,7 @@ const Stock = () => {
       const q = searchTerm.toLowerCase();
       return (
         String(d.barcode || '').toLowerCase().includes(q) ||
+        (d.roughCutNo && String(d.roughCutNo).toLowerCase().includes(q)) ||
         String(d.companyName || '').toLowerCase().includes(q) ||
         (d.assignedWorkerName && String(d.assignedWorkerName).toLowerCase().includes(q))
       );
@@ -82,7 +83,7 @@ const Stock = () => {
       </div>
 
       {/* Filters Toolbar */}
-      <div className="card card-custom p-4 mb-4 shadow-sm">
+      <div className="card card-custom card-static p-4 mb-4 shadow-sm">
         <div className="row g-3">
           <div className="col-md-4">
             <label className="form-label">Search Barcode / Company / Worker</label>
@@ -138,7 +139,7 @@ const Stock = () => {
       </div>
 
       {/* Stock Inventory Breakdown Table */}
-      <div className="card card-custom p-4 shadow-sm">
+      <div className="card card-custom card-static p-4 shadow-sm">
         <h6 className="font-heading fw-bold text-navy mb-3" style={{ color: '#0A192F' }}>
           Detailed Vault & Stock Breakdown ({filteredDiamonds.length})
         </h6>
@@ -169,6 +170,22 @@ const Stock = () => {
                   <tr key={d.id}>
                     <td>
                       <span className="font-heading fw-bold text-navy">{d.barcode}</span>
+                      {d.roughCutNo ? (
+                        <div className="mt-0.5">
+                          <span
+                            className="badge font-mono rounded-pill px-2 py-0.5"
+                            style={{
+                              backgroundColor: '#F1F5F9',
+                              color: '#334155',
+                              border: '1px solid #CBD5E1',
+                              fontSize: '0.7rem',
+                              fontWeight: 600
+                            }}
+                          >
+                            Rough: #{d.roughCutNo}
+                          </span>
+                        </div>
+                      ) : null}
                     </td>
                     <td>
                       <span className="fw-semibold text-dark">{d.companyName}</span>

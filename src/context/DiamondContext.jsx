@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { apiService, STORAGE_KEYS } from '../services/apiService';
+import { apiService, STORAGE_KEYS, normalizeDiamond } from '../services/apiService';
 
 const DiamondContext = createContext();
 
@@ -14,7 +14,7 @@ const getInitialLocalCache = () => {
         return {
           companies: parsed.companies || [],
           workers: parsed.workers || [],
-          diamonds: parsed.diamonds || [],
+          diamonds: (parsed.diamonds || []).map(normalizeDiamond),
           histories: parsed.histories || []
         };
       }
@@ -22,7 +22,7 @@ const getInitialLocalCache = () => {
     // Fallback to storage keys
     const c = JSON.parse(localStorage.getItem(STORAGE_KEYS.COMPANIES) || '[]');
     const w = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORKERS) || '[]');
-    const d = JSON.parse(localStorage.getItem(STORAGE_KEYS.DIAMONDS) || '[]');
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEYS.DIAMONDS) || '[]').map(normalizeDiamond);
     const h = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORIES) || '[]');
     return { companies: c, workers: w, diamonds: d, histories: h };
   } catch (e) { }
@@ -113,13 +113,14 @@ export const DiamondProvider = ({ children }) => {
     const handleRemoteSync = (e) => {
       const data = e.detail;
       if (data) {
+        const cleanDiamonds = Array.isArray(data.diamonds) ? data.diamonds.map(normalizeDiamond) : [];
         if (Array.isArray(data.companies)) setCompanies(data.companies);
         if (Array.isArray(data.workers)) setWorkers(data.workers);
-        if (Array.isArray(data.diamonds)) setDiamonds(data.diamonds);
+        if (cleanDiamonds.length > 0) setDiamonds(cleanDiamonds);
         saveLocalCache(
           data.companies || [],
           data.workers || [],
-          data.diamonds || [],
+          cleanDiamonds,
           data.histories || []
         );
         setSyncError(null);

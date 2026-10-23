@@ -176,6 +176,54 @@ const getFormattedCurrentTime = () => {
   return { dateStr, timeStr, isoDate: now.toISOString().split('T')[0] };
 };
 
+// Helper: Sanitize & normalize diamond records so roughCutNo and shape are always consistent
+export const normalizeDiamond = (d) => {
+  if (!d) return d;
+  const rawRough = d.roughCutNo ?? d.RoughCutNo ?? d['Rough Cut No'] ?? d['Rough.No / Cut.No'] ?? d['Rough No'] ?? d.rough_cut_no ?? d.roughNo ?? d.cutNo ?? '';
+  const cleanRough = String(rawRough).trim();
+
+  let shapeVal = (d.shape || d.size || '').trim();
+  const lowerShape = shapeVal.toLowerCase();
+  if (!shapeVal || lowerShape === 'emerald' || lowerShape.includes('ct') || /^\d+(\.\d+)?$/.test(shapeVal)) {
+    shapeVal = 'Emeral';
+  }
+
+  return {
+    ...d,
+    roughCutNo: cleanRough,
+    shape: shapeVal,
+    barcode: String(d.barcode || '').trim().toUpperCase()
+  };
+};
+
+// Helper: Recover roughCutNo from historical inward remarks if sheet column was missing in older records
+export const backfillRoughFromHistories = (diamonds, histories) => {
+  if (!Array.isArray(diamonds) || !Array.isArray(histories)) return diamonds;
+  const roughMap = {};
+  histories.forEach(h => {
+    if (h.barcode && h.remarks && typeof h.remarks === 'string') {
+      const match = h.remarks.match(/Rough(?:\s*No|\.No|\/Cut\.No)?[:#\s]+([A-Za-z0-9_-]+)/i);
+      if (match && match[1]) {
+        const val = match[1].trim();
+        if (val && val !== 'null' && val !== 'undefined') {
+          roughMap[String(h.barcode).trim().toUpperCase()] = val;
+        }
+      }
+    }
+  });
+
+  return diamonds.map(d => {
+    const bc = String(d.barcode || '').trim().toUpperCase();
+    if (!d.roughCutNo && roughMap[bc]) {
+      return {
+        ...d,
+        roughCutNo: roughMap[bc]
+      };
+    }
+    return d;
+  });
+};
+
 let cachedInitialData = null;
 let lastInitialDataFetchTime = 0;
 const INITIAL_DATA_TTL = 60000; // 60 seconds memory cache
@@ -201,11 +249,13 @@ export const apiService = {
       return cachedInitialData;
     }
 
+    const rawHistories = getItem(STORAGE_KEYS.HISTORIES);
+    const rawDiamonds = getItem(STORAGE_KEYS.DIAMONDS).map(normalizeDiamond);
     const localData = {
       companies: getItem(STORAGE_KEYS.COMPANIES),
       workers: getItem(STORAGE_KEYS.WORKERS),
-      diamonds: getItem(STORAGE_KEYS.DIAMONDS),
-      histories: getItem(STORAGE_KEYS.HISTORIES),
+      diamonds: backfillRoughFromHistories(rawDiamonds, rawHistories),
+      histories: rawHistories,
     };
 
     const hasLocal = localData.companies.length > 0 || localData.workers.length > 0 || localData.diamonds.length > 0;
@@ -224,6 +274,10 @@ export const apiService = {
       try {
         const remoteData = await callGas('getInitialData', null, 'GET');
         if (remoteData) {
+          if (Array.isArray(remoteData.diamonds)) {
+            const clean = remoteData.diamonds.map(normalizeDiamond);
+            remoteData.diamonds = backfillRoughFromHistories(clean, remoteData.histories || []);
+          }
           cachedInitialData = remoteData;
           lastInitialDataFetchTime = Date.now();
           if (remoteData.companies) setItem(STORAGE_KEYS.COMPANIES, remoteData.companies);
@@ -243,6 +297,10 @@ export const apiService = {
     callGas('getInitialData', null, 'GET')
       .then((remoteData) => {
         if (remoteData) {
+          if (Array.isArray(remoteData.diamonds)) {
+            const clean = remoteData.diamonds.map(normalizeDiamond);
+            remoteData.diamonds = backfillRoughFromHistories(clean, remoteData.histories || []);
+          }
           cachedInitialData = remoteData;
           lastInitialDataFetchTime = Date.now();
           if (remoteData.companies) setItem(STORAGE_KEYS.COMPANIES, remoteData.companies);
@@ -1003,5 +1061,78 @@ export const apiService = {
     fireGasBackground('submitDiamondsToCompany', newDispatch);
 
     return newDispatch;
+  },
+
+  // ==================== USER MANAGEMENT & AUTH (BACKEND + SHA-256) ====================
+  loginUser: async (username, password) => {
+    if (isRemoteApiEnabled()) {
+      try {
+        const res = await callGas('loginUser', { username, password }, 'POST');
+        return res;
+      } catch (err) {
+        throw new Error(err.message || 'Login failed');
+      }
+    }
+    return { success: false, message: 'Database connection required for authentication.' };
+  },
+
+  getUsers: async () => {
+    if (isRemoteApiEnabled()) {
+      try {
+        const users = await callGas('getUsers', null, 'GET');
+        return Array.isArray(users) ? users : [];
+      } catch (err) {
+        console.warn('[DIVY Auth] Failed to fetch users from database:', err);
+      }
+    }
+    return [];
+  },
+
+  createUser: async (userData) => {
+    if (isRemoteApiEnabled()) {
+      return await callGas('createUser', userData, 'POST');
+    }
+    throw new Error('Database connection required to create users.');
+  },
+
+  changeUserPassword: async (username, newPassword) => {
+    if (isRemoteApiEnabled()) {
+      return await callGas('changeUserPassword', { username, newPassword }, 'POST');
+    }
+    throw new Error('Database connection required to change password.');
+  },
+
+  changeUserId: async (oldUsername, newUsername) => {
+    if (isRemoteApiEnabled()) {
+      return await callGas('changeUserId', { oldUsername, newUsername }, 'POST');
+    }
+    throw new Error('Database connection required to change user ID.');
+  },
+
+  deleteUser: async (username) => {
+    if (isRemoteApiEnabled()) {
+      return await callGas('deleteUser', { username }, 'POST');
+    }
+    throw new Error('Database connection required to delete user.');
+  },
+
+  verifyAdminAccess: async (key) => {
+    if (isRemoteApiEnabled()) {
+      try {
+        const res = await callGas('verifyAdminAccess', { key }, 'POST');
+        return Boolean(res && res.success);
+      } catch {
+        // Fallback: check if the key logs into the admin account directly via backend
+        try {
+          const loginRes = await callGas('loginUser', { username: 'admin', password: key }, 'POST');
+          return Boolean(loginRes && loginRes.success);
+        } catch {
+          return false;
+        }
+      }
+    }
+    return false;
   }
 };
+
+

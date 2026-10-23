@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DivyLogo, { DivyLogoIcon } from '../../components/common/DivyLogo';
-import { Lock, User, ArrowLeft, LogIn, Key, AlertCircle } from 'lucide-react';
+import { Lock, User, ArrowLeft, LogIn, Key, AlertCircle, Clock } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -10,16 +10,28 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Read session expiry notice if redirected from auto-logout
+  const [sessionNotice] = useState(() => {
+    try {
+      const notice = localStorage.getItem('divy_auth_session_notice');
+      if (notice) {
+        localStorage.removeItem('divy_auth_session_notice');
+        return notice;
+      }
+    } catch { }
+    return '';
+  });
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      const result = login(username, password);
+    try {
+      const result = await login(username, password);
       setLoading(false);
 
       if (result.success) {
@@ -31,20 +43,9 @@ const Login = () => {
       } else {
         setError(result.message || 'Invalid username or password!');
       }
-    }, 400);
-  };
-
-  const fillQuickCredentials = (userRole) => {
-    setError('');
-    if (userRole === 'admin') {
-      setUsername('admin');
-      setPassword('admin123');
-    } else if (userRole === 'supervisor') {
-      setUsername('supervisor');
-      setPassword('supervisor123');
-    } else if (userRole === 'worker') {
-      setUsername('worker');
-      setPassword('worker123');
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || 'Login failed. Please check network connection.');
     }
   };
 
@@ -66,6 +67,13 @@ const Login = () => {
             <p className="text-muted small mb-0">Enter your credentials to access system</p>
           </div>
 
+          {sessionNotice && (
+            <div className="alert alert-warning d-flex align-items-center small p-3 rounded-3 mb-4 border-warning" role="alert">
+              <Clock size={18} className="me-2 text-warning flex-shrink-0" />
+              <div>{sessionNotice}</div>
+            </div>
+          )}
+
           {error && (
             <div className="alert alert-danger d-flex align-items-center small p-3 rounded-3 mb-4" role="alert">
               <AlertCircle size={18} className="me-2 flex-shrink-0" />
@@ -75,13 +83,13 @@ const Login = () => {
 
           <form onSubmit={handleLogin}>
             <div className="mb-3">
-              <label className="form-label fw-semibold text-secondary small">Username / Email</label>
+              <label className="form-label fw-semibold text-secondary small">User ID / Username</label>
               <div className="position-relative">
                 <User size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
                 <input
                   type="text"
-                  className="form-control ps-5"
-                  placeholder="e.g. admin or worker"
+                  className="form-control ps-5 font-mono"
+                  placeholder="Enter your User ID"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -95,7 +103,7 @@ const Login = () => {
                 <Lock size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
                 <input
                   type="password"
-                  className="form-control ps-5"
+                  className="form-control ps-5 font-mono"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -121,24 +129,6 @@ const Login = () => {
           <Link to="/" className="btn btn-outline-secondary w-100 rounded-pill py-2 font-heading fw-medium small d-flex align-items-center justify-content-center">
             <ArrowLeft size={16} className="me-2" /> Back to Company Website
           </Link>
-
-          {/* Quick Demo Credentials Box */}
-          <div className="mt-4 pt-3 border-top">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <span className="text-uppercase fw-bold text-muted" style={{ fontSize: '0.675rem', letterSpacing: '0.05em' }}>
-                <Key size={12} className="me-1 text-warning" /> Quick Demo Fill
-              </span>
-            </div>
-            <div>
-              <button
-                type="button"
-                className="btn btn-xs btn-light border text-navy fw-semibold w-100 py-1.5 small"
-                onClick={() => fillQuickCredentials('admin')}
-              >
-                Auto-Fill Admin Credentials (admin / admin123)
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

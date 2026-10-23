@@ -78,7 +78,8 @@ var SHEETS = {
   COMPANIES: 'Companies',
   WORKERS: 'Workers',
   DIAMONDS: 'Diamonds',
-  HISTORIES: 'Histories'
+  HISTORIES: 'Histories',
+  USERS: 'Users'
 };
 
 // COLUMN HEADERS DEFINITIONS
@@ -92,7 +93,8 @@ var HEADERS = {
     'status', 'completedDate', 'completedBy', 'depositedDate',
     'verifiedDate', 'verifiedBy', 'remarks'
   ],
-  Histories: ['id', 'diamondId', 'barcode', 'action', 'performedBy', 'date', 'time', 'remarks']
+  Histories: ['id', 'diamondId', 'barcode', 'action', 'performedBy', 'date', 'time', 'remarks'],
+  Users: ['id', 'username', 'passwordHash', 'role', 'name', 'email', 'status', 'createdAt']
 };
 
 /**
@@ -177,6 +179,10 @@ function doGet(e) {
         response = getDiamondHistory(query);
         break;
 
+      case 'getUsers':
+        response = getUsers();
+        break;
+
       default:
         response = { error: 'Unknown GET action: ' + action };
     }
@@ -259,6 +265,31 @@ function doPost(e) {
         result = markWorkCompleted(data);
         break;
 
+      case 'login':
+      case 'loginUser':
+        result = loginUser(data);
+        break;
+
+      case 'createUser':
+        result = createUser(data);
+        break;
+
+      case 'changeUserPassword':
+        result = changeUserPassword(data);
+        break;
+
+      case 'changeUserId':
+        result = changeUserId(data);
+        break;
+
+      case 'deleteUser':
+        result = deleteUser(data);
+        break;
+
+      case 'verifyAdminAccess':
+        result = verifyAdminAccess(data);
+        break;
+
       case 'depositDiamond':
         result = depositDiamond(data);
         break;
@@ -334,6 +365,13 @@ function appendRowToSheet(sheetName, obj) {
   var lastCol = sheet.getLastColumn();
   var sheetHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : null;
   var headers = (sheetHeaders && sheetHeaders.length > 0 && sheetHeaders[0]) ? sheetHeaders : (HEADERS[sheetName] || []);
+
+  // Ensure roughCutNo is present in sheet headers if missing on older sheets
+  if (sheetName === SHEETS.DIAMONDS && headers.indexOf('roughCutNo') === -1) {
+    sheet.getRange(1, headers.length + 1).setValue('roughCutNo');
+    headers.push('roughCutNo');
+  }
+
   var rowValues = [];
 
   for (var i = 0; i < headers.length; i++) {
@@ -804,3 +842,237 @@ function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// =========================================================================
+// SECURE USER & PASSWORD MANAGEMENT (SHA-256 HASHED)
+// =========================================================================
+
+function hashPassword(plainPassword) {
+  var raw = String(plainPassword || '').trim();
+  if (!raw) return '';
+  var digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, raw, Utilities.Charset.UTF_8);
+  var hex = '';
+  for (var i = 0; i < digest.length; i++) {
+    var byteVal = digest[i];
+    if (byteVal < 0) byteVal += 256;
+    var byteHex = byteVal.toString(16);
+    if (byteHex.length === 1) hex += '0';
+    hex += byteHex;
+  }
+  return hex;
+}
+
+function ensureUsersTable(ss) {
+  if (!ss) ss = getSpreadsheet();
+  var sheet = ss.getSheetByName(SHEETS.USERS);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEETS.USERS);
+  }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(HEADERS.Users);
+    var headerRange = sheet.getRange(1, 1, 1, HEADERS.Users.length);
+    headerRange.setBackground('#0A192F');
+    headerRange.setFontColor('#D4AF37');
+    headerRange.setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+
+  // Pre-seed default Admin account if sheet is empty
+  if (sheet.getLastRow() <= 1) {
+    var timeInfo = getFormattedTime();
+    sheet.appendRow([
+      'usr-admin',
+      'admin',
+      hashPassword('admin123'),
+      'admin',
+      'Admin Manager',
+      'admin@divyimpex.com',
+      'ACTIVE',
+      timeInfo.dateStr
+    ]);
+  }
+  return sheet;
+}
+
+function getUsers() {
+  ensureUsersTable();
+  var users = getTableData(SHEETS.USERS);
+  return users.map(function (u) {
+    return {
+      id: u.id,
+      username: u.username,
+      name: u.name,
+      role: u.role || 'worker',
+      email: u.email || '',
+      status: u.status || 'ACTIVE',
+      createdAt: u.createdAt || ''
+    };
+  });
+}
+
+function loginUser(data) {
+  ensureUsersTable();
+  var username = String(data.username || '').trim().toLowerCase();
+  var password = String(data.password || '').trim();
+
+  if (!username || !password) {
+    return { success: false, message: 'Username and password are required.' };
+  }
+
+  var hash = hashPassword(password);
+  var users = getTableData(SHEETS.USERS);
+  var found = null;
+  for (var i = 0; i < users.length; i++) {
+    if (String(users[i].username).trim().toLowerCase() === username) {
+      found = users[i];
+      break;
+    }
+  }
+
+  if (!found || String(found.passwordHash).trim() !== hash) {
+    return { success: false, message: 'Invalid username or password!' };
+  }
+
+  return {
+    success: true,
+    user: {
+      id: found.id,
+      username: found.username,
+      name: found.name,
+      role: found.role || 'worker',
+      email: found.email || '',
+      status: found.status || 'ACTIVE'
+    }
+  };
+}
+
+function createUser(data) {
+  ensureUsersTable();
+  var username = String(data.username || '').trim();
+  var password = String(data.password || '').trim();
+  var name = String(data.name || '').trim();
+  var role = String(data.role || 'worker').trim().toLowerCase();
+  var email = String(data.email || '').trim();
+
+  if (!username) return { success: false, message: 'User ID is required.' };
+  if (!password || password.length < 4) return { success: false, message: 'Password must be at least 4 characters.' };
+  if (!name) return { success: false, message: 'Full Name is required.' };
+
+  var users = getTableData(SHEETS.USERS);
+  for (var i = 0; i < users.length; i++) {
+    if (String(users[i].username).trim().toLowerCase() === username.toLowerCase()) {
+      return { success: false, message: 'User ID "' + username + '" already exists in database!' };
+    }
+  }
+
+  var timeInfo = getFormattedTime();
+  var newUser = {
+    id: 'usr-' + Date.now(),
+    username: username,
+    passwordHash: hashPassword(password),
+    role: role,
+    name: name,
+    email: email,
+    status: 'ACTIVE',
+    createdAt: timeInfo.dateStr
+  };
+
+  appendRowToSheet(SHEETS.USERS, newUser);
+  return {
+    success: true,
+    message: 'User account "' + username + '" created securely in database!',
+    user: {
+      id: newUser.id,
+      username: newUser.username,
+      role: newUser.role,
+      name: newUser.name,
+      email: newUser.email,
+      createdAt: newUser.createdAt
+    }
+  };
+}
+
+function changeUserPassword(data) {
+  ensureUsersTable();
+  var username = String(data.username || '').trim().toLowerCase();
+  var newPassword = String(data.newPassword || '').trim();
+
+  if (!username) return { success: false, message: 'User ID is required.' };
+  if (!newPassword || newPassword.length < 4) return { success: false, message: 'New password must be at least 4 characters.' };
+
+  var newHash = hashPassword(newPassword);
+  updateRowInSheet(SHEETS.USERS, 'username', username, {
+    passwordHash: newHash
+  });
+
+  return { success: true, message: 'Password for "' + username + '" successfully updated in database!' };
+}
+
+function changeUserId(data) {
+  ensureUsersTable();
+  var oldUsername = String(data.oldUsername || '').trim();
+  var newUsername = String(data.newUsername || '').trim();
+
+  if (!newUsername) return { success: false, message: 'New User ID cannot be empty.' };
+
+  var users = getTableData(SHEETS.USERS);
+  var conflict = users.some(function (u) {
+    return String(u.username).trim().toLowerCase() === newUsername.toLowerCase();
+  });
+  if (conflict) {
+    return { success: false, message: 'User ID "' + newUsername + '" is already taken in database!' };
+  }
+
+  updateRowInSheet(SHEETS.USERS, 'username', oldUsername, {
+    username: newUsername
+  });
+
+  return { success: true, message: 'User ID changed to "' + newUsername + '" in database!' };
+}
+
+function deleteUser(data) {
+  ensureUsersTable();
+  var username = String(data.username || '').trim().toLowerCase();
+  var users = getTableData(SHEETS.USERS);
+
+  var adminCount = 0;
+  var target = null;
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].role === 'admin') adminCount++;
+    if (String(users[i].username).trim().toLowerCase() === username) {
+      target = users[i];
+    }
+  }
+
+  if (!target) return { success: false, message: 'User not found in database.' };
+  if (target.role === 'admin' && adminCount <= 1) {
+    return { success: false, message: 'Cannot delete the only remaining Admin account in database!' };
+  }
+
+  deleteRowFromSheet(SHEETS.USERS, 'username', username);
+  return { success: true, message: 'User "' + username + '" deleted from database.' };
+}
+
+function verifyAdminAccess(data) {
+  var inputKey = String((data && data.key) || '').trim();
+  if (!inputKey) return { success: false, message: 'Security key or password is required.' };
+
+  // Check 1: Matches server-side API_SECRET (only configured inside private Google Apps Script)
+  if (typeof API_SECRET !== 'undefined' && API_SECRET && inputKey === API_SECRET) {
+    return { success: true };
+  }
+
+  // Check 2: Matches any Admin account password in the database (via SHA-256 hash comparison)
+  ensureUsersTable();
+  var inputHash = hashPassword(inputKey);
+  var users = getTableData(SHEETS.USERS);
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].role === 'admin' && String(users[i].passwordHash).trim() === inputHash) {
+      return { success: true };
+    }
+  }
+
+  return { success: false, message: 'Invalid security key or admin password!' };
+}
+
+

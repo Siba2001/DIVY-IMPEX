@@ -186,9 +186,25 @@ const DepositVerification = () => {
                 <div className="d-flex justify-content-between align-items-start mb-3 border-bottom pb-3">
                   <div>
                     <span className="text-uppercase text-muted small d-block">Found Diamond Spec</span>
-                    <h4 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
-                      {scannedDiamond.barcode}
-                    </h4>
+                    <div className="d-flex align-items-center gap-2">
+                      <h4 className="font-heading fw-bold text-navy mb-0" style={{ color: '#0A192F' }}>
+                        {scannedDiamond.barcode}
+                      </h4>
+                      {scannedDiamond.roughCutNo ? (
+                        <span
+                          className="badge font-mono rounded-pill px-2.5 py-1"
+                          style={{
+                            backgroundColor: '#FFFFFF',
+                            color: '#334155',
+                            border: '1px solid #CBD5E1',
+                            fontSize: '0.75rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          Rough: #{scannedDiamond.roughCutNo}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <Badge status={scannedDiamond.status} />
                 </div>

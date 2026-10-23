@@ -529,7 +529,7 @@ const Companies = () => {
             <input
               type="text"
               className={`form-control ${formErrors.contactPerson ? 'is-invalid' : ''}`}
-              placeholder="Full name of contact person (e.g. Siba Sethy)"
+              placeholder="Full name of contact person"
               value={formData.contactPerson}
               onChange={(e) => {
                 setFormData({ ...formData, contactPerson: e.target.value });
