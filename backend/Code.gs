@@ -366,10 +366,20 @@ function appendRowToSheet(sheetName, obj) {
   var sheetHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : null;
   var headers = (sheetHeaders && sheetHeaders.length > 0 && sheetHeaders[0]) ? sheetHeaders : (HEADERS[sheetName] || []);
 
-  // Ensure roughCutNo is present in sheet headers if missing on older sheets
-  if (sheetName === SHEETS.DIAMONDS && headers.indexOf('roughCutNo') === -1) {
-    sheet.getRange(1, headers.length + 1).setValue('roughCutNo');
-    headers.push('roughCutNo');
+  // Ensure roughCutNo, serialNo, batchTotalWeight are present in sheet headers if missing on older sheets
+  if (sheetName === SHEETS.DIAMONDS) {
+    if (headers.indexOf('roughCutNo') === -1) {
+      sheet.getRange(1, headers.length + 1).setValue('roughCutNo');
+      headers.push('roughCutNo');
+    }
+    if (headers.indexOf('serialNo') === -1) {
+      sheet.getRange(1, headers.length + 1).setValue('serialNo');
+      headers.push('serialNo');
+    }
+    if (headers.indexOf('batchTotalWeight') === -1) {
+      sheet.getRange(1, headers.length + 1).setValue('batchTotalWeight');
+      headers.push('batchTotalWeight');
+    }
   }
 
   var rowValues = [];
@@ -578,6 +588,9 @@ function receiveDiamondsBatch(data) {
   var created = [];
   var timeInfo = getFormattedTime();
 
+  var serialNo = data.serialNo ? String(data.serialNo).trim() : '';
+  var batchTotalWeight = data.batchTotalWeight || data.totalWeight || '';
+
   for (var k = 0; k < diamondsList.length; k++) {
     var item = diamondsList[k];
     var barcode = String(item.barcode).trim().toUpperCase();
@@ -586,11 +599,13 @@ function receiveDiamondsBatch(data) {
       throw new Error('Barcode ' + barcode + ' already exists!');
     }
 
-    var shapeVal = item.shape ? String(item.shape).trim() : 'Emperal';
+    var shapeVal = item.shape ? String(item.shape).trim() : '';
     var roughCutVal = item.roughCutNo ? String(item.roughCutNo).trim() : '';
 
     var newDiamond = {
       id: 'dia-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      serialNo: serialNo,
+      batchTotalWeight: batchTotalWeight ? parseFloat(batchTotalWeight) : '',
       barcode: barcode,
       roughCutNo: roughCutVal,
       companyId: company.id,
@@ -621,7 +636,9 @@ function receiveDiamondsBatch(data) {
     existingBarcodes[barcode] = true;
 
     // Log History
-    var weightDetail = 'Kacha Wt: ' + newDiamond.weight + ' ct';
+    var serialLog = serialNo ? 'Sr: #' + serialNo + ', ' : '';
+    var batchLog = batchTotalWeight ? 'Batch Wt: ' + batchTotalWeight + ' ct, ' : '';
+    var weightDetail = serialLog + batchLog + 'Kacha Wt: ' + newDiamond.weight + ' ct';
     if (newDiamond.targetWeight) weightDetail += ', Teyar Wt: ' + newDiamond.targetWeight + ' ct';
     if (roughCutVal) weightDetail += ', Rough No: ' + roughCutVal;
     if (shapeVal) weightDetail += ', Shape: ' + shapeVal;

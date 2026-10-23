@@ -37,9 +37,10 @@ const DiamondList = () => {
       const q = barcodeSearch.toLowerCase();
       const matchBarcode = String(d.barcode || '').toLowerCase().includes(q);
       const matchRough = d.roughCutNo && String(d.roughCutNo).toLowerCase().includes(q);
+      const matchSerial = d.serialNo && String(d.serialNo).toLowerCase().includes(q);
       const matchComp = String(d.companyName || '').toLowerCase().includes(q);
       const matchWorker = d.assignedWorkerName && String(d.assignedWorkerName).toLowerCase().includes(q);
-      if (!matchBarcode && !matchRough && !matchComp && !matchWorker) return false;
+      if (!matchBarcode && !matchRough && !matchSerial && !matchComp && !matchWorker) return false;
     }
     if (fromDate && d.receivedDate < fromDate) return false;
     if (toDate && d.receivedDate > toDate) return false;
@@ -222,20 +223,36 @@ const DiamondList = () => {
                       <span className="font-heading fw-bold text-navy fs-6" style={{ color: '#0A192F' }}>
                         {d.barcode}
                       </span>
-                      {d.roughCutNo ? (
-                        <div className="mt-1">
-                          <span
-                            className="badge font-mono rounded-pill px-2.5 py-1"
-                            style={{
-                              backgroundColor: '#F1F5F9',
-                              color: '#334155',
-                              border: '1px solid #CBD5E1',
-                              fontSize: '0.72rem',
-                              fontWeight: 600
-                            }}
-                          >
-                            Rough: #{d.roughCutNo}
-                          </span>
+                      {(d.roughCutNo || d.serialNo) ? (
+                        <div className="mt-1 d-flex flex-wrap gap-1">
+                          {d.roughCutNo && (
+                            <span
+                              className="badge font-mono rounded-pill px-2.5 py-1"
+                              style={{
+                                backgroundColor: '#F1F5F9',
+                                color: '#334155',
+                                border: '1px solid #CBD5E1',
+                                fontSize: '0.72rem',
+                                fontWeight: 600
+                              }}
+                            >
+                              Rough: #{d.roughCutNo}
+                            </span>
+                          )}
+                          {d.serialNo && (
+                            <span
+                              className="badge font-mono rounded-pill px-2 py-0.5"
+                              style={{
+                                backgroundColor: '#FEF3C7',
+                                color: '#92400E',
+                                border: '1px solid #FDE68A',
+                                fontSize: '0.70rem',
+                                fontWeight: 600
+                              }}
+                            >
+                              Sr: #{d.serialNo}
+                            </span>
+                          )}
                         </div>
                       ) : null}
                     </td>

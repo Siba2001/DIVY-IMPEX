@@ -103,11 +103,18 @@ const DiamondTimelineModal = ({ isOpen, onClose, diamond }) => {
           <div className="col-md-3">
             <span className="text-muted d-block small">Barcode Number</span>
             <span className="font-heading fw-bold fs-5 text-dark">{diamond.barcode}</span>
-            {diamond.roughCutNo && (
-              <span className="badge bg-light text-secondary border mt-1">
-                Rough #{diamond.roughCutNo}
-              </span>
-            )}
+            <div className="d-flex flex-wrap gap-1 mt-1">
+              {diamond.roughCutNo && (
+                <span className="badge bg-light text-secondary border">
+                  Rough #{diamond.roughCutNo}
+                </span>
+              )}
+              {diamond.serialNo && (
+                <span className="badge font-mono" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
+                  Sr: #{diamond.serialNo}
+                </span>
+              )}
+            </div>
           </div>
           <div className="col-md-3">
             <span className="text-muted d-block small">Company</span>

@@ -3,7 +3,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { PackagePlus, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  PackagePlus,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
 const DiamondReceiving = () => {
   const { companies, diamonds, receiveBatch, showToast } = useDiamonds();
@@ -12,7 +18,10 @@ const DiamondReceiving = () => {
 
   const initialCompanyId = searchParams.get('company') || (companies[0]?.id || '');
 
+  // 1. Batch Inward Master Details state
   const [companyId, setCompanyId] = useState(initialCompanyId);
+  const [serialNo, setSerialNo] = useState('');
+  const [batchTotalWeight, setBatchTotalWeight] = useState('');
   const [receivedDate, setReceivedDate] = useState(new Date().toISOString().split('T')[0]);
   const [receivedBy, setReceivedBy] = useState('Admin Supervisor');
   const [batchRemarks, setBatchRemarks] = useState('');
@@ -20,35 +29,44 @@ const DiamondReceiving = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rowToDeleteIndex, setRowToDeleteIndex] = useState(null);
 
+  // 2. Individual Diamond Records state
   const [diamondsList, setDiamondsList] = useState([
-    { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: 'Emeral', remarks: '' },
+    { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: '', remarks: '' },
   ]);
   const [totalItemsInput, setTotalItemsInput] = useState('');
 
-  const updateRowsToCount = (targetCount, currentList = diamondsList) => {
-    if (targetCount > currentList.length) {
-      const diff = targetCount - currentList.length;
-      const newRows = Array.from({ length: diff }, () => ({
-        roughCutNo: '',
-        barcode: '',
-        weight: '',
-        targetWeight: '',
-        shape: 'Emeral',
-        remarks: ''
-      }));
-      setDiamondsList([...currentList, ...newRows]);
-    } else if (targetCount < currentList.length) {
-      setDiamondsList(currentList.slice(0, targetCount));
-    }
+  const updateRowsToCount = (targetCount) => {
+    const count = parseInt(targetCount, 10);
+    if (isNaN(count) || count < 1) return;
+
+    setDiamondsList((prevList) => {
+      if (count === prevList.length) return prevList;
+      if (count > prevList.length) {
+        const diff = count - prevList.length;
+        const newRows = Array.from({ length: diff }, () => ({
+          roughCutNo: '',
+          barcode: '',
+          weight: '',
+          targetWeight: '',
+          shape: '',
+          remarks: ''
+        }));
+        return [...prevList, ...newRows];
+      } else {
+        return prevList.slice(0, count);
+      }
+    });
   };
 
   const handleAddRow = () => {
-    const updated = [
-      ...diamondsList,
-      { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: 'Emeral', remarks: '' }
-    ];
-    setDiamondsList(updated);
-    setTotalItemsInput(updated.length.toString());
+    setDiamondsList((prev) => {
+      const updated = [
+        ...prev,
+        { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: '', remarks: '' }
+      ];
+      setTotalItemsInput(updated.length.toString());
+      return updated;
+    });
   };
 
   const handleRemoveRow = (index) => {
@@ -58,16 +76,20 @@ const DiamondReceiving = () => {
       setRowToDeleteIndex(index);
       return;
     }
-    const updated = diamondsList.filter((_, idx) => idx !== index);
-    setDiamondsList(updated);
-    setTotalItemsInput(updated.length.toString());
+    setDiamondsList((prev) => {
+      const updated = prev.filter((_, idx) => idx !== index);
+      setTotalItemsInput(updated.length.toString());
+      return updated;
+    });
   };
 
   const confirmRemoveRow = () => {
     if (rowToDeleteIndex === null) return;
-    const updated = diamondsList.filter((_, idx) => idx !== rowToDeleteIndex);
-    setDiamondsList(updated);
-    setTotalItemsInput(updated.length.toString());
+    setDiamondsList((prev) => {
+      const updated = prev.filter((_, idx) => idx !== rowToDeleteIndex);
+      setTotalItemsInput(updated.length.toString());
+      return updated;
+    });
     setRowToDeleteIndex(null);
   };
 
@@ -77,16 +99,19 @@ const DiamondReceiving = () => {
 
     if (rawVal.trim() === '') return;
     const val = parseInt(rawVal, 10);
-    if (!isNaN(val) && val >= 1 && val <= 100) {
+    if (!isNaN(val) && val >= 1 && val <= 5000) {
       updateRowsToCount(val);
     }
   };
 
   const handleTotalItemsInputBlur = () => {
-    if (totalItemsInput.trim() === '') return;
+    if (totalItemsInput.trim() === '') {
+      setTotalItemsInput(diamondsList.length.toString());
+      return;
+    }
     let val = parseInt(totalItemsInput, 10);
     if (isNaN(val) || val < 1) val = 1;
-    if (val > 100) val = 100;
+    if (val > 5000) val = 5000;
     setTotalItemsInput(val.toString());
     updateRowsToCount(val);
   };
@@ -109,6 +134,15 @@ const DiamondReceiving = () => {
     setDiamondsList(updated);
   };
 
+  // Live Weight Calculations
+  const totalBatchWeightNum = diamondsList.reduce((sum, d) => sum + (parseFloat(d.weight) || 0), 0);
+  const totalBatchWeight = totalBatchWeightNum.toFixed(3);
+
+  const totalTargetWeight = diamondsList
+    .reduce((sum, d) => sum + (parseFloat(d.targetWeight) || 0), 0)
+    .toFixed(3);
+
+  const masterWeightNum = parseFloat(batchTotalWeight) || 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -165,10 +199,20 @@ const DiamondReceiving = () => {
       }
     }
 
+    // Weight comparison: If Total Weight is entered, verify sum of individual weights matches
+    if (masterWeightNum > 0 && Math.abs(masterWeightNum - totalBatchWeightNum) > 0.005) {
+      setError(
+        `Total diamond weight (${totalBatchWeight} ct) does not match the entered Batch Total Weight (${masterWeightNum.toFixed(3)} ct). Difference: ${(totalBatchWeightNum - masterWeightNum).toFixed(3)} ct.`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await receiveBatch({
         companyId,
+        serialNo,
+        batchTotalWeight,
         receivedDate,
         receivedBy,
         remarks: batchRemarks,
@@ -183,14 +227,6 @@ const DiamondReceiving = () => {
     }
   };
 
-  const totalBatchWeight = diamondsList
-    .reduce((sum, d) => sum + (parseFloat(d.weight) || 0), 0)
-    .toFixed(3);
-
-  const totalTargetWeight = diamondsList
-    .reduce((sum, d) => sum + (parseFloat(d.targetWeight) || 0), 0)
-    .toFixed(3);
-
   return (
     <PrivateLayout title="Physical Diamond Inward Receiving">
       <div className="card card-custom p-3 p-sm-4 mb-4 shadow-sm">
@@ -204,7 +240,7 @@ const DiamondReceiving = () => {
                 New Diamond Parcel Receiving Entry
               </h5>
               <small className="text-muted d-block">
-                Enter batch inward details and list individual diamonds with barcode and carat weight.
+                Enter batch inward details, parcel serial number, and total carat weight to reconcile against individual stones.
               </small>
             </div>
           </div>
@@ -218,16 +254,25 @@ const DiamondReceiving = () => {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Batch Master Info Header */}
+          {/* 1. Batch Inward Master Details */}
           <div className="bg-light p-3 p-sm-4 rounded-3 border mb-4">
-            <h6 className="fw-bold text-navy mb-3" style={{ color: '#0A192F' }}>
-              1. Batch Inward Master Details
-            </h6>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="fw-bold text-navy mb-0 d-flex align-items-center gap-2" style={{ color: '#0A192F' }}>
+                <span>1. Batch Inward Master Details</span>
+              </h6>
+              {serialNo && (
+                <span className="badge bg-white text-navy border font-mono small px-2.5 py-1">
+                  Parcel Sr: {serialNo}
+                </span>
+              )}
+            </div>
+
             <div className="row g-3">
+              {/* Client Company */}
               <div className="col-12 col-md-4">
                 <label className="form-label fw-semibold">Client Company <span className="text-danger">*</span></label>
                 <select
-                  className="form-select"
+                  className="form-select bg-white"
                   value={companyId}
                   onChange={(e) => setCompanyId(e.target.value)}
                   required
@@ -241,51 +286,91 @@ const DiamondReceiving = () => {
                 </select>
               </div>
 
+              {/* Serial No */}
+              <div className="col-12 col-sm-6 col-md-2">
+                <label className="form-label fw-semibold">Serial No</label>
+                <input
+                  type="text"
+                  className="form-control font-mono fw-bold bg-white text-navy"
+                  placeholder="e.g. 15 or SR-01"
+                  value={serialNo}
+                  onChange={(e) => setSerialNo(e.target.value)}
+                  title="Inward Serial No for this batch parcel"
+                />
+              </div>
+
+              {/* Received Date */}
               <div className="col-12 col-sm-6 col-md-3">
                 <label className="form-label fw-semibold">Received Date <span className="text-danger">*</span></label>
                 <input
                   type="date"
-                  className="form-control"
+                  className="form-control bg-white"
                   value={receivedDate}
                   onChange={(e) => setReceivedDate(e.target.value)}
                   required
                 />
               </div>
 
+              {/* Received By (Supervisor) */}
               <div className="col-12 col-sm-6 col-md-3">
                 <label className="form-label fw-semibold">Received By (Supervisor)</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control bg-white"
                   placeholder="Supervisor name"
                   value={receivedBy}
                   onChange={(e) => setReceivedBy(e.target.value)}
                 />
               </div>
 
-              <div className="col-12 col-md-2">
-                <label className="form-label fw-semibold">Total Items *</label>
+              {/* Total Items (Count) */}
+              <div className="col-12 col-sm-6 col-md-2">
+                <label className="form-label fw-semibold">Total Items <span className="text-danger">*</span></label>
                 <div className="input-group">
                   <input
                     type="number"
                     min="1"
-                    max="100"
+                    max="5000"
                     className="form-control bg-white fw-bold text-navy font-mono"
                     value={totalItemsInput}
                     onChange={handleTotalItemsInputChange}
                     onBlur={handleTotalItemsInputBlur}
-                    placeholder="e.g. 5"
-                    title="Type a number to set the total items count"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleTotalItemsInputBlur();
+                      }
+                    }}
+                    placeholder="e.g. 15"
+                    title="Enter number of diamonds (e.g. 15, 125) to automatically create rows"
                   />
                   <span className="input-group-text bg-white text-muted px-2 small">pcs</span>
                 </div>
               </div>
 
-              <div className="col-12">
+              {/* Total Weight */}
+              <div className="col-12 col-sm-6 col-md-3">
+                <label className="form-label fw-semibold">Total Weight</label>
+                <div className="input-group">
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    className="form-control bg-white fw-bold text-navy font-mono"
+                    value={batchTotalWeight}
+                    onChange={(e) => setBatchTotalWeight(e.target.value)}
+                    placeholder="e.g. 8.50"
+                  />
+                  <span className="input-group-text bg-light text-muted px-2 small fw-bold font-mono">ct</span>
+                </div>
+              </div>
+
+              {/* Batch Inward Remarks */}
+              <div className="col-12 col-md-7">
                 <label className="form-label fw-semibold">Batch Inward Remarks</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control bg-white"
                   placeholder="e.g. Received via courier sealed parcel #KGK-B90"
                   value={batchRemarks}
                   onChange={(e) => setBatchRemarks(e.target.value)}
@@ -294,7 +379,7 @@ const DiamondReceiving = () => {
             </div>
           </div>
 
-          {/* Individual Diamonds Table */}
+          {/* 2. Individual Diamond Records Table */}
           <div className="mb-4">
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
               <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -304,11 +389,21 @@ const DiamondReceiving = () => {
                 <span className="badge rounded-pill bg-white text-navy border px-2.5 py-1.5 fw-semibold shadow-xs">
                   {diamondsList.length} {diamondsList.length === 1 ? 'Diamond' : 'Diamonds'}
                 </span>
-                <span className="badge rounded-pill px-2.5 py-1.5 fw-semibold" style={{ backgroundColor: 'rgba(212, 175, 55, 0.15)', color: '#9A7B1C', border: '1px solid rgba(212, 175, 55, 0.35)' }}>
+
+                {/* Total Rough Weight Badge */}
+                <span
+                  className="badge rounded-pill px-2.5 py-1.5 fw-semibold shadow-xs font-mono"
+                  style={{
+                    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+                    color: '#9A7B1C',
+                    border: '1px solid rgba(212, 175, 55, 0.35)'
+                  }}
+                >
                   Total Rough Wt: {totalBatchWeight} ct
                 </span>
+
                 {parseFloat(totalTargetWeight) > 0 && (
-                  <span className="badge rounded-pill px-2.5 py-1.5 fw-semibold bg-white text-primary border shadow-xs">
+                  <span className="badge rounded-pill px-2.5 py-1.5 fw-semibold bg-white text-primary border shadow-xs font-mono">
                     Total Polished Wt: {totalTargetWeight} ct
                   </span>
                 )}
@@ -349,7 +444,7 @@ const DiamondReceiving = () => {
                     <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '190px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
                       Barcode Number <span className="text-danger">*</span>
                     </th>
-                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '160px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
+                    <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '170px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
                       Rough Weight <span className="text-danger">*</span>
                     </th>
                     <th className="py-2.5 text-uppercase fw-bold text-nowrap" style={{ width: '160px', fontSize: '0.75rem', letterSpacing: '0.04em', color: '#0A192F', backgroundColor: '#F1F5F9' }}>
@@ -472,6 +567,28 @@ const DiamondReceiving = () => {
                     </tr>
                   ))}
                 </tbody>
+
+                {/* Table Summary Footer */}
+                <tfoot style={{ backgroundColor: '#F8FAFC', borderTop: '2px solid #CBD5E1' }}>
+                  <tr className="fw-bold font-mono">
+                    <td className="text-center py-2.5 text-muted small bg-light">TOTAL</td>
+                    <td className="py-2.5 text-navy small">{diamondsList.length} Items</td>
+                    <td className="py-2.5 text-muted small">
+                      {diamondsList.filter((d) => d.barcode?.trim()).length} / {diamondsList.length} Barcodes
+                    </td>
+                    <td className="py-2.5">
+                      <span className="text-navy" style={{ fontSize: '0.88rem' }}>{totalBatchWeight} ct</span>
+                    </td>
+                    <td className="py-2.5 text-primary small">
+                      {parseFloat(totalTargetWeight) > 0 ? `${totalTargetWeight} ct` : '—'}
+                    </td>
+                    <td colSpan="3" className="py-2.5 text-muted small text-end pe-3">
+                      {masterWeightNum > 0 && (
+                        <span>Batch Total Weight: <strong className="text-navy">{masterWeightNum.toFixed(3)} ct</strong></span>
+                      )}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>
@@ -513,15 +630,16 @@ const DiamondReceiving = () => {
           onClose={() => setRowToDeleteIndex(null)}
           onConfirm={confirmRemoveRow}
           title="Remove Diamond Entry"
-          message={`Are you sure you want to discard row #${rowToDeleteIndex + 1}${
-            diamondsList[rowToDeleteIndex]?.barcode ? ` (Barcode: ${diamondsList[rowToDeleteIndex].barcode})` : ''
-          }? All details entered for this row will be cleared.`}
+          message={`Are you sure you want to discard row #${rowToDeleteIndex + 1}${diamondsList[rowToDeleteIndex]?.barcode ? ` (Barcode: ${diamondsList[rowToDeleteIndex].barcode})` : ''
+            }? All details entered for this row will be cleared.`}
           confirmText="Remove Row"
           cancelText="Keep Row"
           confirmVariant="danger"
           icon="delete"
         />
       )}
+
+
     </PrivateLayout>
   );
 };

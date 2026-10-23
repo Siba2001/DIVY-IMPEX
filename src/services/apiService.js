@@ -191,6 +191,11 @@ export const normalizeDiamond = (d) => {
   const rawRough = d.roughCutNo ?? d.RoughCutNo ?? d['Rough Cut No'] ?? d['Rough.No / Cut.No'] ?? d['Rough No'] ?? d.rough_cut_no ?? d.roughNo ?? d.cutNo ?? '';
   const cleanRough = String(rawRough).trim();
 
+  const rawSerial = d.serialNo ?? d.SerialNo ?? d['Serial No'] ?? d['Sr. No'] ?? d['Sr No'] ?? d['Lot No'] ?? '';
+  const cleanSerial = String(rawSerial).trim();
+
+  const rawBatchWeight = d.batchTotalWeight ?? d.BatchTotalWeight ?? d['Batch Total Weight'] ?? null;
+
   let shapeVal = (d.shape || d.size || '').trim();
   const lowerShape = shapeVal.toLowerCase();
   if (!shapeVal || lowerShape === 'emerald' || lowerShape.includes('ct') || /^\d+(\.\d+)?$/.test(shapeVal)) {
@@ -200,6 +205,8 @@ export const normalizeDiamond = (d) => {
   return {
     ...d,
     roughCutNo: cleanRough,
+    serialNo: cleanSerial,
+    batchTotalWeight: rawBatchWeight ? parseFloat(rawBatchWeight) : null,
     shape: shapeVal,
     barcode: String(d.barcode || '').trim().toUpperCase()
   };
@@ -471,7 +478,7 @@ export const apiService = {
     return diamonds.find((d) => (d.barcode || '').toLowerCase() === cleanBarcode) || null;
   },
 
-  receiveDiamondsBatch: async ({ companyId, receivedDate, receivedBy, remarks, diamondsList }) => {
+  receiveDiamondsBatch: async ({ companyId, receivedDate, receivedBy, remarks, diamondsList, serialNo, batchTotalWeight }) => {
     const companies = getItem(STORAGE_KEYS.COMPANIES);
     const company = companies.find((c) => c.id === companyId);
     if (!company) throw new Error('Invalid Company selected');
@@ -480,6 +487,8 @@ export const apiService = {
     const histories = getItem(STORAGE_KEYS.HISTORIES);
     const { dateStr, timeStr } = getFormattedCurrentTime();
 
+    const cleanSerial = serialNo ? String(serialNo).trim() : '';
+    const cleanBatchWeight = batchTotalWeight ? parseFloat(batchTotalWeight) : null;
     const createdDiamonds = [];
 
     for (const item of diamondsList) {
@@ -489,11 +498,13 @@ export const apiService = {
         throw new Error(`Barcode ${barcodeClean} already exists in the system!`);
       }
 
-      const shapeVal = item.shape ? item.shape.trim() : 'Emperal';
+      const shapeVal = item.shape ? item.shape.trim() : '';
       const roughCutVal = item.roughCutNo ? String(item.roughCutNo).trim() : '';
 
       const newDiamond = {
         id: `dia-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        serialNo: cleanSerial,
+        batchTotalWeight: cleanBatchWeight,
         barcode: barcodeClean,
         roughCutNo: roughCutVal,
         companyId: company.id,
@@ -522,7 +533,9 @@ export const apiService = {
       existingDiamonds.unshift(newDiamond);
       createdDiamonds.push(newDiamond);
 
-      const weightLog = `Kacha Wt: ${newDiamond.weight} ct` +
+      const serialLog = cleanSerial ? `Sr: #${cleanSerial}, ` : '';
+      const batchLog = cleanBatchWeight ? `Batch Wt: ${cleanBatchWeight} ct, ` : '';
+      const weightLog = `${serialLog}${batchLog}Kacha Wt: ${newDiamond.weight} ct` +
         (newDiamond.targetWeight ? `, Teyar Wt: ${newDiamond.targetWeight} ct` : '') +
         (roughCutVal ? `, Rough No: ${roughCutVal}` : '') +
         (shapeVal ? `, Shape: ${shapeVal}` : '');
@@ -547,7 +560,7 @@ export const apiService = {
       cachedInitialData.histories = histories;
     }
 
-    fireGasBackground('receiveDiamondsBatch', { companyId, receivedDate, receivedBy, remarks, diamondsList });
+    fireGasBackground('receiveDiamondsBatch', { companyId, receivedDate, receivedBy, remarks, diamondsList, serialNo: cleanSerial, batchTotalWeight: cleanBatchWeight });
 
     return createdDiamonds;
   },

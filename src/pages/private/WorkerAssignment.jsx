@@ -4,7 +4,7 @@ import PrivateLayout from '../../layouts/PrivateLayout';
 import Badge from '../../components/common/Badge';
 import { useDiamonds } from '../../context/DiamondContext';
 import { useAuth } from '../../context/AuthContext';
-import { UserCheck, CheckCircle2, AlertCircle, ShieldAlert } from 'lucide-react';
+import { UserCheck, CheckCircle2, AlertCircle, Search, X } from 'lucide-react';
 
 const WorkerAssignment = () => {
   const { diamonds, companies, workers, assignWorker } = useDiamonds();
@@ -13,6 +13,7 @@ const WorkerAssignment = () => {
 
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [selectedBarcode, setSelectedBarcode] = useState(searchParams.get('barcode') || '');
+  const [diamondSearch, setDiamondSearch] = useState('');
   const [selectedWorkerId, setSelectedWorkerId] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -22,6 +23,28 @@ const WorkerAssignment = () => {
     if (selectedCompanyId && d.companyId !== selectedCompanyId) return false;
     return d.status === 'RECEIVED' || d.status === 'REWORK' || !d.assignedWorkerId;
   });
+
+  // Filtered diamonds based on instant search (barcode, serial #, rough #, weight, company, shape)
+  const filteredAssignableDiamonds = assignableDiamonds.filter((d) => {
+    if (!diamondSearch.trim()) return true;
+    const q = diamondSearch.trim().toLowerCase();
+    const barcode = String(d.barcode || '').toLowerCase();
+    const rough = String(d.roughCutNo || '').toLowerCase();
+    const serial = String(d.serialNo || '').toLowerCase();
+    const shape = String(d.shape || d.size || '').toLowerCase();
+    const comp = String(d.companyCode || d.companyName || '').toLowerCase();
+    const weight = String(d.weight || '');
+    return (
+      barcode.includes(q) ||
+      rough.includes(q) ||
+      serial.includes(q) ||
+      shape.includes(q) ||
+      comp.includes(q) ||
+      weight.includes(q)
+    );
+  });
+
+  const selectedDiamond = diamonds.find((d) => d.barcode === selectedBarcode);
 
   const handleAssignSubmit = async (e) => {
     e.preventDefault();
@@ -46,6 +69,7 @@ const WorkerAssignment = () => {
 
       setSuccess(`Successfully assigned Diamond ${res.barcode} to ${res.assignedWorkerName}!`);
       setSelectedBarcode('');
+      setDiamondSearch('');
       setSelectedWorkerId('');
     } catch (err) {
       setError(err.message || 'Failed to assign diamond.');
@@ -108,23 +132,125 @@ const WorkerAssignment = () => {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">2. Select Diamond Barcode *</label>
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <label className="form-label mb-0 fw-semibold">2. Select Diamond Barcode <span className="text-danger">*</span></label>
+                  {diamondSearch && (
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 text-decoration-none small text-muted"
+                      onClick={() => setDiamondSearch('')}
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      Clear Search
+                    </button>
+                  )}
+                </div>
+
+                {/* Instant Diamond Search / Filter Input */}
+                <div className="position-relative mb-2">
+                  <Search size={15} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+                  <input
+                    type="text"
+                    className="form-control form-control-sm ps-5 pe-4 bg-white font-mono"
+                    placeholder="Search barcode, serial #, rough #, weight..."
+                    value={diamondSearch}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDiamondSearch(val);
+                      // Auto-select if user typed or scanned an exact barcode
+                      const exact = assignableDiamonds.find(
+                        (d) => String(d.barcode).toLowerCase() === val.trim().toLowerCase()
+                      );
+                      if (exact) {
+                        setSelectedBarcode(exact.barcode);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (filteredAssignableDiamonds.length > 0) {
+                          setSelectedBarcode(filteredAssignableDiamonds[0].barcode);
+                        }
+                      }
+                    }}
+                  />
+                  {diamondSearch && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-link position-absolute top-50 end-0 translate-middle-y me-2 text-muted p-0 text-decoration-none"
+                      onClick={() => setDiamondSearch('')}
+                      title="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filtered Dropdown */}
                 <select
                   className="form-select fw-bold text-navy"
                   value={selectedBarcode}
                   onChange={(e) => setSelectedBarcode(e.target.value)}
                   required
                 >
-                  <option value="">-- Select Unassigned Diamond --</option>
-                  {assignableDiamonds.map((d) => (
+                  <option value="">
+                    {filteredAssignableDiamonds.length === 0
+                      ? (diamondSearch ? '-- No matching diamonds found --' : '-- Select Unassigned Diamond --')
+                      : '-- Select Unassigned Diamond --'}
+                  </option>
+                  {filteredAssignableDiamonds.map((d) => (
                     <option key={d.id} value={d.barcode}>
-                      {d.barcode}{d.roughCutNo ? ` [Rough #${d.roughCutNo}]` : ''} | {d.companyCode} | {d.shape || d.size} ({d.weight} ct) - Status: {d.status}
+                      {d.barcode}
+                      {d.serialNo ? ` [Sr #${d.serialNo}]` : ''}
+                      {d.roughCutNo ? ` [Rough #${d.roughCutNo}]` : ''}
+                      {` | ${d.companyCode} | ${d.shape || d.size} (${d.weight} ct)`}
+                      {d.status === 'REWORK' ? ' [REWORK]' : ''}
                     </option>
                   ))}
                 </select>
-                <small className="text-muted mt-1 d-block">
-                  Showing {assignableDiamonds.length} unassigned / rework diamonds available.
-                </small>
+
+                <div className="d-flex justify-content-between align-items-center mt-1">
+                  <small className="text-muted" style={{ fontSize: '0.78rem' }}>
+                    {diamondSearch
+                      ? `Showing ${filteredAssignableDiamonds.length} of ${assignableDiamonds.length} available diamonds`
+                      : `Showing ${assignableDiamonds.length} unassigned / rework diamonds available`}
+                  </small>
+                </div>
+
+                {/* Selected Diamond Preview Card */}
+                {selectedDiamond && (
+                  <div className="mt-2.5 p-2.5 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                    <div>
+                      <div className="d-flex align-items-center gap-1.5 flex-wrap">
+                        <span className="fw-bold font-mono text-navy">{selectedDiamond.barcode}</span>
+                        {selectedDiamond.serialNo && (
+                          <span className="badge bg-white text-navy border font-mono small">
+                            Sr: #{selectedDiamond.serialNo}
+                          </span>
+                        )}
+                        {selectedDiamond.roughCutNo && (
+                          <span className="badge bg-white text-muted border font-mono small">
+                            Rough: #{selectedDiamond.roughCutNo}
+                          </span>
+                        )}
+                        <span className="badge bg-gold text-dark font-mono small">
+                          {selectedDiamond.weight} ct
+                        </span>
+                      </div>
+                      <small className="text-muted d-block mt-0.5" style={{ fontSize: '0.75rem' }}>
+                        Company: <strong>{selectedDiamond.companyName || selectedDiamond.companyCode}</strong> &bull; Shape: {selectedDiamond.shape || 'Standard'} &bull; Status: {selectedDiamond.status}
+                      </small>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary border-0 p-1"
+                      onClick={() => setSelectedBarcode('')}
+                      title="Clear selection"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="mb-4">
@@ -146,14 +272,6 @@ const WorkerAssignment = () => {
                 </select>
               </div>
 
-              <div className="p-3 bg-light rounded-3 mb-4 border">
-                <small className="text-muted d-block mb-1">
-                  <ShieldAlert size={14} className="me-1 text-warning" /> <strong>Business Rule Enforced:</strong>
-                </small>
-                <small className="text-secondary">
-                  The system strictly prevents assigning the same barcode to multiple workers simultaneously.
-                </small>
-              </div>
 
               <button type="submit" className="btn btn-gold w-100 py-2.5 font-heading fw-semibold">
                 <UserCheck size={18} className="me-2" /> Confirm & Assign Diamond
