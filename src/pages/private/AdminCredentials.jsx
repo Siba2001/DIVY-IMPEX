@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DivyLogo from '../../components/common/DivyLogo';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import {
   Shield,
   Key,
@@ -65,6 +66,7 @@ const AdminCredentials = () => {
   const [editingUserId, setEditingUserId] = useState(null);
   const [newUserIdVal, setNewUserIdVal] = useState('');
   const [renameMsg, setRenameMsg] = useState({ type: '', text: '' });
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const [checkingKey, setCheckingKey] = useState(false);
 
@@ -211,24 +213,27 @@ const AdminCredentials = () => {
   };
 
   // Delete User with confirmation
-  const handleDelete = async (uname) => {
-    if (window.confirm(`Are you sure you want to delete user "${uname}" from the database? This cannot be undone.`)) {
-      setSubmitting(true);
-      try {
-        const res = await deleteUser(uname);
-        setSubmitting(false);
-        if (res.success) {
-          alert(res.message);
-          if (selectedUserForReset === uname) {
-            setSelectedUserForReset('');
-          }
-        } else {
-          alert(res.message);
-        }
-      } catch (err) {
-        setSubmitting(false);
-        alert(err.message || 'Error deleting user from database.');
+  const handleDelete = (uname) => {
+    setUserToDelete(uname);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    setSubmitting(true);
+    try {
+      const res = await deleteUser(userToDelete);
+      setSubmitting(false);
+      const targetUser = userToDelete;
+      setUserToDelete(null);
+      if (selectedUserForReset === targetUser) {
+        setSelectedUserForReset('');
       }
+      if (!res.success) {
+        alert(res.message);
+      }
+    } catch (err) {
+      setSubmitting(false);
+      alert(err.message || 'Error deleting user from database.');
     }
   };
 
@@ -925,6 +930,22 @@ const AdminCredentials = () => {
           </div>
         )}
       </div>
+
+      {/* Delete User Account Confirmation Modal */}
+      {userToDelete && (
+        <ConfirmModal
+          isOpen={!!userToDelete}
+          onClose={() => !submitting && setUserToDelete(null)}
+          onConfirm={confirmDeleteUser}
+          isLoading={submitting}
+          title="Delete User Account"
+          message={`Are you sure you want to delete user account "${userToDelete}"? This user will permanently lose access to the DIVY IMPEX portal.`}
+          confirmText="Delete Account"
+          cancelText="Cancel"
+          confirmVariant="danger"
+          icon="delete"
+        />
+      )}
     </div>
   );
 };

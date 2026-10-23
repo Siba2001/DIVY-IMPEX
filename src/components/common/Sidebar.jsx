@@ -20,10 +20,12 @@ import {
   Truck,
   X
 } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 
 const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -170,7 +172,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
           {!isCollapsed && (
             <button
               className="btn btn-sm btn-outline-light border-0 p-1 text-secondary hover-danger ms-1"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               title="Sign Out"
             >
               <LogOut size={16} />
@@ -178,6 +180,21 @@ const Sidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar 
           )}
         </div>
       </div>
+
+      {/* Logout Confirmation Permission Modal */}
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        title="Sign Out Confirmation"
+        message={`Are you sure you want to sign out, ${user?.name || 'User'}? You will need to sign in again to access the portal.`}
+        confirmText="Sign Out"
+        confirmVariant="navy"
+        iconType="logout"
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          handleLogout();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </aside>
   );
 };

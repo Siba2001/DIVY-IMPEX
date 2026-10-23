@@ -4,6 +4,7 @@ import PrivateLayout from '../../layouts/PrivateLayout';
 import StatCard from '../../components/common/StatCard';
 import Badge from '../../components/common/Badge';
 import DiamondTimelineModal from '../../components/timeline/DiamondTimelineModal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useDiamonds } from '../../context/DiamondContext';
 import {
   Building2,
@@ -23,6 +24,8 @@ import {
 const CompanyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { companies, diamonds, deleteCompany } = useDiamonds();
 
   const [fromDate, setFromDate] = useState('');
@@ -104,13 +107,14 @@ const CompanyDetails = () => {
     setIsTimelineOpen(true);
   };
 
-  const handleDeleteCompany = async () => {
-    const msg = companyDiamonds.length > 0
-      ? `Company "${company.name}" (${company.code}) has ${companyDiamonds.length} diamonds registered. Are you sure you want to delete this company?`
-      : `Are you sure you want to delete "${company.name}" (${company.code})?`;
-    if (window.confirm(msg)) {
+  const confirmDeleteCompany = async () => {
+    setIsDeleting(true);
+    try {
       await deleteCompany(company.id);
+      setShowDeleteModal(false);
       navigate('/companies');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -151,7 +155,7 @@ const CompanyDetails = () => {
             </button>
             <button
               className="btn btn-outline-danger rounded-pill px-3 py-2 font-heading fw-semibold text-nowrap d-inline-flex align-items-center justify-content-center flex-grow-1 flex-lg-grow-0"
-              onClick={handleDeleteCompany}
+              onClick={() => setShowDeleteModal(true)}
               title="Delete Company"
             >
               <Trash2 size={15} className="me-1.5" /> Delete
@@ -309,6 +313,20 @@ const CompanyDetails = () => {
         isOpen={isTimelineOpen}
         onClose={() => setIsTimelineOpen(false)}
         diamond={selectedDiamond}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeleting && setShowDeleteModal(false)}
+        onConfirm={confirmDeleteCompany}
+        isLoading={isDeleting}
+        title="Delete Client Company"
+        message={`Are you sure you want to permanently delete "${company.name}" (${company.code})?${companyDiamonds.length > 0 ? ` WARNING: This company currently has ${companyDiamonds.length} associated diamond records in the system.` : ''} This action cannot be undone.`}
+        confirmText="Delete Company"
+        cancelText="Keep Company"
+        confirmVariant="danger"
+        icon="delete"
       />
     </PrivateLayout>
   );

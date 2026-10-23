@@ -2,17 +2,25 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Search, LogOut, User, Menu } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 
 const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/diamonds-list?search=${encodeURIComponent(searchTerm.trim())}`);
     }
+  };
+
+  const handleConfirmedLogout = () => {
+    setShowLogoutConfirm(false);
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -43,7 +51,6 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
           />
         </form>
 
-
         {/* User Badge */}
         <div className="d-flex align-items-center ps-1.5 ps-sm-2 border-start">
           <div className="avatar bg-navy text-warning rounded-circle fw-bold me-1 me-sm-2 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#0A192F' }}>
@@ -54,10 +61,7 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
             <span className="d-block text-muted text-uppercase" style={{ fontSize: '0.65rem' }}>{user?.role}</span>
           </div>
           <button
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
+            onClick={() => setShowLogoutConfirm(true)}
             className="btn btn-sm btn-outline-danger border-0 p-1"
             title="Logout"
           >
@@ -65,6 +69,18 @@ const Topbar = ({ pageTitle, toggleMobileSidebar }) => {
           </button>
         </div>
       </div>
+
+      {/* Logout Confirmation Permission Modal */}
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        title="Sign Out Confirmation"
+        message={`Are you sure you want to sign out, ${user?.name || 'User'}? You will need to sign in again to access the portal.`}
+        confirmText="Sign Out"
+        confirmVariant="navy"
+        iconType="logout"
+        onConfirm={handleConfirmedLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </header>
   );
 };

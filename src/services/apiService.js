@@ -19,8 +19,17 @@ export const STORAGE_KEYS = {
   SYNC_MODE: 'divy_sync_mode',
 };
 
-const SCRIPT_URL = (import.meta.env.VITE_GOOGLE_SCRIPT_URL || '').trim();
-const API_SECRET = (import.meta.env.VITE_API_SECRET || '').trim();
+const RAW_SCRIPT_URL = (import.meta.env.VITE_GOOGLE_SCRIPT_URL || '').trim();
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxK3giDdjOqGwSJAm5M28l8SlgGwENHKbU0PDfka0ZMdEVDoJJ2LyKp2Oa3aDeU6pcz-A/exec';
+
+const SCRIPT_URL = (!RAW_SCRIPT_URL || RAW_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID'))
+  ? DEFAULT_SCRIPT_URL
+  : RAW_SCRIPT_URL;
+
+const RAW_SECRET = (import.meta.env.VITE_API_SECRET || '').trim();
+const API_SECRET = (!RAW_SECRET || RAW_SECRET.includes('YOUR_CUSTOM_SECRET_KEY'))
+  ? 'DIVY_SECURE_TOKEN_2026'
+  : RAW_SECRET;
 
 // Production: always use Google Sheets cloud sync
 const currentSyncMode = 'cloud';

@@ -4,6 +4,7 @@ import PrivateLayout from '../../layouts/PrivateLayout';
 import StatCard from '../../components/common/StatCard';
 import Badge from '../../components/common/Badge';
 import DiamondTimelineModal from '../../components/timeline/DiamondTimelineModal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useDiamonds } from '../../context/DiamondContext';
 import { ArrowLeft, HardHat, Gem, CheckCircle2, Clock, Activity, Eye, Trash2 } from 'lucide-react';
 
@@ -14,6 +15,8 @@ const WorkerDetails = () => {
 
   const [selectedDiamond, setSelectedDiamond] = useState(null);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const worker = workers.find((w) => w.id === id);
 
@@ -41,13 +44,16 @@ const WorkerDetails = () => {
     setIsTimelineOpen(true);
   };
 
-  const handleDeleteWorker = async () => {
-    const msg = totalAssigned > 0
-      ? `Artisan "${worker.name}" (${worker.employeeId}) has ${totalAssigned} diamonds in history. Are you sure you want to delete this artisan?`
-      : `Are you sure you want to delete artisan worker "${worker.name}" (${worker.employeeId})?`;
-    if (window.confirm(msg)) {
+  const confirmDeleteWorker = async () => {
+    setIsDeleting(true);
+    try {
       await deleteWorker(worker.id);
+      setShowDeleteModal(false);
       navigate('/workers');
+    } catch (err) {
+      console.error('Failed to delete worker', err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -78,7 +84,7 @@ const WorkerDetails = () => {
           </div>
           <button
             className="btn btn-outline-danger rounded-pill px-3 py-1.5 font-heading fw-semibold text-nowrap d-inline-flex align-items-center align-self-start align-self-sm-center"
-            onClick={handleDeleteWorker}
+            onClick={() => setShowDeleteModal(true)}
             title="Delete Worker"
           >
             <Trash2 size={15} className="me-1.5" /> Delete Artisan
@@ -165,6 +171,24 @@ const WorkerDetails = () => {
         isOpen={isTimelineOpen}
         onClose={() => setIsTimelineOpen(false)}
         diamond={selectedDiamond}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeleting && setShowDeleteModal(false)}
+        onConfirm={confirmDeleteWorker}
+        isLoading={isDeleting}
+        title="Delete Artisan Worker"
+        message={`Are you sure you want to permanently delete artisan "${worker.name}" (${worker.employeeId || 'ID Pending'})?${
+          totalAssigned > 0
+            ? ` WARNING: This artisan has ${totalAssigned} diamond records in their assignment history.`
+            : ''
+        } This action cannot be undone.`}
+        confirmText="Delete Worker"
+        cancelText="Keep Worker"
+        confirmVariant="danger"
+        icon="delete"
       />
     </PrivateLayout>
   );

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Modal from '../../components/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useDiamonds } from '../../context/DiamondContext';
 import { Building2, Plus, Eye, Edit, Phone, Mail, MapPin, Search, Trash2, AlertCircle, LayoutGrid, Table as TableIcon, User } from 'lucide-react';
 
@@ -13,6 +14,8 @@ const Companies = () => {
   const [viewMode, setViewMode] = useState('auto'); // 'auto' | 'table' | 'cards'
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
+  const [companyToDelete, setCompanyToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -132,14 +135,19 @@ const Companies = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteCompany = async (comp, e) => {
-    e.stopPropagation();
-    const associatedDiamonds = diamonds.filter((d) => d.companyId === comp.id);
-    const msg = associatedDiamonds.length > 0
-      ? `Company "${comp.name}" (${comp.code}) has ${associatedDiamonds.length} diamonds associated with it. Are you sure you want to delete this company?`
-      : `Are you sure you want to delete "${comp.name}" (${comp.code})?`;
-    if (window.confirm(msg)) {
-      await deleteCompany(comp.id);
+  const handleDeleteCompany = (comp, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    setCompanyToDelete(comp);
+  };
+
+  const handleConfirmDeleteCompany = async () => {
+    if (!companyToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteCompany(companyToDelete.id);
+      setCompanyToDelete(null);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -618,6 +626,34 @@ const Companies = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Delete Company Confirmation Permission Modal */}
+      <ConfirmModal
+        isOpen={!!companyToDelete}
+        title="Delete Company Confirmation"
+        message={
+          companyToDelete ? (
+            <div>
+              <p className="mb-2">
+                Are you sure you want to delete client company <strong>"{companyToDelete.name}" ({companyToDelete.code})</strong>?
+              </p>
+              {diamonds.filter((d) => d.companyId === companyToDelete.id).length > 0 && (
+                <div className="alert alert-warning small p-2 mb-0 border-warning">
+                  ⚠️ This company currently has{' '}
+                  <strong>{diamonds.filter((d) => d.companyId === companyToDelete.id).length}</strong> registered diamonds
+                  in the inventory. Deleting it may impact stock records.
+                </div>
+              )}
+            </div>
+          ) : ''
+        }
+        confirmText="Yes, Delete Company"
+        confirmVariant="danger"
+        iconType="delete"
+        isSubmitting={isDeleting}
+        onConfirm={handleConfirmDeleteCompany}
+        onCancel={() => setCompanyToDelete(null)}
+      />
     </PrivateLayout>
   );
 };

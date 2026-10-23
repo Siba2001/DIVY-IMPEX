@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Modal from '../../components/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useDiamonds } from '../../context/DiamondContext';
 import { Users, Plus, Eye, Edit, Phone, HardHat, Search, Trash2, AlertCircle } from 'lucide-react';
 
@@ -12,6 +13,8 @@ const Workers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState(null);
+  const [workerToDelete, setWorkerToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     employeeId: '',
@@ -100,14 +103,21 @@ const Workers = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteWorker = async (w, e) => {
+  const handleDeleteWorker = (w, e) => {
     e.stopPropagation();
-    const assignedDiamonds = diamonds.filter((d) => d.assignedWorkerId === w.id);
-    const msg = assignedDiamonds.length > 0
-      ? `Artisan "${w.name}" (${w.employeeId}) currently has ${assignedDiamonds.length} diamonds assigned. Are you sure you want to delete this artisan?`
-      : `Are you sure you want to delete artisan worker "${w.name}" (${w.employeeId})?`;
-    if (window.confirm(msg)) {
-      await deleteWorker(w.id);
+    setWorkerToDelete(w);
+  };
+
+  const confirmDeleteWorker = async () => {
+    if (!workerToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteWorker(workerToDelete.id);
+      setWorkerToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete worker', err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -413,6 +423,26 @@ const Workers = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Delete Artisan Worker Confirmation Modal */}
+      {workerToDelete && (
+        <ConfirmModal
+          isOpen={!!workerToDelete}
+          onClose={() => !isDeleting && setWorkerToDelete(null)}
+          onConfirm={confirmDeleteWorker}
+          isLoading={isDeleting}
+          title="Delete Artisan Worker"
+          message={`Are you sure you want to permanently delete artisan worker "${workerToDelete.name}" (${workerToDelete.employeeId || 'ID Pending'})?${
+            diamonds.filter((d) => d.assignedWorkerId === workerToDelete.id).length > 0
+              ? ` WARNING: This artisan currently has ${diamonds.filter((d) => d.assignedWorkerId === workerToDelete.id).length} assigned diamonds in the workshop.`
+              : ''
+          } This action cannot be undone.`}
+          confirmText="Delete Worker"
+          cancelText="Cancel"
+          confirmVariant="danger"
+          icon="delete"
+        />
+      )}
     </PrivateLayout>
   );
 };

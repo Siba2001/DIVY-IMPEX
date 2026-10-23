@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useDiamonds } from '../../context/DiamondContext';
 import { PackagePlus, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const DiamondReceiving = () => {
   const [batchRemarks, setBatchRemarks] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rowToDeleteIndex, setRowToDeleteIndex] = useState(null);
 
   const [diamondsList, setDiamondsList] = useState([
     { roughCutNo: '', barcode: '', weight: '', targetWeight: '', shape: 'Emeral', remarks: '' },
@@ -51,9 +53,22 @@ const DiamondReceiving = () => {
 
   const handleRemoveRow = (index) => {
     if (diamondsList.length === 1) return;
+    const item = diamondsList[index];
+    if (item.barcode?.trim() || item.weight?.trim() || item.roughCutNo?.trim()) {
+      setRowToDeleteIndex(index);
+      return;
+    }
     const updated = diamondsList.filter((_, idx) => idx !== index);
     setDiamondsList(updated);
     setTotalItemsInput(updated.length.toString());
+  };
+
+  const confirmRemoveRow = () => {
+    if (rowToDeleteIndex === null) return;
+    const updated = diamondsList.filter((_, idx) => idx !== rowToDeleteIndex);
+    setDiamondsList(updated);
+    setTotalItemsInput(updated.length.toString());
+    setRowToDeleteIndex(null);
   };
 
   const handleTotalItemsInputChange = (e) => {
@@ -490,6 +505,23 @@ const DiamondReceiving = () => {
           </div>
         </form>
       </div>
+
+      {/* Discard Diamond Row Confirmation Modal */}
+      {rowToDeleteIndex !== null && (
+        <ConfirmModal
+          isOpen={rowToDeleteIndex !== null}
+          onClose={() => setRowToDeleteIndex(null)}
+          onConfirm={confirmRemoveRow}
+          title="Remove Diamond Entry"
+          message={`Are you sure you want to discard row #${rowToDeleteIndex + 1}${
+            diamondsList[rowToDeleteIndex]?.barcode ? ` (Barcode: ${diamondsList[rowToDeleteIndex].barcode})` : ''
+          }? All details entered for this row will be cleared.`}
+          confirmText="Remove Row"
+          cancelText="Keep Row"
+          confirmVariant="danger"
+          icon="delete"
+        />
+      )}
     </PrivateLayout>
   );
 };
