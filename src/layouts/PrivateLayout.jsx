@@ -51,12 +51,12 @@ const PrivateLayout = ({ children, title }) => {
         <Topbar pageTitle={title} toggleMobileSidebar={toggleMobileSidebar} />
         <main className={`content-body ${isAnimatedPage ? 'page-animated' : 'page-static'}`}>
           {syncError && (
-            <div className="alert alert-danger border-danger d-flex align-items-center justify-content-between mb-4 p-3 rounded-3 shadow-sm bg-danger bg-opacity-10">
-              <div className="d-flex align-items-start small text-dark">
+            <div className="alert alert-danger border-danger d-flex align-items-center justify-content-between mb-4 p-3 rounded-3 shadow-sm" style={{ background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+              <div className="d-flex align-items-start small">
                 <AlertTriangle size={18} className="text-danger me-2 mt-0.5 flex-shrink-0" />
                 <div>
                   <strong className="text-danger d-block mb-0.5">Database Connection Notice:</strong>
-                  <span className="text-dark font-monospace" style={{ fontSize: '0.8rem' }}>{syncError}</span>
+                  <span className="font-monospace text-light opacity-75" style={{ fontSize: '0.8rem' }}>{syncError}</span>
                 </div>
               </div>
               <button

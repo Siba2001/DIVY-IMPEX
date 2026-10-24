@@ -112,7 +112,7 @@ const CustomBarTooltip = ({ active, payload, label }) => {
 };
 
 const Dashboard = () => {
-  const { companies, diamonds, getKpis } = useDiamonds();
+  const { companies, diamonds, getKpis, loading } = useDiamonds();
   const navigate = useNavigate();
   const kpis = getKpis();
 
@@ -176,6 +176,12 @@ const Dashboard = () => {
 
   return (
     <PrivateLayout title="Executive Diamond Dashboard">
+      {loading && diamonds.length === 0 && (
+        <div className="alert alert-info border-0 d-flex align-items-center gap-2 mb-3 py-2 px-3 rounded-3 shadow-sm" style={{ background: 'rgba(14, 165, 233, 0.12)', color: '#38BDF8' }}>
+          <div className="spinner-border spinner-border-sm text-info flex-shrink-0" role="status" />
+          <span className="small fw-semibold">Connecting to Google Sheets and synchronizing diamond inventory...</span>
+        </div>
+      )}
       {/* Top KPI Cards Grid */}
       <div className="row g-2 mb-3">
         <div className="col-6 col-md-6 col-xl-3">

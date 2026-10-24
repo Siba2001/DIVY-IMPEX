@@ -41,73 +41,26 @@ const isRemoteApiEnabled = () => {
 // In-flight mutation cache to absorb rapid multiple clicks/submissions
 const activeMutations = new Map();
 
-// Helper: Call Google Apps Script Web App Endpoint
+let currentWorkingScriptUrl = SCRIPT_URL;
+
+// Helper: Call Google Apps Script Web App Endpoint with automatic failover
 const callGas = async (action, data = null, method = 'POST') => {
-  if (!SCRIPT_URL || !SCRIPT_URL.startsWith('http')) {
-    throw new Error('Google Apps Script URL is missing or invalid in .env (VITE_GOOGLE_SCRIPT_URL).');
-  }
-
-  if (method === 'GET') {
-    const url = new URL(SCRIPT_URL);
-    url.searchParams.set('action', action);
-    if (API_SECRET) url.searchParams.set('key', API_SECRET);
-    if (data && typeof data === 'object') {
-      Object.entries(data).forEach(([k, v]) => {
-        if (v !== undefined && v !== null) {
-          url.searchParams.set(k, String(v));
-        }
-      });
-    }
-
-    let res;
-    try {
-      res = await fetch(url.toString(), { redirect: 'follow' });
-    } catch (netErr) {
-      throw new Error(`Network error connecting to database: ${netErr.message}`);
-    }
-
-    if (res.status === 404) {
-      throw new Error('Google Apps Script Web App returned 404 (Page Not Found). Please verify your Web App URL in .env.');
-    }
-
-    const text = await res.text();
-    let json;
-    try {
-      json = JSON.parse(text);
-    } catch (parseErr) {
-      if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-        throw new Error('Google Apps Script returned an HTML page instead of JSON. Ensure "Who has access" is set to "Anyone" and deploy a new version.');
-      }
-      throw new Error(`Invalid response format from database: ${text.slice(0, 100)}`);
-    }
-
-    if (!json.success) throw new Error(json.error || 'Failed to fetch from Google Script');
-    return json.data;
-  } else {
-    // Deduplication key for mutations
-    const mutationKey = `${action}:${JSON.stringify(data || {})}`;
-    if (activeMutations.has(mutationKey)) {
-      return activeMutations.get(mutationKey);
-    }
-
-    const postPromise = (async () => {
-      const payload = { action, key: API_SECRET, data };
-      let res;
-      try {
-        res = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          redirect: 'follow',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8',
-          },
-          body: JSON.stringify(payload),
+  const executeEndpoint = async (endpointUrl) => {
+    if (method === 'GET') {
+      const url = new URL(endpointUrl);
+      url.searchParams.set('action', action);
+      if (API_SECRET) url.searchParams.set('key', API_SECRET);
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([k, v]) => {
+          if (v !== undefined && v !== null) {
+            url.searchParams.set(k, String(v));
+          }
         });
-      } catch (netErr) {
-        throw new Error(`Network failure on POST to database: ${netErr.message}`);
       }
 
-      if (res.status === 404) {
-        throw new Error('Google Apps Script Web App returned 404 (Not Found).');
+      const res = await fetch(url.toString(), { redirect: 'follow' });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText || 'Fetch failed'}`);
       }
 
       const text = await res.text();
@@ -115,13 +68,71 @@ const callGas = async (action, data = null, method = 'POST') => {
       try {
         json = JSON.parse(text);
       } catch (parseErr) {
-        throw new Error(`Database POST error: ${text.slice(0, 100)}`);
+        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+          throw new Error('Google Apps Script returned HTML. Ensure "Who has access" is set to "Anyone" in Web App deployment.');
+        }
+        throw new Error(`Invalid response format from database: ${text.slice(0, 100)}`);
+      }
+
+      if (!json.success) throw new Error(json.error || 'Failed to fetch from Google Script');
+      return json.data;
+    } else {
+      // POST Mutation
+      const payload = { action, key: API_SECRET, data };
+      const res = await fetch(endpointUrl, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText || 'POST failed'}`);
+      }
+
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error(`Database response parse error: ${text.slice(0, 100)}`);
       }
 
       if (!json.success) throw new Error(json.error || 'Google Script request failed');
       return json.data;
-    })();
+    }
+  };
 
+  const tryCallWithFailover = async () => {
+    try {
+      return await executeEndpoint(currentWorkingScriptUrl);
+    } catch (primaryErr) {
+      if (currentWorkingScriptUrl !== DEFAULT_SCRIPT_URL) {
+        console.warn(`[DIVY API] Primary endpoint ${currentWorkingScriptUrl} failed (${primaryErr.message}). Retrying with default production endpoint...`);
+        try {
+          const fallbackResult = await executeEndpoint(DEFAULT_SCRIPT_URL);
+          currentWorkingScriptUrl = DEFAULT_SCRIPT_URL;
+          return fallbackResult;
+        } catch (fallbackErr) {
+          throw new Error(`Database connection failed: ${fallbackErr.message || primaryErr.message}`);
+        }
+      }
+      throw primaryErr;
+    }
+  };
+
+  if (method === 'GET') {
+    return await tryCallWithFailover();
+  } else {
+    // Deduplication key for mutations
+    const mutationKey = `${action}:${JSON.stringify(data || {})}`;
+    if (activeMutations.has(mutationKey)) {
+      return activeMutations.get(mutationKey);
+    }
+
+    const postPromise = tryCallWithFailover();
     activeMutations.set(mutationKey, postPromise);
     postPromise.finally(() => {
       setTimeout(() => {
@@ -941,46 +952,33 @@ export const apiService = {
 
     // 3. Quick bounded remote fetch (never hangs: 4.5 second hard timeout)
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4500);
-
-      const url = new URL(SCRIPT_URL);
-      url.searchParams.set('action', 'getHistory');
-      url.searchParams.set('diamondIdOrBarcode', diamondIdOrBarcode);
-      if (API_SECRET) url.searchParams.set('key', API_SECRET);
-
-      const res = await fetch(url.toString(), { redirect: 'follow', signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          const sanitizeHistoryItem = (h) => {
-            if (!h) return h;
-            let cleanTime = h.time;
-            if (!cleanTime || String(cleanTime).includes('1899') || String(cleanTime).includes('1900')) {
-              const match = String(h.id || '').match(/\d{12,13}/);
-              if (match) {
-                try {
-                  const dt = new Date(parseInt(match[0], 10));
-                  if (!isNaN(dt.getTime())) {
-                    cleanTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                  }
-                } catch (e) { }
-              }
+      const remoteData = await callGas('getHistory', { diamondIdOrBarcode }, 'GET');
+      if (Array.isArray(remoteData) && remoteData.length > 0) {
+        const sanitizeHistoryItem = (h) => {
+          if (!h) return h;
+          let cleanTime = h.time;
+          if (!cleanTime || String(cleanTime).includes('1899') || String(cleanTime).includes('1900')) {
+            const match = String(h.id || '').match(/\d{12,13}/);
+            if (match) {
+              try {
+                const dt = new Date(parseInt(match[0], 10));
+                if (!isNaN(dt.getTime())) {
+                  cleanTime = dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                }
+              } catch (e) { }
             }
-            return { ...h, time: cleanTime };
-          };
+          }
+          return { ...h, time: cleanTime };
+        };
 
-          const sanitizedRemote = json.data.map(sanitizeHistoryItem);
-          const existing = getItem(STORAGE_KEYS.HISTORIES);
-          const existingIds = new Set(existing.map((h) => h.id));
-          sanitizedRemote.forEach((rh) => {
-            if (!existingIds.has(rh.id)) existing.push(rh);
-          });
-          setItem(STORAGE_KEYS.HISTORIES, existing);
-          return sanitizedRemote;
-        }
+        const sanitizedRemote = remoteData.map(sanitizeHistoryItem);
+        const existing = getItem(STORAGE_KEYS.HISTORIES);
+        const existingIds = new Set(existing.map((h) => h.id));
+        sanitizedRemote.forEach((rh) => {
+          if (!existingIds.has(rh.id)) existing.push(rh);
+        });
+        setItem(STORAGE_KEYS.HISTORIES, existing);
+        return sanitizedRemote;
       }
     } catch (e) {
       console.warn('[DIVY Sync] Remote history quick-fetch notice:', e.message);
