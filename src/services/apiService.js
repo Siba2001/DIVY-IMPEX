@@ -623,6 +623,60 @@ export const apiService = {
     return diamond;
   },
 
+  assignDiamondsBatch: async ({ barcodes, workerId, assignedBy }) => {
+    const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
+    const workers = getItem(STORAGE_KEYS.WORKERS);
+    const histories = getItem(STORAGE_KEYS.HISTORIES);
+
+    const worker = workers.find((w) => w.id === workerId);
+    if (!worker) throw new Error('Worker not found');
+
+    const cleanBarcodes = (barcodes || []).map((b) => String(b).trim().toUpperCase());
+    if (cleanBarcodes.length === 0) throw new Error('No diamonds selected for assignment');
+
+    const barcodeSet = new Set(cleanBarcodes);
+    const { dateStr, timeStr, isoDate } = getFormattedCurrentTime();
+    const assignedList = [];
+
+    diamonds.forEach((diamond) => {
+      const bc = String(diamond.barcode || '').trim().toUpperCase();
+      if (barcodeSet.has(bc)) {
+        diamond.assignedWorkerId = worker.id;
+        diamond.assignedWorkerName = worker.name;
+        diamond.assignedDate = isoDate;
+        diamond.status = 'ASSIGNED';
+        assignedList.push(diamond);
+
+        histories.unshift({
+          id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          diamondId: diamond.id,
+          barcode: diamond.barcode,
+          action: `Assigned to ${worker.name}`,
+          performedBy: assignedBy || 'Supervisor',
+          date: dateStr,
+          time: timeStr,
+          remarks: `Assigned for ${worker.department} work`
+        });
+      }
+    });
+
+    setItem(STORAGE_KEYS.DIAMONDS, diamonds);
+    setItem(STORAGE_KEYS.HISTORIES, histories);
+
+    if (cachedInitialData) {
+      cachedInitialData.diamonds = diamonds;
+      cachedInitialData.histories = histories;
+    }
+
+    fireGasBackground('assignDiamondsBatch', { barcodes: cleanBarcodes, workerId, assignedBy });
+
+    return {
+      assignedCount: assignedList.length,
+      workerName: worker.name,
+      diamonds: assignedList
+    };
+  },
+
   startWork: async ({ barcode, workerId }) => {
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
     const histories = getItem(STORAGE_KEYS.HISTORIES);

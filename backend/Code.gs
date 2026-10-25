@@ -254,7 +254,8 @@ function doPost(e) {
         break;
 
       case 'assignDiamond':
-        result = assignDiamond(data);
+      case 'assignDiamondsBatch':
+        result = assignDiamondsBatch(data);
         break;
 
       case 'startWork':
@@ -659,7 +660,14 @@ function receiveDiamondsBatch(data) {
 }
 
 function assignDiamond(data) {
-  var barcode = String(data.barcode).trim().toUpperCase();
+  return assignDiamondsBatch(data);
+}
+
+function assignDiamondsBatch(data) {
+  var barcodes = data.barcodes || [];
+  if (data.barcode && barcodes.indexOf(data.barcode) === -1) {
+    barcodes.push(data.barcode);
+  }
   var workerId = data.workerId;
   var assignedBy = data.assignedBy || 'Supervisor';
 
@@ -673,6 +681,7 @@ function assignDiamond(data) {
   }
 
   if (!worker) throw new Error('Worker not found');
+  if (!barcodes || barcodes.length === 0) throw new Error('No barcodes provided for assignment');
 
   var timeInfo = getFormattedTime();
   var updateData = {
@@ -682,20 +691,23 @@ function assignDiamond(data) {
     status: 'ASSIGNED'
   };
 
-  updateRowInSheet(SHEETS.DIAMONDS, 'barcode', barcode, updateData);
+  for (var b = 0; b < barcodes.length; b++) {
+    var bc = String(barcodes[b]).trim().toUpperCase();
+    updateRowInSheet(SHEETS.DIAMONDS, 'barcode', bc, updateData);
 
-  appendRowToSheet(SHEETS.HISTORIES, {
-    id: 'hist-' + Date.now(),
-    diamondId: '',
-    barcode: barcode,
-    action: 'Assigned to ' + worker.name,
-    performedBy: assignedBy,
-    date: timeInfo.dateStr,
-    time: timeInfo.timeStr,
-    remarks: 'Assigned for ' + worker.department + ' work'
-  });
+    appendRowToSheet(SHEETS.HISTORIES, {
+      id: 'hist-' + Date.now() + '-' + b,
+      diamondId: '',
+      barcode: bc,
+      action: 'Assigned to ' + worker.name,
+      performedBy: assignedBy,
+      date: timeInfo.dateStr,
+      time: timeInfo.timeStr,
+      remarks: 'Assigned for ' + worker.department + ' work'
+    });
+  }
 
-  return updateData;
+  return { success: true, count: barcodes.length, workerName: worker.name, assignedWorkerId: worker.id };
 }
 
 function startWork(data) {
