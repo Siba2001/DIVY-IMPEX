@@ -563,9 +563,8 @@ const WorkerAssignment = () => {
                               <div
                                 key={d.id || d.barcode}
                                 onClick={() => handleToggleBarcode(d.barcode)}
-                                className={`d-flex align-items-center justify-content-between px-3 py-2 border-bottom cursor-pointer user-select-none ${
-                                  isChecked ? 'bg-primary bg-opacity-10' : ''
-                                }`}
+                                className={`d-flex align-items-center justify-content-between px-3 py-2 border-bottom cursor-pointer user-select-none ${isChecked ? 'bg-primary bg-opacity-10' : ''
+                                  }`}
                                 style={{
                                   cursor: 'pointer',
                                   transition: 'background-color 0.15s ease'
