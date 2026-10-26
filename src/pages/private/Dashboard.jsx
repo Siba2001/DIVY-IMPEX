@@ -13,7 +13,8 @@ import {
   PackageCheck,
   ShieldCheck,
   TrendingUp,
-  ArrowUpRight
+  ArrowUpRight,
+  Truck
 } from 'lucide-react';
 import {
   BarChart,
@@ -159,6 +160,8 @@ const Dashboard = () => {
   const companySummaries = companies.map((c) => {
     const compDiamonds = diamonds.filter((d) => d.companyId === c.id);
     const received = compDiamonds.length;
+    const submitted = compDiamonds.filter((d) => d.status === 'RETURNED').length;
+    const inFactory = received - submitted;
     const completed = compDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
     const inProduction = compDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
     const pending = compDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
@@ -168,9 +171,11 @@ const Dashboard = () => {
       name: c.name,
       code: c.code,
       received,
+      inFactory,
       inProduction,
       pending,
-      completed
+      completed,
+      submitted
     };
   });
 
@@ -195,13 +200,32 @@ const Dashboard = () => {
         </div>
         <div className="col-6 col-md-6 col-xl-3">
           <StatCard
-            title="Total Diamonds"
+            title="Total Received"
             value={kpis.totalDiamonds}
             icon={Gem}
             colorType="diamonds"
-            subtitle="Master Recorded Count"
+            subtitle="All-Time Master Inward"
           />
         </div>
+        <div className="col-6 col-md-6 col-xl-3">
+          <StatCard
+            title="In-Factory Stock"
+            value={kpis.activeInFactory}
+            icon={CheckCircle2}
+            colorType="balance"
+            subtitle="Active Balance with Us"
+          />
+        </div>
+        <div className="col-6 col-md-6 col-xl-3">
+          <StatCard
+            title="Submitted to Company"
+            value={kpis.submitted}
+            icon={Truck}
+            colorType="submitted"
+            subtitle="Delivered Back with Challan"
+          />
+        </div>
+
         <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Today's Received"
@@ -213,30 +237,11 @@ const Dashboard = () => {
         </div>
         <div className="col-6 col-md-6 col-xl-3">
           <StatCard
-            title="Pending Diamonds"
-            value={kpis.pending}
-            icon={Clock}
-            colorType="pending"
-            subtitle="Awaiting Polishing / QC"
-          />
-        </div>
-
-        <div className="col-6 col-md-6 col-xl-3">
-          <StatCard
             title="In Production"
             value={kpis.inProduction}
             icon={Activity}
             colorType="production"
             subtitle="Active on Sockets"
-          />
-        </div>
-        <div className="col-6 col-md-6 col-xl-3">
-          <StatCard
-            title="Work Completed"
-            value={kpis.workCompleted}
-            icon={CheckCircle2}
-            colorType="completed"
-            subtitle="Worker Polishing Done"
           />
         </div>
         <div className="col-6 col-md-6 col-xl-3">
@@ -251,10 +256,10 @@ const Dashboard = () => {
         <div className="col-6 col-md-6 col-xl-3">
           <StatCard
             title="Verified & Completed"
-            value={kpis.verified}
+            value={kpis.completed}
             icon={ShieldCheck}
             colorType="verified"
-            subtitle="Final Approved & Handed Over"
+            subtitle="Final Approved & Ready to Submit"
           />
         </div>
       </div>
@@ -364,17 +369,18 @@ const Dashboard = () => {
               <tr>
                 <th className="text-nowrap">Company Name</th>
                 <th className="text-nowrap">Company Code</th>
-                <th className="text-nowrap">Total Received</th>
-                <th className="text-nowrap">In Production</th>
-                <th className="text-nowrap">Pending</th>
-                <th className="text-nowrap">Completed</th>
+                <th className="text-nowrap text-center">Total Received</th>
+                <th className="text-nowrap text-center">In Factory (Balance)</th>
+                <th className="text-nowrap text-center">In Production</th>
+                <th className="text-nowrap text-center">Completed (Ready)</th>
+                <th className="text-nowrap text-center">Submitted to Company</th>
                 <th className="text-end text-nowrap">Action</th>
               </tr>
             </thead>
             <tbody>
               {companySummaries.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-4 text-muted">
+                  <td colSpan="8" className="text-center py-4 text-muted">
                     No client companies found. Click "View All Companies" to register your first partner.
                   </td>
                 </tr>
@@ -393,20 +399,25 @@ const Dashboard = () => {
                       {comp.code}
                     </span>
                   </td>
-                  <td className="fw-semibold text-dark text-nowrap">{comp.received}</td>
-                  <td>
+                  <td className="fw-semibold text-dark text-nowrap text-center">{comp.received}</td>
+                  <td className="text-center">
+                    <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}>
+                      {comp.inFactory}
+                    </span>
+                  </td>
+                  <td className="text-center">
                     <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>
                       {comp.inProduction}
                     </span>
                   </td>
-                  <td>
-                    <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>
-                      {comp.pending}
-                    </span>
-                  </td>
-                  <td>
+                  <td className="text-center">
                     <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>
                       {comp.completed}
+                    </span>
+                  </td>
+                  <td className="text-center">
+                    <span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE' }}>
+                      {comp.submitted}
                     </span>
                   </td>
                   <td className="text-end text-nowrap">

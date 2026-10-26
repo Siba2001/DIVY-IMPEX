@@ -332,6 +332,9 @@ export const DiamondProvider = ({ children }) => {
     const today = new Date().toISOString().split('T')[0];
     const todaysReceived = diamonds.filter((d) => d.receivedDate === today).length;
 
+    const submitted = diamonds.filter((d) => d.status === 'RETURNED').length;
+    const activeInFactory = diamonds.filter((d) => d.status !== 'RETURNED').length;
+
     const completed = diamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
     const inProduction = diamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
     const pending = diamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
@@ -341,7 +344,9 @@ export const DiamondProvider = ({ children }) => {
 
     return {
       totalCompanies,
-      totalDiamonds,
+      totalDiamonds, // Total All-Time Inward Received
+      activeInFactory, // Current Active Balance In Factory
+      submitted, // Submitted / Returned Back to Company
       todaysReceived,
       pending,
       inProduction,

@@ -4,7 +4,7 @@ import StatCard from '../../components/common/StatCard';
 import Badge from '../../components/common/Badge';
 import DiamondTimelineModal from '../../components/timeline/DiamondTimelineModal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Layers, Search, Filter, Eye, Gem } from 'lucide-react';
+import { Layers, Search, Filter, Eye, Gem, Truck } from 'lucide-react';
 
 const Stock = () => {
   const { diamonds, companies } = useDiamonds();
@@ -25,6 +25,7 @@ const Stock = () => {
   const depositedCount = diamonds.filter((d) => d.status === 'DEPOSITED').length;
   const verifiedCount = diamonds.filter((d) => d.status === 'VERIFIED').length;
   const completedCount = diamonds.filter((d) => d.status === 'COMPLETED').length;
+  const returnedCount = diamonds.filter((d) => d.status === 'RETURNED').length;
   const pendingCount = diamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'IN PROGRESS', 'REWORK'].includes(d.status)).length;
   const reworkCount = diamonds.filter((d) => d.status === 'REWORK').length;
 
@@ -72,7 +73,10 @@ const Stock = () => {
           <StatCard title="Verified" value={verifiedCount} icon={Layers} colorType="verified" />
         </div>
         <div className="col-lg-3 col-md-4 col-6">
-          <StatCard title="Final Completed" value={completedCount} icon={Layers} colorType="completed" />
+          <StatCard title="Completed Ready" value={completedCount} icon={Layers} colorType="completed" />
+        </div>
+        <div className="col-lg-3 col-md-4 col-6">
+          <StatCard title="Submitted to Co." value={returnedCount} icon={Truck} colorType="submitted" />
         </div>
         <div className="col-lg-3 col-md-4 col-6">
           <StatCard title="Pending Vault" value={pendingCount} icon={Layers} colorType="pending" />
@@ -121,7 +125,8 @@ const Stock = () => {
               <option value="WORK COMPLETED">WORK COMPLETED</option>
               <option value="DEPOSITED">DEPOSITED</option>
               <option value="VERIFIED">VERIFIED</option>
-              <option value="COMPLETED">COMPLETED</option>
+              <option value="COMPLETED">COMPLETED (Ready to Submit)</option>
+              <option value="RETURNED">RETURNED / SUBMITTED TO CO.</option>
               <option value="REWORK">REWORK</option>
             </select>
           </div>

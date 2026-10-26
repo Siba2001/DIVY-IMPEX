@@ -18,7 +18,8 @@ import {
   Eye,
   Filter,
   Trash2,
-  FileBarChart2
+  FileBarChart2,
+  Truck
 } from 'lucide-react';
 
 const CompanyDetails = () => {
@@ -68,11 +69,13 @@ const CompanyDetails = () => {
 
   // Calculate aggregates with 100% mathematical integrity
   const totalReceived = companyDiamonds.length;
+  const submitted = companyDiamonds.filter((d) => d.status === 'RETURNED').length;
+  const inFactoryBalance = totalReceived - submitted;
   const completed = companyDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
   const inProduction = companyDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
   const pending = companyDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
 
-  // Group date-wise summary with 100% mathematical integrity (received = assigned + inProgress + completed + pending)
+  // Group date-wise summary with 100% mathematical integrity (received = submitted + inFactory)
   const dateWiseMap = {};
   companyDiamonds.forEach((d) => {
     const dDate = d.receivedDate || '2026-10-01';
@@ -80,22 +83,29 @@ const CompanyDetails = () => {
       dateWiseMap[dDate] = {
         date: dDate,
         received: 0,
+        inFactory: 0,
         assigned: 0,
         inProgress: 0,
         completed: 0,
+        submitted: 0,
         pending: 0
       };
     }
     dateWiseMap[dDate].received += 1;
-    if (d.status === 'ASSIGNED') {
-      dateWiseMap[dDate].assigned += 1;
-    } else if (['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)) {
-      dateWiseMap[dDate].inProgress += 1;
-    } else if (['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)) {
-      dateWiseMap[dDate].completed += 1;
+    if (d.status === 'RETURNED') {
+      dateWiseMap[dDate].submitted += 1;
     } else {
-      // RECEIVED, REWORK, and any other initial pending status
-      dateWiseMap[dDate].pending += 1;
+      dateWiseMap[dDate].inFactory += 1;
+      if (d.status === 'ASSIGNED') {
+        dateWiseMap[dDate].assigned += 1;
+      } else if (['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)) {
+        dateWiseMap[dDate].inProgress += 1;
+      } else if (['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)) {
+        dateWiseMap[dDate].completed += 1;
+      } else {
+        // RECEIVED, REWORK, and any other initial pending status
+        dateWiseMap[dDate].pending += 1;
+      }
     }
   });
 
@@ -165,18 +175,24 @@ const CompanyDetails = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-6 col-lg-3">
-          <StatCard title="Total Received" value={totalReceived} icon={Gem} colorType="total" />
+      <div className="row g-2 mb-3">
+        <div className="col-6 col-md-4 col-xl-2">
+          <StatCard title="Total Received" value={totalReceived} icon={Gem} colorType="diamonds" subtitle="All-time Inward" />
         </div>
-        <div className="col-6 col-lg-3">
-          <StatCard title="Total Completed" value={completed} icon={CheckCircle2} colorType="completed" />
+        <div className="col-6 col-md-4 col-xl-2">
+          <StatCard title="In-Factory Stock" value={inFactoryBalance} icon={CheckCircle2} colorType="balance" subtitle="Active Balance" />
         </div>
-        <div className="col-6 col-lg-3">
-          <StatCard title="Total Pending" value={pending} icon={Clock} colorType="pending" />
+        <div className="col-6 col-md-4 col-xl-2">
+          <StatCard title="Submitted to Co." value={submitted} icon={Truck} colorType="submitted" subtitle="Returned to Client" />
         </div>
-        <div className="col-6 col-lg-3">
-          <StatCard title="In Production" value={inProduction} icon={Activity} colorType="production" />
+        <div className="col-6 col-md-4 col-xl-2">
+          <StatCard title="In Production" value={inProduction} icon={Activity} colorType="production" subtitle="Active on Sockets" />
+        </div>
+        <div className="col-6 col-md-4 col-xl-2">
+          <StatCard title="Total Pending" value={pending} icon={Clock} colorType="pending" subtitle="Awaiting Work/QC" />
+        </div>
+        <div className="col-6 col-md-4 col-xl-2">
+          <StatCard title="Completed Ready" value={completed} icon={CheckCircle2} colorType="completed" subtitle="Ready for Dispatch" />
         </div>
       </div>
 
@@ -228,26 +244,30 @@ const CompanyDetails = () => {
               <tr>
                 <th className="text-start text-nowrap">Received Date</th>
                 <th className="text-nowrap text-center">Received</th>
+                <th className="text-nowrap text-center">In-Factory</th>
                 <th className="text-nowrap text-center">Assigned</th>
                 <th className="text-nowrap text-center">In Progress</th>
                 <th className="text-nowrap text-center">Completed</th>
+                <th className="text-nowrap text-center">Submitted</th>
                 <th className="text-nowrap text-center">Pending</th>
               </tr>
             </thead>
             <tbody>
               {dateWiseSummary.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-muted py-3">No date summary available for selected filters.</td>
+                  <td colSpan="8" className="text-muted py-3">No date summary available for selected filters.</td>
                 </tr>
               ) : (
                 dateWiseSummary.map((row) => (
                   <tr key={row.date}>
                     <td className="text-start fw-bold text-navy text-nowrap" style={{ color: '#0A192F' }}>{row.date}</td>
-                    <td className="fw-semibold">{row.received}</td>
-                    <td><span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>{row.assigned}</span></td>
-                    <td><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>{row.inProgress}</span></td>
-                    <td><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>{row.completed}</span></td>
-                    <td><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>{row.pending}</span></td>
+                    <td className="fw-semibold text-center">{row.received}</td>
+                    <td className="text-center"><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}>{row.inFactory}</span></td>
+                    <td className="text-center"><span className="badge font-mono fw-bold px-2.5 py-1.5" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>{row.assigned}</span></td>
+                    <td className="text-center"><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FCD34D' }}>{row.inProgress}</span></td>
+                    <td className="text-center"><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #86EFAC' }}>{row.completed}</span></td>
+                    <td className="text-center"><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE' }}>{row.submitted}</span></td>
+                    <td className="text-center"><span className="badge px-2.5 py-1.5 fw-bold" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }}>{row.pending}</span></td>
                   </tr>
                 ))
               )}

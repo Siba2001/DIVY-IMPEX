@@ -9,6 +9,8 @@ const colorMap = {
   completed:  { iconBg: '#D1FAE5', iconColor: '#059669', badgeBg: '#D1FAE5', badgeColor: '#059669', curve: '#10B981' },
   deposited:  { iconBg: '#EEF2FF', iconColor: '#4338CA', badgeBg: '#EEF2FF', badgeColor: '#4338CA', curve: '#6366F1' },
   verified:   { iconBg: '#CCFBF1', iconColor: '#0F766E', badgeBg: '#CCFBF1', badgeColor: '#0F766E', curve: '#14B8A6' },
+  submitted:  { iconBg: '#F5F3FF', iconColor: '#7C3AED', badgeBg: '#F5F3FF', badgeColor: '#7C3AED', curve: '#8B5CF6' },
+  balance:    { iconBg: '#ECFDF5', iconColor: '#059669', badgeBg: '#ECFDF5', badgeColor: '#059669', curve: '#10B981' },
 };
 
 /* Decorative mini sparkline SVG — purely aesthetic */
