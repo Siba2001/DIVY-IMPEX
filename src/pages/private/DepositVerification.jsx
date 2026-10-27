@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Badge from '../../components/common/Badge';
@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   Scale,
   Barcode,
-  History
+  History,
+  X
 } from 'lucide-react';
 
 const DepositVerification = () => {
@@ -40,6 +41,62 @@ const DepositVerification = () => {
   const [verificationRemarks, setVerificationRemarks] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchWrapperRef = useRef(null);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter ONLY diamonds currently assigned to a worker that are active (NOT returned, NOT unassigned, NOT already verified)
+  const cleanQuery = inputBarcode.trim().toLowerCase();
+  const suggestions = useMemo(() => {
+    if (cleanQuery.length < 2) return [];
+    return diamonds.filter((d) => {
+      // 1. Must be assigned to an artisan worker
+      const isAssigned = Boolean(
+        d.assignedWorkerId ||
+        (d.assignedWorkerName && String(d.assignedWorkerName).trim().toLowerCase() !== 'unassigned')
+      );
+      if (!isAssigned) return false;
+
+      // 2. Must NOT be RETURNED (already dispatched/returned to client company)
+      if (d.status === 'RETURNED') return false;
+
+      // 3. Must NOT be RECEIVED (not yet assigned)
+      if (d.status === 'RECEIVED') return false;
+
+      // 4. Must NOT be COMPLETED (already verified in QC)
+      if (d.status === 'COMPLETED') return false;
+
+      const bc = String(d.barcode || '').toLowerCase();
+      const rough = String(d.roughCutNo || '').toLowerCase();
+      return bc.includes(cleanQuery) || rough.includes(cleanQuery);
+    });
+  }, [diamonds, cleanQuery]);
+
+  const handleSelectSuggestion = (d) => {
+    setInputBarcode(d.barcode);
+    setShowSuggestions(false);
+    setError('');
+    setSuccessMsg('');
+
+    if (d.status === 'COMPLETED' || d.status === 'RETURNED') {
+      setScannedDiamond(null);
+      setError(`Diamond "${d.barcode}" has already been verified (Status: ${d.status}).`);
+      return;
+    }
+
+    setScannedDiamond(d);
+    setActualWeight(d.actualWeight ? String(d.actualWeight) : String((d.weight - 0.015).toFixed(3)));
+  };
 
   const handleScanOrSearch = (e) => {
     e.preventDefault();
@@ -160,8 +217,8 @@ const DepositVerification = () => {
               </div>
             )}
 
-            {/* Barcode Search Box */}
-            <form onSubmit={handleScanOrSearch} className="mb-4">
+            {/* Barcode Search Box with Dynamic Autocomplete */}
+            <form onSubmit={handleScanOrSearch} className="mb-4 position-relative" ref={searchWrapperRef}>
               <label className="form-label font-heading fw-bold">1. Enter or Scan Barcode</label>
               <div className="d-flex flex-column flex-sm-row gap-2">
                 <div className="position-relative flex-grow-1">
@@ -171,13 +228,115 @@ const DepositVerification = () => {
                     className="form-control form-control-lg ps-5 text-uppercase fw-bold text-navy"
                     placeholder="e.g. KGK003 or RSB010..."
                     value={inputBarcode}
-                    onChange={(e) => setInputBarcode(e.target.value)}
+                    autoComplete="off"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setInputBarcode(val);
+                      setShowSuggestions(true);
+                      if (!val.trim()) {
+                        setScannedDiamond(null);
+                        setActualWeight('');
+                        setError('');
+                        setSuccessMsg('');
+                      }
+                    }}
+                    onFocus={() => {
+                      if (inputBarcode.trim().length >= 2) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setShowSuggestions(false);
+                      }
+                    }}
                   />
+                  {inputBarcode && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-link position-absolute top-50 end-0 translate-middle-y me-2 text-muted p-1 text-decoration-none"
+                      style={{ zIndex: 5 }}
+                      onClick={() => {
+                        setInputBarcode('');
+                        setScannedDiamond(null);
+                        setActualWeight('');
+                        setError('');
+                        setSuccessMsg('');
+                        setShowSuggestions(false);
+                      }}
+                      title="Clear field"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
                 <button type="submit" className="btn btn-navy px-4 font-heading fw-bold text-nowrap w-100 w-sm-auto d-flex align-items-center justify-content-center py-2.5">
                   <Search size={16} className="me-1.5" /> Scan & Lookup
                 </button>
               </div>
+
+              {/* Dynamic Suggestions Dropdown for Active Assigned Diamonds */}
+              {showSuggestions && cleanQuery.length >= 2 && (
+                <div
+                  className="position-absolute start-0 bg-white border rounded-3 shadow-lg mt-1 overflow-hidden"
+                  style={{
+                    top: '100%',
+                    zIndex: 1050,
+                    width: '100%',
+                    minWidth: '320px',
+                    maxHeight: '320px',
+                    overflowY: 'auto',
+                    boxShadow: '0 14px 35px rgba(0,0,0,0.12)'
+                  }}
+                >
+                  <div className="p-2.5 bg-light border-bottom d-flex align-items-center justify-content-between px-3">
+                    <span className="small text-muted fw-bold text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+                      Active Assigned Diamonds ({suggestions.length})
+                    </span>
+                    <span className="small text-muted" style={{ fontSize: '0.75rem' }}>
+                      Click diamond to inspect & verify
+                    </span>
+                  </div>
+
+                  {suggestions.length === 0 ? (
+                    <div className="p-3 text-center text-muted small">
+                      No active assigned diamonds matching "<strong>{inputBarcode}</strong>".
+                    </div>
+                  ) : (
+                    suggestions.map((d) => (
+                      <div
+                        key={d.id || d.barcode}
+                        className="p-3 border-bottom d-flex align-items-center justify-content-between text-start"
+                        style={{ cursor: 'pointer', transition: 'background-color 0.15s ease' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                        onClick={() => handleSelectSuggestion(d)}
+                      >
+                        <div className="d-flex align-items-center gap-2.5 me-3">
+                          <div>
+                            <div className="d-flex align-items-center gap-2">
+                              <span className="fw-bold font-heading fs-6" style={{ color: '#0A192F' }}>
+                                {d.barcode}
+                              </span>
+                              {d.roughCutNo && (
+                                <span className="badge bg-light text-secondary border font-mono fw-normal" style={{ fontSize: '0.72rem' }}>
+                                  #{d.roughCutNo}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-muted mt-0.5" style={{ fontSize: '0.8rem' }}>
+                              Worker: <span className="text-dark fw-semibold">{d.assignedWorkerName}</span> • <span className="text-primary fw-semibold">{d.companyCode || d.companyName || 'DIVY'}</span> • <span className="fw-semibold text-dark">{d.weight} ct</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <Badge status={d.status} />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </form>
 
             {/* Display Diamond Inspection Card */}
