@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import DivyLogo, { DivyLogoIcon } from '../../components/common/DivyLogo';
@@ -25,6 +25,17 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const formRef = useRef(null);
+
+  // Force reset fields on mount / refresh and session completion
+  useEffect(() => {
+    setUsername('');
+    setPassword('');
+    setShowPassword(false);
+    if (formRef.current) {
+      formRef.current.reset();
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -36,6 +47,13 @@ const Login = () => {
       setLoading(false);
 
       if (result.success) {
+        // Clear credential fields immediately so they never remain in memory or browser cache
+        setUsername('');
+        setPassword('');
+        if (formRef.current) {
+          formRef.current.reset();
+        }
+
         if (result.user.role === 'worker') {
           navigate('/worker-dashboard');
         } else {
@@ -82,17 +100,27 @@ const Login = () => {
             </div>
           )}
 
-          <form onSubmit={handleLogin}>
+          <form ref={formRef} onSubmit={handleLogin} autoComplete="off">
+            {/* Hidden dummy inputs to consume browser autofill heuristics */}
+            <input type="text" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="false" />
+            <input type="password" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="false" />
+
             <div className="mb-3">
               <label className="form-label fw-semibold text-secondary small">User ID / Username</label>
               <div className="position-relative">
                 <User size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
                 <input
                   type="text"
+                  name="divy_username_login"
+                  id="divy_username_login"
                   className="form-control ps-5 font-mono"
                   placeholder="Enter your User ID"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
                   required
                 />
               </div>
@@ -104,10 +132,13 @@ const Login = () => {
                 <Lock size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  name="divy_password_login"
+                  id="divy_password_login"
                   className="form-control ps-5 pe-5 font-mono"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
                   required
                 />
                 <button

@@ -42,15 +42,15 @@ const ConfirmModal = ({
 
   return (
     <div
-      className="modal fade show d-block"
+      className="modal fade show d-block modal-animate-backdrop"
       tabIndex="-1"
       onClick={() => {
         if (!loading && handleCancel) handleCancel();
       }}
-      style={{ backgroundColor: 'rgba(10, 25, 47, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1060 }}
+      style={{ backgroundColor: 'rgba(10, 25, 47, 0.65)', backdropFilter: 'blur(5px)', zIndex: 1060 }}
     >
       <div
-        className="modal-dialog modal-dialog-centered"
+        className="modal-dialog modal-dialog-centered modal-animate-dialog"
         style={{ maxWidth: '440px' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -65,10 +65,10 @@ const ConfirmModal = ({
                     confirmVariant === 'danger'
                       ? '#FEE2E2'
                       : confirmVariant === 'warning'
-                      ? '#FEF3C7'
-                      : confirmVariant === 'gold'
-                      ? '#FEF9C3'
-                      : '#E0E7FF'
+                        ? '#FEF3C7'
+                        : confirmVariant === 'gold'
+                          ? '#FEF9C3'
+                          : '#E0E7FF'
                 }}
               >
                 {renderIcon()}
