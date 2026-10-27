@@ -27,11 +27,15 @@ const Login = () => {
   const navigate = useNavigate();
   const formRef = useRef(null);
 
+  const [fieldErrors, setFieldErrors] = useState({});
+
   // Force reset fields on mount / refresh and session completion
   useEffect(() => {
     setUsername('');
     setPassword('');
     setShowPassword(false);
+    setError('');
+    setFieldErrors({});
     if (formRef.current) {
       formRef.current.reset();
     }
@@ -40,6 +44,22 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
+
+    const errors = {};
+    if (!username.trim()) {
+      errors.username = 'Please enter your User ID / Username.';
+    }
+    if (!password) {
+      errors.password = 'Please enter your password.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError(errors.username || errors.password);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -50,6 +70,7 @@ const Login = () => {
         // Clear credential fields immediately so they never remain in memory or browser cache
         setUsername('');
         setPassword('');
+        setFieldErrors({});
         if (formRef.current) {
           formRef.current.reset();
         }
@@ -100,7 +121,7 @@ const Login = () => {
             </div>
           )}
 
-          <form ref={formRef} onSubmit={handleLogin} autoComplete="off">
+          <form ref={formRef} onSubmit={handleLogin} autoComplete="off" noValidate>
             {/* Hidden dummy inputs to consume browser autofill heuristics */}
             <input type="text" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="false" />
             <input type="password" style={{ display: 'none' }} tabIndex={-1} aria-hidden="true" autoComplete="false" />
@@ -108,38 +129,55 @@ const Login = () => {
             <div className="mb-3">
               <label className="form-label fw-semibold text-secondary small">User ID / Username</label>
               <div className="position-relative">
-                <User size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+                <User size={16} className={`position-absolute top-50 start-0 translate-middle-y ms-3 ${fieldErrors.username ? 'text-danger' : 'text-muted'}`} />
                 <input
                   type="text"
                   name="divy_username_login"
                   id="divy_username_login"
-                  className="form-control ps-5 font-mono"
+                  className={`form-control ps-5 font-mono ${fieldErrors.username ? 'is-invalid border-danger' : ''}`}
                   placeholder="Enter your User ID"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (fieldErrors.username) {
+                      setFieldErrors((prev) => ({ ...prev, username: '' }));
+                    }
+                    if (error) setError('');
+                  }}
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck="false"
-                  required
                 />
               </div>
+              {fieldErrors.username && (
+                <div className="text-danger small mt-1.5 fw-medium d-flex align-items-center" style={{ fontSize: '0.8rem' }}>
+                  <AlertCircle size={14} className="me-1 flex-shrink-0" />
+                  {fieldErrors.username}
+                </div>
+              )}
             </div>
 
             <div className="mb-4">
               <label className="form-label fw-semibold text-secondary small">Password</label>
               <div className="position-relative">
-                <Lock size={16} className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" />
+                <Lock size={16} className={`position-absolute top-50 start-0 translate-middle-y ms-3 ${fieldErrors.password ? 'text-danger' : 'text-muted'}`} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="divy_password_login"
                   id="divy_password_login"
-                  className="form-control ps-5 pe-5 font-mono"
+                  className={`form-control ps-5 pe-5 font-mono ${fieldErrors.password ? 'is-invalid border-danger' : ''}`}
+                  style={fieldErrors.password ? { backgroundImage: 'none', paddingRight: '2.75rem' } : {}}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldErrors.password) {
+                      setFieldErrors((prev) => ({ ...prev, password: '' }));
+                    }
+                    if (error) setError('');
+                  }}
                   autoComplete="new-password"
-                  required
                 />
                 <button
                   type="button"
@@ -153,6 +191,12 @@ const Login = () => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <div className="text-danger small mt-1.5 fw-medium d-flex align-items-center" style={{ fontSize: '0.8rem' }}>
+                  <AlertCircle size={14} className="me-1 flex-shrink-0" />
+                  {fieldErrors.password}
+                </div>
+              )}
             </div>
 
             <button

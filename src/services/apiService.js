@@ -213,13 +213,30 @@ export const normalizeDiamond = (d) => {
     shapeVal = 'Emeral';
   }
 
+  // Safely clean and preserve exact string value for barcode, rough, and serial numbers (never strip leading zeros)
+  let rawBarcode = d.barcode ?? d.Barcode ?? '';
+  if (typeof rawBarcode === 'string' && rawBarcode.startsWith("'")) {
+    rawBarcode = rawBarcode.substring(1);
+  }
+  const cleanBarcode = String(rawBarcode ?? '').trim().toUpperCase();
+
+  let formattedRough = cleanRough;
+  if (typeof formattedRough === 'string' && formattedRough.startsWith("'")) {
+    formattedRough = formattedRough.substring(1);
+  }
+
+  let formattedSerial = cleanSerial;
+  if (typeof formattedSerial === 'string' && formattedSerial.startsWith("'")) {
+    formattedSerial = formattedSerial.substring(1);
+  }
+
   return {
     ...d,
-    roughCutNo: cleanRough,
-    serialNo: cleanSerial,
+    roughCutNo: formattedRough,
+    serialNo: formattedSerial,
     batchTotalWeight: rawBatchWeight ? parseFloat(rawBatchWeight) : null,
     shape: shapeVal,
-    barcode: String(d.barcode || '').trim().toUpperCase()
+    barcode: cleanBarcode
   };
 };
 

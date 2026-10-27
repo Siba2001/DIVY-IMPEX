@@ -23,7 +23,7 @@ const DiamondReceiving = () => {
   const [serialNo, setSerialNo] = useState('');
   const [batchTotalWeight, setBatchTotalWeight] = useState('');
   const [receivedDate, setReceivedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [receivedBy, setReceivedBy] = useState('Admin Supervisor');
+  const [receivedBy, setReceivedBy] = useState('');
   const [batchRemarks, setBatchRemarks] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

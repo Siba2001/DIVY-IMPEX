@@ -1368,4 +1368,58 @@ body {
 .modal-animate-dialog {
   animation: modalSlideDownTopCenter 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   will-change: transform, opacity;
-}
+}
+
+/* =========================================================================
+   Professional Form Input Placeholder Styling
+   (Prevents placeholder from inheriting fw-bold / fw-semibold from inputs)
+   ========================================================================= */
+input::placeholder,
+textarea::placeholder,
+.form-control::placeholder {
+  font-weight: 400 !important;
+  color: #94A3B8 !important; /* Elegant subtle slate-400 */
+  opacity: 0.85 !important;
+  letter-spacing: normal !important;
+}
+
+/* Webkit vendor prefix */
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder,
+.form-control::-webkit-input-placeholder {
+  font-weight: 400 !important;
+  color: #94A3B8 !important;
+  opacity: 0.85 !important;
+  letter-spacing: normal !important;
+}
+
+/* Firefox vendor prefix */
+input::-moz-placeholder,
+textarea::-moz-placeholder,
+.form-control::-moz-placeholder {
+  font-weight: 400 !important;
+  color: #94A3B8 !important;
+  opacity: 0.85 !important;
+  letter-spacing: normal !important;
+}
+
+/* Microsoft Edge / IE */
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder,
+.form-control:-ms-input-placeholder {
+  font-weight: 400 !important;
+  color: #94A3B8 !important;
+  opacity: 0.85 !important;
+  letter-spacing: normal !important;
+}
+
+/* =========================================================================
+   Prevent Bootstrap .is-invalid Background SVG from Overlapping Action Buttons
+   ========================================================================= */
+.form-control.is-invalid.no-feedback-icon,
+.position-relative > .form-control.is-invalid {
+  background-image: none !important;
+  padding-right: 2.75rem !important;
+}
+
+

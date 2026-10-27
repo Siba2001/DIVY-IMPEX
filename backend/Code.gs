@@ -35,7 +35,16 @@ function isAuthorized(e, body) {
   return token === API_SECRET;
 }
 
-function sanitizeCell(val) {
+function sanitizeCell(val, header) {
+  if (val === undefined || val === null) return '';
+  var s = String(val);
+  var h = header ? String(header).toLowerCase() : '';
+  // Barcodes, cut numbers, lot/serial numbers must remain exact strings even with leading zeros
+  if (h.indexOf('barcode') !== -1 || h.indexOf('rough') !== -1 || h.indexOf('serial') !== -1 || h.indexOf('code') !== -1) {
+    if (typeof val === 'string' && val.length > 1 && val.charAt(0) === '0' && /^\d+$/.test(val)) {
+      return "'" + val; // Force Google Sheets to treat as literal text preserving leading zeros
+    }
+  }
   if (typeof val === 'string' && val.length > 0) {
     var c = val.charAt(0);
     if (c === '=' || c === '+' || c === '-' || c === '@') {
@@ -328,9 +337,11 @@ function getTableData(sheetName, ss) {
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) return [];
 
-  var values = sheet.getDataRange().getValues();
+  var dataRange = sheet.getDataRange();
+  var values = dataRange.getValues();
   if (!values || values.length <= 1) return [];
 
+  var displayValues = dataRange.getDisplayValues();
   var headers = values[0];
   var rows = [];
 
@@ -339,10 +350,19 @@ function getTableData(sheetName, ss) {
     for (var j = 0; j < headers.length; j++) {
       var header = headers[j];
       var cellVal = values[i][j];
+      var hName = String(header || '').toLowerCase();
+
+      // For identifiers like barcode, roughCutNo, serialNo: prefer displayValues to never drop leading zeros!
+      if (hName.indexOf('barcode') !== -1 || hName.indexOf('rough') !== -1 || hName.indexOf('serial') !== -1) {
+        var disp = displayValues && displayValues[i] ? displayValues[i][j] : '';
+        if (disp && typeof disp === 'string') {
+          cellVal = disp.trim();
+        }
+      }
+
       // Normalize dates, times, or null values
       if (cellVal instanceof Date) {
         var year = cellVal.getFullYear();
-        var hName = String(header || '').toLowerCase();
         // Google Sheets stores time-only values as Dec 30 1899. If year is 1899/1900 or header is time, format as time!
         if (year <= 1900 || hName.indexOf('time') !== -1) {
           cellVal = Utilities.formatDate(cellVal, Session.getScriptTimeZone(), 'hh:mm a');
@@ -387,7 +407,7 @@ function appendRowToSheet(sheetName, obj) {
 
   for (var i = 0; i < headers.length; i++) {
     var val = obj[headers[i]];
-    val = sanitizeCell(val);
+    val = sanitizeCell(val, headers[i]);
     rowValues.push(val !== undefined && val !== null ? val : '');
   }
 
