@@ -82,6 +82,7 @@ h6,
 .gold-gradient-text {
   background: linear-gradient(135deg, #FDE68A 0%, #D4AF37 50%, #9A7B1C 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -1339,13 +1340,16 @@ body {
     opacity: 0;
     transform: translate3d(0, -90px, 0) scale(0.95);
   }
+
   60% {
     opacity: 0.95;
     transform: translate3d(0, 8px, 0) scale(1.008);
   }
+
   80% {
     transform: translate3d(0, -3px, 0) scale(0.998);
   }
+
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
@@ -1356,6 +1360,7 @@ body {
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -1378,7 +1383,8 @@ input::placeholder,
 textarea::placeholder,
 .form-control::placeholder {
   font-weight: 400 !important;
-  color: #94A3B8 !important; /* Elegant subtle slate-400 */
+  color: #94A3B8 !important;
+  /* Elegant subtle slate-400 */
   opacity: 0.85 !important;
   letter-spacing: normal !important;
 }
@@ -1417,9 +1423,7 @@ textarea:-ms-input-placeholder,
    Prevent Bootstrap .is-invalid Background SVG from Overlapping Action Buttons
    ========================================================================= */
 .form-control.is-invalid.no-feedback-icon,
-.position-relative > .form-control.is-invalid {
+.position-relative>.form-control.is-invalid {
   background-image: none !important;
   padding-right: 2.75rem !important;
 }
-
-
