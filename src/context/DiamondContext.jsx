@@ -208,6 +208,17 @@ export const DiamondProvider = ({ children }) => {
     return created;
   };
 
+  const updateDiamond = async (diamondData) => {
+    const updated = await apiService.updateDiamond(diamondData);
+    setDiamonds((prev) => {
+      const list = prev.map((d) => (d.id === updated.id || d.barcode === updated.barcode ? updated : d));
+      saveLocalCache(companies, workers, list);
+      return list;
+    });
+    showToast(`Diamond ${updated.barcode} updated successfully!`, 'success');
+    return updated;
+  };
+
   const assignWorker = async ({ barcode, workerId, assignedBy }) => {
     const res = await apiService.assignDiamond({ barcode, workerId, assignedBy });
     setDiamonds((prev) => {
@@ -376,6 +387,7 @@ export const DiamondProvider = ({ children }) => {
         updateWorker,
         deleteWorker,
         receiveBatch,
+        updateDiamond,
         assignWorker,
         assignWorkersBatch,
         startWorkerWork,

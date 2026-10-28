@@ -1296,6 +1296,16 @@ body {
    PRINT
    ========================================================================== */
 @media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
 
   .sidebar,
   .topbar,
@@ -1319,12 +1329,91 @@ body {
   .card-custom {
     border: none !important;
     box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Official PDF Executive Header Banner (matching Excel design) */
+  .print-official-banner {
+    display: block !important;
+    margin-bottom: 10px !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    page-break-after: avoid;
+  }
+
+  .print-banner-title {
+    background-color: #0A192F !important;
+    color: #FFFFFF !important;
+    font-size: 13pt !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    padding: 7px 12px !important;
+    letter-spacing: 0.03em !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-banner-meta {
+    background-color: #F1F5F9 !important;
+    color: #334155 !important;
+    font-size: 8.5pt !important;
+    font-weight: 600 !important;
+    padding: 5px 12px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-banner-filters {
+    background-color: #F8FAFC !important;
+    color: #475569 !important;
+    font-size: 8pt !important;
+    padding: 4px 12px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Official Table Print Styling (Royal Blue Headers + Clear Borders) */
+  .table-custom,
+  table.table-bordered {
+    border-collapse: collapse !important;
+    width: 100% !important;
   }
 
   .table-custom th,
-  .table-custom td {
-    font-size: 0.75rem !important;
-    padding: 0.4rem 0.5rem !important;
+  table.table-bordered thead th {
+    background-color: #1E40AF !important;
+    color: #FFFFFF !important;
+    font-size: 8pt !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    padding: 5px 6px !important;
+    border: 1px solid #0F172A !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .table-custom td,
+  table.table-bordered tbody td {
+    font-size: 7.8pt !important;
+    padding: 4px 6px !important;
+    border: 1px solid #CBD5E1 !important;
+  }
+
+  /* Grand Total Footer Row in Print */
+  .table-custom tfoot tr,
+  table.table-bordered tfoot tr {
+    background-color: #F1F5F9 !important;
+    color: #0A192F !important;
+    font-weight: bold !important;
+    border-top: 2px solid #0A192F !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .badge-status {

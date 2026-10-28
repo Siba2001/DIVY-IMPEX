@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Badge from '../../components/common/Badge';
 import { useDiamonds } from '../../context/DiamondContext';
+import { useAuth } from '../../context/AuthContext';
 import { exportToCSV, exportToExcel, exportShapeMatrixExcel, triggerPrint } from '../../services/exportService';
 import {
   FileBarChart2,
@@ -24,6 +25,7 @@ import {
 
 const Reports = () => {
   const { diamonds, companies, workers } = useDiamonds();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
 
   const initialCompany = searchParams.get('company') || '';
@@ -144,7 +146,9 @@ const Reports = () => {
       dateMap[dDate].diamonds.push(d);
     });
 
-    const sortedShapes = Array.from(shapeSet).sort();
+    const sortedShapes = Array.from(shapeSet)
+      .filter((s) => s && s.trim() !== '-' && s.trim() !== '')
+      .sort();
     const sortedDates = Object.keys(dateMap).sort().reverse();
     const rows = sortedDates.map((dKey) => dateMap[dKey]);
 
@@ -195,9 +199,11 @@ const Reports = () => {
     if (activeReportType === '1' && viewMode === 'matrix') {
       const fileName = `Monthly_Stock_Shape_Matrix_${compName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}`;
       exportShapeMatrixExcel(fileName, {
-        companyName: selectedCompany ? `${selectedCompany.name} (${selectedCompany.code})` : 'All Client Companies',
+        companyName: selectedCompany ? selectedCompany.name : 'All Client Companies',
+        companyCode: selectedCompany ? selectedCompany.code : '',
         fromDate: fromDate || 'Start',
         toDate: toDate || 'Present',
+        generatedBy: user?.name || user?.username || 'Admin Manager',
         shapes: matrixData.shapes,
         rows: matrixData.rows,
         grandTotal: matrixData.grandTotal
@@ -220,13 +226,17 @@ const Reports = () => {
       VerifiedDate: d.verifiedDate || ''
     }));
     const reportTitle = reportTypes.find((r) => r.id === activeReportType)?.name || 'Diamond_Report';
-    exportToExcel(reportTitle.replace(/[^a-zA-Z0-9]/g, '_'), exportRows);
+    exportToExcel(reportTitle.replace(/[^a-zA-Z0-9]/g, '_'), exportRows, {
+      title: `DIVY IMPEX — ${reportTitle}`,
+      generatedBy: user?.name || user?.username || 'Admin Manager',
+      scope: `${selectedCompany ? selectedCompany.name : 'All Companies'} | ${fromDate || 'Start'} to ${toDate || 'Present'}`
+    });
   };
 
   return (
     <PrivateLayout title="Audit & Operational Reports Console">
       {/* Report Selector & Export Header */}
-      <div className="card card-custom p-3 p-sm-4 mb-4 shadow-sm">
+      <div className="card card-custom p-3 p-sm-4 mb-4 shadow-sm btn-print-hide">
         <div className="row g-3 align-items-center justify-content-between">
           <div className="col-lg-6">
             <label className="form-label font-heading fw-bold mb-1">Select Active Audit Report Type</label>
@@ -251,12 +261,6 @@ const Reports = () => {
               >
                 <FileSpreadsheet size={16} className="me-2" />
                 {activeReportType === '1' && viewMode === 'matrix' ? 'Export Matrix Excel (.xlsx)' : 'Export Excel (.xlsx)'}
-              </button>
-              <button
-                className="btn btn-outline-primary font-heading fw-semibold rounded-pill px-3 shadow-xs"
-                onClick={handleExportCSV}
-              >
-                <Download size={16} className="me-2" /> Export CSV
               </button>
               <button
                 className="btn btn-navy font-heading fw-semibold rounded-pill px-3 shadow-xs"
@@ -405,9 +409,29 @@ const Reports = () => {
       </div>
 
       {/* Report Container */}
-      <div className="card card-custom p-3 p-sm-4 shadow-sm border">
-        {/* Report Header Title & Mode Switcher */}
-        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4 pb-3 border-bottom">
+      <div className="card card-custom p-3 p-sm-4 shadow-sm border report-print-container">
+        {/* ========================================================================= */}
+        {/* OFFICIAL PRINT / PDF HEADER BANNER (Visible ONLY during Print / PDF)     */}
+        {/* ========================================================================= */}
+        <div className="d-none d-print-block print-official-banner mb-3">
+          <div className="print-banner-title">
+            DIVY IMPEX — {activeReportType === '1'
+              ? (viewMode === 'matrix' ? 'MONTHLY STOCK & SHAPE MATRIX LEDGER' : 'DETAILED DIAMOND ITEMIZATION AUDIT REGISTER')
+              : (reportTypes.find((r) => r.id === activeReportType)?.name || 'OFFICIAL AUDIT REPORT').toUpperCase()}
+          </div>
+          <div className="print-banner-meta">
+            <span><strong>Generated On:</strong> {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+            <span><strong>Generated By:</strong> {user?.name || user?.username || 'Admin Manager'}</span>
+            <span><strong>Total Diamonds:</strong> {reportData.length} pcs</span>
+            <span><strong>Total Weight:</strong> {matrixData.grandTotal.totalWeight.toFixed(3)} ct</span>
+          </div>
+          <div className="print-banner-filters">
+            <strong>Applied Filters:</strong> Company: {selectedCompany ? `${selectedCompany.name} (${selectedCompany.code})` : 'All Client Companies'} &nbsp;|&nbsp; Date Scope: {fromDate || 'Start'} to {toDate || 'Present'} &nbsp;|&nbsp; Status: All Active Stock
+          </div>
+        </div>
+
+        {/* Report Header Title & Mode Switcher (Web view only, hidden during print) */}
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4 pb-3 border-bottom btn-print-hide">
           <div>
             <div className="d-flex align-items-center gap-2 flex-wrap mb-1.5">
               <div className="p-2 rounded bg-navy text-warning flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
@@ -432,10 +456,10 @@ const Reports = () => {
                 {fromDate && toDate
                   ? `${fromDate} to ${toDate}`
                   : fromDate
-                  ? `From ${fromDate}`
-                  : toDate
-                  ? `Up to ${toDate}`
-                  : 'All Recorded Time'}
+                    ? `From ${fromDate}`
+                    : toDate
+                      ? `Up to ${toDate}`
+                      : 'All Recorded Time'}
               </span>
               <span className="text-muted opacity-50">•</span>
               <span className="badge rounded-pill fw-bold px-2.5 py-1" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
@@ -500,10 +524,13 @@ const Reports = () => {
                   {/* Clean Modern Table Header */}
                   <thead style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
                     <tr>
-                      <th className="py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '130px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                      <th className="py-2.5 px-2 text-center text-uppercase fw-bold text-nowrap" style={{ width: '50px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                        Sr No
+                      </th>
+                      <th className="py-2.5 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '120px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
                         Date
                       </th>
-                      <th className="text-center py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '100px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                      <th className="text-center py-2.5 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '95px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
                         Total Pcs
                       </th>
                       {/* Dynamic Shape Columns from the company's diamonds */}
@@ -524,17 +551,17 @@ const Reports = () => {
                           </span>
                         </th>
                       ))}
-                      <th className="text-end py-3 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '130px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
+                      <th className="text-end py-2.5 px-3 text-uppercase fw-bold text-nowrap" style={{ width: '130px', color: '#475569', fontSize: '0.74rem', letterSpacing: '0.04em' }}>
                         Total Weight
                       </th>
-                      <th className="text-center py-3 px-2 text-uppercase fw-bold text-nowrap btn-print-hide" style={{ width: '60px', color: '#94A3B8', fontSize: '0.72rem' }}>
+                      <th className="text-center py-2.5 px-2 text-uppercase fw-bold text-nowrap btn-print-hide" style={{ width: '60px', color: '#94A3B8', fontSize: '0.72rem' }}>
                         Inspect
                       </th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {matrixData.rows.map((rowItem) => {
+                    {matrixData.rows.map((rowItem, rIdx) => {
                       const isExpanded = !!expandedDates[rowItem.date];
                       return (
                         <React.Fragment key={rowItem.date}>
@@ -542,6 +569,11 @@ const Reports = () => {
                             style={{ cursor: 'pointer', transition: 'background-color 0.15s ease' }}
                             onClick={() => toggleDateExpanded(rowItem.date)}
                           >
+                            {/* Sr No */}
+                            <td className="text-center py-2.5 px-2 text-muted font-mono small">
+                              {rIdx + 1}
+                            </td>
+
                             {/* Date */}
                             <td className="py-2.5 px-3 fw-bold font-mono text-nowrap" style={{ color: '#0A192F' }}>
                               {rowItem.date}
@@ -599,7 +631,7 @@ const Reports = () => {
                           {/* Expandable Sub-Table: Shows exact barcodes for this date */}
                           {isExpanded && (
                             <tr className="bg-light btn-print-hide">
-                              <td colSpan={matrixData.shapes.length + 4} className="p-3 bg-light">
+                              <td colSpan={matrixData.shapes.length + 5} className="p-3 bg-light">
                                 <div className="card shadow-xs border p-3 bg-white rounded-3">
                                   <div className="d-flex justify-content-between align-items-center mb-2">
                                     <h6 className="fw-bold text-navy mb-0 small" style={{ color: '#0A192F' }}>
@@ -657,8 +689,8 @@ const Reports = () => {
                   {/* Grand Summary Total Row at Bottom */}
                   <tfoot style={{ backgroundColor: '#F8FAFC', borderTop: '2px solid #CBD5E1' }}>
                     <tr>
-                      <td className="py-3 px-3 text-uppercase fw-bold" style={{ color: '#0A192F', fontSize: '0.78rem', letterSpacing: '0.04em' }}>
-                        Total Summary
+                      <td colSpan={2} className="py-3 px-3 text-uppercase fw-bold" style={{ color: '#0A192F', fontSize: '0.78rem', letterSpacing: '0.04em' }}>
+                        GRAND TOTAL SUMMARY
                       </td>
                       <td className="text-center py-3 px-3">
                         <span className="badge rounded-pill font-mono fw-bold px-3 py-1.5" style={{ backgroundColor: '#0A192F', color: '#FFFFFF', fontSize: '0.78rem' }}>

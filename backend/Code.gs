@@ -262,6 +262,10 @@ function doPost(e) {
         result = receiveDiamondsBatch(data);
         break;
 
+      case 'updateDiamond':
+        result = updateDiamond(data);
+        break;
+
       case 'assignDiamond':
       case 'assignDiamondsBatch':
         result = assignDiamondsBatch(data);
@@ -677,6 +681,103 @@ function receiveDiamondsBatch(data) {
   }
 
   return created;
+}
+
+function updateDiamond(data) {
+  if (!data) throw new Error('No diamond data provided');
+  var id = data.id;
+  var barcode = data.barcode ? String(data.barcode).trim().toUpperCase() : '';
+  if (!id && !barcode) throw new Error('Diamond ID or Barcode is required');
+
+  var originalBarcode = data.originalBarcode ? String(data.originalBarcode).trim().toUpperCase() : barcode;
+  var newBarcode = data.barcode ? String(data.barcode).trim().toUpperCase() : originalBarcode;
+
+  var existingDiamonds = getTableData(SHEETS.DIAMONDS);
+  var target = null;
+  for (var i = 0; i < existingDiamonds.length; i++) {
+    var d = existingDiamonds[i];
+    if ((id && String(d.id) === String(id)) || (originalBarcode && String(d.barcode).toUpperCase() === originalBarcode)) {
+      target = d;
+      break;
+    }
+  }
+
+  if (!target) throw new Error('Diamond record not found');
+
+  var updateObj = {};
+  if (newBarcode && newBarcode !== target.barcode) {
+    updateObj.barcode = "'" + newBarcode;
+  }
+  if (data.roughCutNo !== undefined) updateObj.roughCutNo = String(data.roughCutNo).trim();
+  if (data.serialNo !== undefined) updateObj.serialNo = String(data.serialNo).trim();
+  if (data.shape !== undefined) {
+    updateObj.shape = String(data.shape).trim();
+    updateObj.size = updateObj.shape;
+  }
+  if (data.weight !== undefined) updateObj.weight = parseFloat(data.weight) || 0;
+  if (data.targetWeight !== undefined) updateObj.targetWeight = data.targetWeight ? (parseFloat(data.targetWeight) || '') : '';
+  if (data.actualWeight !== undefined) updateObj.actualWeight = data.actualWeight ? (parseFloat(data.actualWeight) || '') : '';
+  if (data.companyId !== undefined && data.companyId !== target.companyId) {
+    var companies = getTableData(SHEETS.COMPANIES);
+    var comp = null;
+    for (var c = 0; c < companies.length; c++) {
+      if (companies[c].id === data.companyId) {
+        comp = companies[c];
+        break;
+      }
+    }
+    if (comp) {
+      updateObj.companyId = comp.id;
+      updateObj.companyCode = comp.code;
+      updateObj.companyName = comp.name;
+    }
+  }
+  if (data.remarks !== undefined) updateObj.remarks = data.remarks;
+  if (data.status !== undefined) updateObj.status = data.status;
+
+  updateRowInSheet(SHEETS.DIAMONDS, 'id', target.id, updateObj);
+
+  // If barcode changed, cascade to existing history rows in SHEETS.HISTORIES
+  if (newBarcode && originalBarcode && newBarcode !== originalBarcode) {
+    try {
+      var ss = getSpreadsheet();
+      var histSheet = ss.getSheetByName(SHEETS.HISTORIES);
+      if (histSheet && histSheet.getLastRow() > 1) {
+        var histValues = histSheet.getDataRange().getValues();
+        var histHeaders = histValues[0];
+        var bColIdx = histHeaders.indexOf('barcode');
+        var dIdColIdx = histHeaders.indexOf('diamondId');
+        if (bColIdx !== -1) {
+          for (var h = 1; h < histValues.length; h++) {
+            var rowBarcode = String(histValues[h][bColIdx]).replace(/^'/, '').toUpperCase();
+            var rowDId = dIdColIdx !== -1 ? String(histValues[h][dIdColIdx]) : '';
+            if (rowBarcode === originalBarcode || (rowDId && rowDId === String(target.id))) {
+              histSheet.getRange(h + 1, bColIdx + 1).setValue("'" + newBarcode);
+            }
+          }
+        }
+      }
+    } catch (he) {}
+  }
+
+  // Log edit in history
+  var timeInfo = getFormattedTime();
+  var barcodeNote = (newBarcode && originalBarcode && newBarcode !== originalBarcode)
+    ? 'Barcode corrected: ' + originalBarcode + ' -> ' + newBarcode + '. '
+    : '';
+
+  appendRowToSheet(SHEETS.HISTORIES, {
+    id: 'hist-' + Date.now(),
+    diamondId: target.id,
+    barcode: newBarcode || target.barcode,
+    action: 'Record Details Updated',
+    performedBy: data.updatedBy || 'Admin Manager',
+    date: timeInfo.dateStr,
+    time: timeInfo.timeStr,
+    remarks: barcodeNote + 'Diamond specs updated: ' + (data.editReason || 'Correction of entry typo')
+  });
+
+  return Object.assign({}, target, updateObj);
 }
 
 function assignDiamond(data) {

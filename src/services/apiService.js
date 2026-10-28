@@ -593,6 +593,94 @@ export const apiService = {
     return createdDiamonds;
   },
 
+  updateDiamond: async (diamondData) => {
+    const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
+    const histories = getItem(STORAGE_KEYS.HISTORIES);
+    const companies = getItem(STORAGE_KEYS.COMPANIES);
+    const { dateStr, timeStr } = getFormattedCurrentTime();
+
+    const id = diamondData.id;
+    const originalBarcode = diamondData.originalBarcode
+      ? String(diamondData.originalBarcode).trim().toUpperCase()
+      : (diamondData.barcode ? String(diamondData.barcode).trim().toUpperCase() : '');
+    const newBarcode = diamondData.barcode ? String(diamondData.barcode).trim().toUpperCase() : originalBarcode;
+
+    const index = diamonds.findIndex(
+      (d) => (id && d.id === id) || (originalBarcode && String(d.barcode).toUpperCase() === originalBarcode)
+    );
+    if (index === -1) throw new Error('Diamond record not found');
+
+    const target = diamonds[index];
+
+    let compDetails = {};
+    if (diamondData.companyId && diamondData.companyId !== target.companyId) {
+      const comp = companies.find((c) => c.id === diamondData.companyId);
+      if (comp) {
+        compDetails = {
+          companyId: comp.id,
+          companyCode: comp.code,
+          companyName: comp.name
+        };
+      }
+    }
+
+    const updated = {
+      ...target,
+      ...compDetails,
+      ...(newBarcode ? { barcode: newBarcode } : {}),
+      ...(diamondData.roughCutNo !== undefined ? { roughCutNo: String(diamondData.roughCutNo).trim() } : {}),
+      ...(diamondData.serialNo !== undefined ? { serialNo: String(diamondData.serialNo).trim() } : {}),
+      ...(diamondData.shape !== undefined ? { shape: String(diamondData.shape).trim(), size: String(diamondData.shape).trim() } : {}),
+      ...(diamondData.weight !== undefined ? { weight: parseFloat(diamondData.weight) || 0 } : {}),
+      ...(diamondData.targetWeight !== undefined ? { targetWeight: diamondData.targetWeight ? parseFloat(diamondData.targetWeight) : null } : {}),
+      ...(diamondData.actualWeight !== undefined ? { actualWeight: diamondData.actualWeight ? parseFloat(diamondData.actualWeight) : null } : {}),
+      ...(diamondData.remarks !== undefined ? { remarks: diamondData.remarks } : {}),
+      ...(diamondData.status !== undefined ? { status: diamondData.status } : {})
+    };
+
+    diamonds[index] = updated;
+
+    // If barcode was changed, update barcode reference in all past histories for this diamond
+    if (originalBarcode && newBarcode && originalBarcode !== newBarcode) {
+      histories.forEach((h) => {
+        if (
+          (h.diamondId && h.diamondId === target.id) ||
+          (h.barcode && String(h.barcode).toUpperCase() === originalBarcode)
+        ) {
+          h.barcode = newBarcode;
+        }
+      });
+    }
+
+    const barcodeNote =
+      originalBarcode && newBarcode && originalBarcode !== newBarcode
+        ? `Barcode corrected: ${originalBarcode} -> ${newBarcode}. `
+        : '';
+
+    histories.unshift({
+      id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      diamondId: target.id,
+      barcode: updated.barcode,
+      action: 'Record Details Updated',
+      performedBy: diamondData.updatedBy || 'Admin Manager',
+      date: dateStr,
+      time: timeStr,
+      remarks: `${barcodeNote}Diamond specs corrected: ${diamondData.editReason || 'Typo correction'}`
+    });
+
+    setItem(STORAGE_KEYS.DIAMONDS, diamonds);
+    setItem(STORAGE_KEYS.HISTORIES, histories);
+
+    if (cachedInitialData) {
+      cachedInitialData.diamonds = diamonds;
+      cachedInitialData.histories = histories;
+    }
+
+    fireGasBackground('updateDiamond', { ...diamondData, originalBarcode, barcode: newBarcode });
+
+    return updated;
+  },
+
   assignDiamond: async ({ barcode, workerId, assignedBy }) => {
     const diamonds = getItem(STORAGE_KEYS.DIAMONDS);
     const workers = getItem(STORAGE_KEYS.WORKERS);

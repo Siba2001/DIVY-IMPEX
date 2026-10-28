@@ -1,5 +1,120 @@
-// Helper service for CSV, Native Excel (.xlsx), and Print Export
-import * as XLSX from 'xlsx';
+// Helper service for CSV, Native Styled Excel (.xlsx), and Print Export
+import XLSX from 'xlsx-js-style';
+
+/**
+ * Common Corporate Theme Palette & Style Definitions
+ * Matching DIVY IMPEX branding and the reference corporate spreadsheet layout:
+ * - Header Banner: Deep Navy (#0A192F) with bold white text
+ * - Subtitle Banner: Dark Navy/Slate (#1E293B) with bold white text
+ * - Metadata Strip: Slate Light Gray (#F1F5F9) with bold slate text
+ * - Filter Strip: Off-white (#F8FAFC) with subtle slate text
+ * - Table Column Headers: Deep Royal Blue (#1E40AF) with white bold text
+ * - Total / Summary Footers: Light Gray (#F1F5F9) with bold navy text & top/double borders
+ * - Data Rows: Clean borders with numbers right-aligned and codes centered
+ */
+const STYLES = {
+  // Level 1: Main Title Banner (Navy fill, White text, Centered)
+  titleBanner: {
+    fill: { fgColor: { rgb: '0A192F' } },
+    font: { name: 'Calibri', sz: 13, bold: true, color: { rgb: 'FFFFFF' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  },
+  // Level 2: Subtitle Banner (Secondary Navy fill)
+  subtitleBanner: {
+    fill: { fgColor: { rgb: '1E293B' } },
+    font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  },
+  // Level 3: Metadata Row (Light background, Bold slate text)
+  metadataStrip: {
+    fill: { fgColor: { rgb: 'F1F5F9' } },
+    font: { name: 'Calibri', sz: 9.5, bold: true, color: { rgb: '334155' } },
+    alignment: { horizontal: 'left', vertical: 'center' }
+  },
+  // Level 4: Applied Filter Row
+  filterStrip: {
+    fill: { fgColor: { rgb: 'F8FAFC' } },
+    font: { name: 'Calibri', sz: 9, bold: false, color: { rgb: '475569' } },
+    alignment: { horizontal: 'left', vertical: 'center' }
+  },
+  // Level 5: Table Header Cells (Royal Blue fill, White bold text, bordered)
+  tableHeader: {
+    fill: { fgColor: { rgb: '1E40AF' } },
+    font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: 'FFFFFF' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: {
+      top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      bottom: { style: 'medium', color: { rgb: '0F172A' } },
+      left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+    }
+  },
+  // Data Cell Styles
+  dataCellLeft: {
+    font: { name: 'Calibri', sz: 10, color: { rgb: '0F172A' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+    border: {
+      top: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      left: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      right: { style: 'thin', color: { rgb: 'E2E8F0' } }
+    }
+  },
+  dataCellCenter: {
+    font: { name: 'Calibri', sz: 10, color: { rgb: '0F172A' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: {
+      top: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      left: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      right: { style: 'thin', color: { rgb: 'E2E8F0' } }
+    }
+  },
+  dataCellRight: {
+    font: { name: 'Calibri', sz: 10, color: { rgb: '0F172A' } },
+    alignment: { horizontal: 'right', vertical: 'center' },
+    border: {
+      top: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      left: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      right: { style: 'thin', color: { rgb: 'E2E8F0' } }
+    }
+  },
+  // Grand Total Summary Row
+  summaryTotal: {
+    fill: { fgColor: { rgb: 'F1F5F9' } },
+    font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: '0A192F' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+    border: {
+      top: { style: 'medium', color: { rgb: '0A192F' } },
+      bottom: { style: 'double', color: { rgb: '0A192F' } },
+      left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+    }
+  },
+  summaryTotalLeft: {
+    fill: { fgColor: { rgb: 'F1F5F9' } },
+    font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: '0A192F' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+    border: {
+      top: { style: 'medium', color: { rgb: '0A192F' } },
+      bottom: { style: 'double', color: { rgb: '0A192F' } },
+      left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+    }
+  },
+  summaryTotalRight: {
+    fill: { fgColor: { rgb: 'F1F5F9' } },
+    font: { name: 'Calibri', sz: 10.5, bold: true, color: { rgb: '0A192F' } },
+    alignment: { horizontal: 'right', vertical: 'center' },
+    border: {
+      top: { style: 'medium', color: { rgb: '0A192F' } },
+      bottom: { style: 'double', color: { rgb: '0A192F' } },
+      left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+    }
+  }
+};
 
 /**
  * Standard CSV Export
@@ -46,22 +161,154 @@ export const exportToCSV = (filename, rows) => {
 };
 
 /**
- * Standard Native Excel (.xlsx) Export
+ * Standard Native Excel (.xlsx) Export with Professional Executive Styling,
+ * Automatic Grand Total Row (Total Diamonds, Original Weight, Actual Weight, Yield %), and A4 Layout.
+ * Used across generic reports (Reports 2 - 9).
  */
-export const exportToExcel = (filename, rows) => {
+export const exportToExcel = (filename, rows, options = {}) => {
   if (!rows || !rows.length) return;
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
 
-  // Auto-fit column widths so data is never squashed in Google Sheets / Excel
   const keys = Object.keys(rows[0]);
+  const totalCols = Math.max(keys.length - 1, 1);
+  const now = new Date();
+  const dateFormatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+  const titleText = (options.title || filename.replace(/_/g, ' ')).toUpperCase();
+  const metadataText = `Generated On: ${dateFormatted} ${timeFormatted}   |   Generated By: ${options.generatedBy || 'Admin Manager'}   |   Total Records: ${rows.length}`;
+  const filterText = `Applied Filters: Scope: ${options.scope || 'All Active Records'}   |   Status: Production Audit`;
+
+  const aoa = [
+    [titleText],
+    [metadataText],
+    [filterText],
+    [], // Blank Row
+    keys // Table Header Row (Row index 4)
+  ];
+
+  // Detect numeric weight columns for calculation
+  const origWeightColIdx = keys.findIndex((k) =>
+    /orig.*weight|original.*weight/i.test(k)
+  );
+  const actWeightColIdx = keys.findIndex((k) =>
+    /act.*weight|actual.*weight|finished.*weight|polished.*weight/i.test(k)
+  );
+
+  let sumOrigWeight = 0;
+  let sumActWeight = 0;
+
+  rows.forEach((r) => {
+    aoa.push(
+      keys.map((k, colIdx) => {
+        const val = r[k] === null || r[k] === undefined ? '' : r[k];
+        if (colIdx === origWeightColIdx) {
+          sumOrigWeight += parseFloat(val) || 0;
+        } else if (colIdx === actWeightColIdx) {
+          sumActWeight += parseFloat(val) || 0;
+        }
+        return val;
+      })
+    );
+  });
+
+  // Append Grand Total Row at the end
+  const totalRowIdx = aoa.length;
+  const totalRow = keys.map((k, colIdx) => {
+    if (colIdx === 0) return 'TOTAL';
+    if (colIdx === 1) return `GRAND TOTAL (${rows.length} Diamonds)`;
+    if (colIdx === origWeightColIdx) return parseFloat(sumOrigWeight.toFixed(3));
+    if (colIdx === actWeightColIdx) return parseFloat(sumActWeight.toFixed(3));
+    return '';
+  });
+  aoa.push(totalRow);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Merges for Header Rows
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: totalCols } }
+  ];
+
+  // Apply Styles to Cells
+  // Row 0: Title Banner
+  for (let c = 0; c <= totalCols; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 0, c });
+    if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+    ws[ref].s = STYLES.titleBanner;
+  }
+  // Row 1: Metadata Strip
+  for (let c = 0; c <= totalCols; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 1, c });
+    if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+    ws[ref].s = STYLES.metadataStrip;
+  }
+  // Row 2: Filter Strip
+  for (let c = 0; c <= totalCols; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 2, c });
+    if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+    ws[ref].s = STYLES.filterStrip;
+  }
+  // Row 4: Table Headers
+  for (let c = 0; c < keys.length; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 4, c });
+    if (ws[ref]) {
+      ws[ref].s = STYLES.tableHeader;
+    }
+  }
+
+  // Row 5 to (totalRowIdx - 1): Data Rows
+  for (let r = 5; r < totalRowIdx; r++) {
+    for (let c = 0; c < keys.length; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (ws[ref]) {
+        const val = ws[ref].v;
+        const isNum = typeof val === 'number';
+        ws[ref].s = isNum ? STYLES.dataCellRight : STYLES.dataCellLeft;
+      }
+    }
+  }
+
+  // Grand Total Row (Row totalRowIdx)
+  for (let c = 0; c < keys.length; c++) {
+    const ref = XLSX.utils.encode_cell({ r: totalRowIdx, c });
+    if (ws[ref]) {
+      if (c === origWeightColIdx || c === actWeightColIdx) {
+        ws[ref].s = STYLES.summaryTotalRight;
+      } else if (c === 1) {
+        ws[ref].s = STYLES.summaryTotalLeft;
+      } else {
+        ws[ref].s = STYLES.summaryTotal;
+      }
+    }
+  }
+
+  // Column Widths
   ws['!cols'] = keys.map((key) => {
     const maxLen = rows.reduce((max, r) => {
       const val = r[key] !== null && r[key] !== undefined ? String(r[key]) : '';
       return Math.max(max, val.length);
     }, key.length);
-    return { wch: Math.max(maxLen + 3, 12) };
+    return { wch: Math.max(maxLen + 3, 14) };
   });
+
+  // A4 Page Setup
+  ws['!pageSetup'] = {
+    paperSize: 9, // 9 = A4
+    orientation: 'landscape',
+    fitToWidth: 1,
+    fitToHeight: 0
+  };
+  ws['!margins'] = {
+    left: 0.4,
+    right: 0.4,
+    top: 0.5,
+    bottom: 0.5,
+    header: 0.3,
+    footer: 0.3
+  };
 
   XLSX.utils.book_append_sheet(wb, ws, 'Report_Data');
   XLSX.writeFile(wb, `${filename}.xlsx`);
@@ -69,30 +316,61 @@ export const exportToExcel = (filename, rows) => {
 
 /**
  * Generates a native multi-sheet Excel (.xlsx) workbook for Company Shape-Wise Monthly Stock Matrix.
- * Sheet 1: "Monthly_Stock_Matrix" - Date-by-date matrix showing pieces and carats for each diamond shape
- * Sheet 2: "Itemized_Diamonds" - Full individual diamond records matching the matrix
+ * Sheet 1: "Stock_Shape_Matrix" - Date-by-date matrix showing pieces and carats for each diamond shape
+ * Sheet 2: "Diamond_Itemization" - Full individual diamond records matching the matrix with
+ *                                  Grand Total Summary Row (Total Diamonds, Original Weight, Polished/Actual Weight, Weight Diff)
+ * Formatted with executive colors and A4 landscape printing dimensions.
  */
 export const exportShapeMatrixExcel = (
   filename,
-  { companyName = 'All Companies', fromDate = '', toDate = '', shapes = [], rows = [], grandTotal = {} }
+  {
+    companyName = 'All Companies',
+    companyCode = '',
+    fromDate = '',
+    toDate = '',
+    generatedBy = 'Admin Manager',
+    shapes = [],
+    rows = [],
+    grandTotal = {}
+  }
 ) => {
   if (!rows || !rows.length) return;
 
   const wb = XLSX.utils.book_new();
 
-  // 1. SHEET 1: MONTHLY STOCK SHAPE MATRIX
+  // Filter out any dash or invalid shape names so columns are clean and valid
+  const validShapes = (shapes || []).filter(
+    (s) => s && String(s).trim() !== '-' && String(s).trim() !== ''
+  );
+
+  const totalColsIdx = Math.max(3 + validShapes.length, 5);
+
+  // 1. SHEET 1: MONTHLY STOCK SHAPE MATRIX (Executive Corporate Design)
+  const now = new Date();
+  const dateFormatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+  const filterSummary = `Company: ${companyName}${companyCode ? ` (${companyCode})` : ''}   |   Date Scope: ${fromDate || 'Start'} to ${toDate || 'Present'}   |   Status: All Active Stock`;
+
   const matrixAoa = [
-    ['DIVY IMPEX — DIAMOND MANAGEMENT SYSTEM'],
-    ['MONTHLY STOCK & SHAPE MATRIX LEDGER'],
+    // Row 0: Executive Corporate Banner
+    ['DIVY IMPEX — MONTHLY STOCK & SHAPE MATRIX LEDGER'],
+    // Row 1: Audit & Generation Metadata
     [
-      `Client Company: ${companyName}   |   Date Scope: ${fromDate || 'All Time'} to ${toDate || 'Present'}   |   Generated: ${new Date().toLocaleDateString('en-GB')}`
+      `Generated On: ${dateFormatted} ${timeFormatted}   |   Generated By: ${generatedBy}   |   Total Diamonds: ${grandTotal.totalPcs || 0} pcs   |   Total Weight: ${(grandTotal.totalWeight || 0).toFixed(3)} ct`
     ],
-    [], // Blank visual separator
+    // Row 2: Applied Filter Parameters
+    [
+      `Applied Filters: ${filterSummary}`
+    ],
+    // Row 3: Blank spacing row
+    [],
+    // Row 4: Table Column Headers
     [
       'Sr No',
       'Date',
       'Total Pcs',
-      ...shapes.map((s) => `${s.toUpperCase()} (Pcs / Carats)`),
+      ...validShapes.map((s) => `${s.toUpperCase()} (Pcs / Carats)`),
       'Total Weight (ct)'
     ]
   ];
@@ -102,48 +380,125 @@ export const exportShapeMatrixExcel = (
       idx + 1,
       r.date,
       r.totalPcs,
-      ...shapes.map((s) => {
-        const shapeData = r.shapes[s];
-        return shapeData ? `${shapeData.pcs} pcs / ${shapeData.weight.toFixed(3)} ct` : '—';
+      ...validShapes.map((s) => {
+        const shapeData = r.shapes ? r.shapes[s] : null;
+        return shapeData && shapeData.pcs > 0
+          ? `${shapeData.pcs} pcs / ${shapeData.weight.toFixed(3)} ct`
+          : '—';
       }),
       parseFloat(r.totalWeight.toFixed(3))
     ]);
   });
 
   // Grand Total Summary Row
+  const grandTotalRowIdx = matrixAoa.length;
   matrixAoa.push([
     'TOTAL',
     'GRAND TOTAL SUMMARY',
     grandTotal.totalPcs || 0,
-    ...shapes.map((s) => {
+    ...validShapes.map((s) => {
       const sTot = grandTotal.shapes ? grandTotal.shapes[s] : null;
-      return sTot ? `${sTot.pcs} pcs / ${sTot.weight.toFixed(3)} ct` : '—';
+      return sTot && sTot.pcs > 0 ? `${sTot.pcs} pcs / ${sTot.weight.toFixed(3)} ct` : '—';
     }),
     parseFloat((grandTotal.totalWeight || 0).toFixed(3))
   ]);
 
   const wsMatrix = XLSX.utils.aoa_to_sheet(matrixAoa);
-  const totalCols = 3 + shapes.length;
+
+  // Merged top header banners
   wsMatrix['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: totalCols } }
+    { s: { r: 0, c: 0 }, e: { r: 0, c: totalColsIdx } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: totalColsIdx } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: totalColsIdx } }
   ];
+
+  // Apply Styles to Sheet 1 Cells
+  // Row 0: Title Banner
+  for (let c = 0; c <= totalColsIdx; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 0, c });
+    if (!wsMatrix[ref]) wsMatrix[ref] = { t: 's', v: '' };
+    wsMatrix[ref].s = STYLES.titleBanner;
+  }
+  // Row 1: Metadata Strip
+  for (let c = 0; c <= totalColsIdx; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 1, c });
+    if (!wsMatrix[ref]) wsMatrix[ref] = { t: 's', v: '' };
+    wsMatrix[ref].s = STYLES.metadataStrip;
+  }
+  // Row 2: Filter Strip
+  for (let c = 0; c <= totalColsIdx; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 2, c });
+    if (!wsMatrix[ref]) wsMatrix[ref] = { t: 's', v: '' };
+    wsMatrix[ref].s = STYLES.filterStrip;
+  }
+  // Row 4: Column Headers
+  for (let c = 0; c <= totalColsIdx; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 4, c });
+    if (wsMatrix[ref]) {
+      wsMatrix[ref].s = STYLES.tableHeader;
+    }
+  }
+
+  // Row 5 to (grandTotalRowIdx - 1): Data Rows
+  for (let r = 5; r < grandTotalRowIdx; r++) {
+    for (let c = 0; c <= totalColsIdx; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (wsMatrix[ref]) {
+        if (c === 0 || c === 2) {
+          wsMatrix[ref].s = STYLES.dataCellCenter;
+        } else if (c === totalColsIdx) {
+          wsMatrix[ref].s = STYLES.dataCellRight;
+        } else {
+          wsMatrix[ref].s = STYLES.dataCellLeft;
+        }
+      }
+    }
+  }
+
+  // Grand Total Row
+  for (let c = 0; c <= totalColsIdx; c++) {
+    const ref = XLSX.utils.encode_cell({ r: grandTotalRowIdx, c });
+    if (wsMatrix[ref]) {
+      wsMatrix[ref].s = c === totalColsIdx ? STYLES.summaryTotalRight : STYLES.summaryTotal;
+    }
+  }
+
+  // Professional column widths
   wsMatrix['!cols'] = [
     { wch: 8 },  // Sr No
     { wch: 16 }, // Date
     { wch: 14 }, // Total Pcs
-    ...shapes.map(() => ({ wch: 25 })), // Shape columns
+    ...validShapes.map(() => ({ wch: 26 })), // Shape columns
     { wch: 20 }  // Total Weight
   ];
-  XLSX.utils.book_append_sheet(wb, wsMatrix, 'Monthly_Stock_Matrix');
 
-  // 2. SHEET 2: ITEMIZED DIAMOND RECORDS
+  // A4 Paper Size Setup (paperSize: 9 is standard A4, orientation: 'landscape')
+  wsMatrix['!pageSetup'] = {
+    paperSize: 9, // 9 = A4 (210 mm x 297 mm)
+    orientation: 'landscape',
+    fitToWidth: 1,
+    fitToHeight: 0
+  };
+
+  wsMatrix['!margins'] = {
+    left: 0.4,
+    right: 0.4,
+    top: 0.5,
+    bottom: 0.5,
+    header: 0.3,
+    footer: 0.3
+  };
+
+  XLSX.utils.book_append_sheet(wb, wsMatrix, 'Stock_Shape_Matrix');
+
+  // 2. SHEET 2: ITEMIZED DIAMOND RECORDS (Matching Reference Layout + Comprehensive Totals)
   const itemAoa = [
-    ['DIVY IMPEX — DIAMOND MANAGEMENT SYSTEM'],
-    ['DETAILED DIAMOND ITEMIZATION AUDIT REGISTER'],
+    ['DIVY IMPEX — DETAILED DIAMOND ITEMIZATION AUDIT REGISTER'],
     [
-      `Company: ${companyName}   |   Total Diamonds: ${grandTotal.totalPcs || 0} pcs   |   Generated: ${new Date().toLocaleDateString('en-GB')}`
+      `Generated On: ${dateFormatted} ${timeFormatted}   |   Generated By: ${generatedBy}   |   Total Diamonds: ${grandTotal.totalPcs || 0} pcs`
+    ],
+    [
+      `Applied Filters: ${filterSummary}`
     ],
     [],
     [
@@ -161,22 +516,53 @@ export const exportShapeMatrixExcel = (
   ];
 
   let itemIdx = 1;
+  let totalRoughWeight = 0;
+  let totalPolishedWeight = 0;
+
   rows.forEach((r) => {
     (r.diamonds || []).forEach((d) => {
+      let shapeClean = (d.shape || d.size || '').trim();
+      const lower = shapeClean.toLowerCase();
+      if (!shapeClean || lower === 'emerald' || lower === '-' || lower.includes('ct') || /^\d+(\.\d+)?$/.test(shapeClean)) {
+        shapeClean = 'Emeral';
+      }
+
+      const roughW = parseFloat((parseFloat(d.weight) || 0).toFixed(3));
+      const polW = d.targetWeight ? parseFloat((parseFloat(d.targetWeight) || 0).toFixed(3)) : null;
+
+      totalRoughWeight += roughW;
+      if (polW !== null) totalPolishedWeight += polW;
+
       itemAoa.push([
         itemIdx++,
         r.date,
-        d.barcode,
+        String(d.barcode || ''),
         d.roughCutNo || '—',
-        d.companyName,
-        d.shape || d.size || 'Emeral',
-        parseFloat((parseFloat(d.weight) || 0).toFixed(3)),
-        d.targetWeight ? parseFloat((parseFloat(d.targetWeight) || 0).toFixed(3)) : '—',
+        d.companyName || companyName,
+        shapeClean,
+        roughW,
+        polW !== null ? polW : '—',
         d.assignedWorkerName || 'Unassigned',
-        d.status || 'Received'
+        d.status || 'RECEIVED'
       ]);
     });
   });
+
+  // Calculate Grand Total Row for Itemized Diamonds Sheet
+  const totalItemsCount = itemIdx - 1;
+  const itemTotalRowIdx = itemAoa.length;
+  itemAoa.push([
+    'TOTAL',
+    'GRAND TOTAL SUMMARY',
+    `${totalItemsCount} Diamonds`,
+    '',
+    `${companyName}`,
+    'ALL SHAPES',
+    parseFloat(totalRoughWeight.toFixed(3)),
+    totalPolishedWeight > 0 ? parseFloat(totalPolishedWeight.toFixed(3)) : '—',
+    'OFFICIAL REGISTER',
+    'AUDITED'
+  ]);
 
   const wsItems = XLSX.utils.aoa_to_sheet(itemAoa);
   wsItems['!merges'] = [
@@ -184,19 +570,87 @@ export const exportShapeMatrixExcel = (
     { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } }
   ];
+
+  // Apply Styles to Sheet 2 Cells
+  for (let c = 0; c <= 9; c++) {
+    const ref0 = XLSX.utils.encode_cell({ r: 0, c });
+    if (!wsItems[ref0]) wsItems[ref0] = { t: 's', v: '' };
+    wsItems[ref0].s = STYLES.titleBanner;
+
+    const ref1 = XLSX.utils.encode_cell({ r: 1, c });
+    if (!wsItems[ref1]) wsItems[ref1] = { t: 's', v: '' };
+    wsItems[ref1].s = STYLES.metadataStrip;
+
+    const ref2 = XLSX.utils.encode_cell({ r: 2, c });
+    if (!wsItems[ref2]) wsItems[ref2] = { t: 's', v: '' };
+    wsItems[ref2].s = STYLES.filterStrip;
+
+    const refH = XLSX.utils.encode_cell({ r: 4, c });
+    if (wsItems[refH]) {
+      wsItems[refH].s = STYLES.tableHeader;
+    }
+  }
+
+  // Sheet 2 Data Rows
+  for (let r = 5; r < itemTotalRowIdx; r++) {
+    for (let c = 0; c <= 9; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (wsItems[ref]) {
+        if (c === 0 || c === 2 || c === 9) {
+          wsItems[ref].s = STYLES.dataCellCenter;
+        } else if (c === 6 || c === 7) {
+          wsItems[ref].s = STYLES.dataCellRight;
+        } else {
+          wsItems[ref].s = STYLES.dataCellLeft;
+        }
+      }
+    }
+  }
+
+  // Sheet 2 Grand Total Row
+  for (let c = 0; c <= 9; c++) {
+    const ref = XLSX.utils.encode_cell({ r: itemTotalRowIdx, c });
+    if (wsItems[ref]) {
+      if (c === 6 || c === 7) {
+        wsItems[ref].s = STYLES.summaryTotalRight;
+      } else if (c === 1) {
+        wsItems[ref].s = STYLES.summaryTotalLeft;
+      } else {
+        wsItems[ref].s = STYLES.summaryTotal;
+      }
+    }
+  }
+
   wsItems['!cols'] = [
-    { wch: 8 },
-    { wch: 16 },
-    { wch: 20 },
-    { wch: 16 },
-    { wch: 24 },
-    { wch: 16 },
-    { wch: 18 },
-    { wch: 20 },
-    { wch: 22 },
-    { wch: 16 }
+    { wch: 8 },  // Sr No
+    { wch: 15 }, // Received Date
+    { wch: 20 }, // Barcode
+    { wch: 16 }, // Rough Cut No
+    { wch: 24 }, // Company
+    { wch: 16 }, // Shape
+    { wch: 18 }, // Rough Weight
+    { wch: 20 }, // Polished Weight
+    { wch: 22 }, // Artisan
+    { wch: 18 }  // Status
   ];
-  XLSX.utils.book_append_sheet(wb, wsItems, 'Itemized_Diamonds');
+
+  // A4 Paper Size Setup for Itemized Sheet
+  wsItems['!pageSetup'] = {
+    paperSize: 9, // A4
+    orientation: 'landscape',
+    fitToWidth: 1,
+    fitToHeight: 0
+  };
+  wsItems['!margins'] = {
+    left: 0.4,
+    right: 0.4,
+    top: 0.5,
+    bottom: 0.5,
+    header: 0.3,
+    footer: 0.3
+  };
+
+  XLSX.utils.book_append_sheet(wb, wsItems, 'Diamond_Itemization');
 
   XLSX.writeFile(wb, `${filename}.xlsx`);
 };
@@ -207,7 +661,7 @@ export const exportShapeMatrixExcel = (
  * Sheet 1: "Delivery_Dispatches" - Chronological delivery register with corporate header and auto-fitted columns
  * Sheet 2: "Company_Summary" - Delivery totals grouped by each client company
  * Sheet 3: "Executive_Totals" - Grand delivery statistics & yield metrics
- * Sheet 4: "Diamond_Itemization" - Full item-by-item barcode breakdown
+ * Sheet 4: "Diamond_Itemization" - Full item-by-item barcode breakdown with summary totals
  */
 export const exportDispatchHistoryExcel = (
   filename,
@@ -216,13 +670,16 @@ export const exportDispatchHistoryExcel = (
   if (!dispatches || !dispatches.length) return;
 
   const wb = XLSX.utils.book_new();
+  const now = new Date();
+  const dateFormatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
   // 1. SHEET 1: DATE-BY-DATE DISPATCH REGISTER (Main Sheet)
   const dispatchAoa = [
     ['DIVY IMPEX — DIAMOND MANAGEMENT SYSTEM'],
     ['FINISHED GOODS DELIVERY & DISPATCH REGISTER'],
     [
-      `Generated: ${new Date().toLocaleString('en-GB')}   |   Scope: ${filters.scope || 'All Active Delivery Logs'}   |   Batches: ${dispatches.length} Challans`
+      `Generated: ${dateFormatted} ${timeFormatted}   |   Scope: ${filters.scope || 'All Active Delivery Logs'}   |   Batches: ${dispatches.length} Challans`
     ],
     [], // Blank separator
     [
@@ -245,7 +702,6 @@ export const exportDispatchHistoryExcel = (
   dispatches.forEach((dp, idx) => {
     let origW = parseFloat(dp.totalOriginalWeight) || 0;
     const actW = parseFloat(dp.totalActualWeight) || 0;
-    // Fallback if orig weight was unrecorded on legacy dispatches
     if (origW === 0 && actW > 0) origW = actW;
     const lossW = actW - origW;
 
@@ -271,6 +727,7 @@ export const exportDispatchHistoryExcel = (
   const totAct = parseFloat((overallTotals.totalActualWeight || 0).toFixed(3));
   const totLoss = parseFloat((overallTotals.totalLoss || 0).toFixed(3));
 
+  const totalRowIdx = dispatchAoa.length;
   dispatchAoa.push([
     'TOTAL',
     'GRAND TOTAL',
@@ -293,6 +750,51 @@ export const exportDispatchHistoryExcel = (
     { s: { r: 1, c: 0 }, e: { r: 1, c: 12 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 12 } }
   ];
+
+  // Styles for Sheet 1
+  for (let c = 0; c <= 12; c++) {
+    const ref0 = XLSX.utils.encode_cell({ r: 0, c });
+    if (!wsDispatches[ref0]) wsDispatches[ref0] = { t: 's', v: '' };
+    wsDispatches[ref0].s = STYLES.titleBanner;
+
+    const ref1 = XLSX.utils.encode_cell({ r: 1, c });
+    if (!wsDispatches[ref1]) wsDispatches[ref1] = { t: 's', v: '' };
+    wsDispatches[ref1].s = STYLES.subtitleBanner;
+
+    const ref2 = XLSX.utils.encode_cell({ r: 2, c });
+    if (!wsDispatches[ref2]) wsDispatches[ref2] = { t: 's', v: '' };
+    wsDispatches[ref2].s = STYLES.metadataStrip;
+
+    const refH = XLSX.utils.encode_cell({ r: 4, c });
+    if (wsDispatches[refH]) {
+      wsDispatches[refH].s = STYLES.tableHeader;
+    }
+  }
+
+  // Data Rows Sheet 1
+  for (let r = 5; r < totalRowIdx; r++) {
+    for (let c = 0; c <= 12; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (wsDispatches[ref]) {
+        if (c === 0 || c === 1 || c === 2 || c === 4) {
+          wsDispatches[ref].s = STYLES.dataCellCenter;
+        } else if (c >= 7 && c <= 10) {
+          wsDispatches[ref].s = STYLES.dataCellRight;
+        } else {
+          wsDispatches[ref].s = STYLES.dataCellLeft;
+        }
+      }
+    }
+  }
+
+  // Grand Total Row
+  for (let c = 0; c <= 12; c++) {
+    const ref = XLSX.utils.encode_cell({ r: totalRowIdx, c });
+    if (wsDispatches[ref]) {
+      wsDispatches[ref].s = (c >= 7 && c <= 10) ? STYLES.summaryTotalRight : STYLES.summaryTotal;
+    }
+  }
+
   wsDispatches['!cols'] = [
     { wch: 8 },  // Sr No
     { wch: 16 }, // Dispatch Date
@@ -309,37 +811,117 @@ export const exportDispatchHistoryExcel = (
     { wch: 35 }  // Barcodes
   ];
 
+  wsDispatches['!pageSetup'] = {
+    paperSize: 9, // A4
+    orientation: 'landscape',
+    fitToWidth: 1,
+    fitToHeight: 0
+  };
+  wsDispatches['!margins'] = {
+    left: 0.4,
+    right: 0.4,
+    top: 0.5,
+    bottom: 0.5,
+    header: 0.3,
+    footer: 0.3
+  };
+
   XLSX.utils.book_append_sheet(wb, wsDispatches, 'Delivery_Dispatches');
 
   // 2. SHEET 2: EVERY COMPANY DELIVERY SUMMARY
-  const companyRows = companySummary.map((c, idx) => ({
-    'Sr No': idx + 1,
-    'Company Name': c.name,
-    'Company Code': c.code,
-    'Total Challans': c.challansCount,
-    'Total Diamonds (pcs)': c.diamondsCount,
-    'Total Orig Weight (ct)': parseFloat(c.totalOrigWeight.toFixed(3)),
-    'Handed Weight (ct)': parseFloat(c.totalActualWeight.toFixed(3)),
-    'Net Weight Loss (ct)': parseFloat(c.loss.toFixed(3)),
-    'Yield (%)': `${c.yieldPercentage}%`,
-    'Status': 'DELIVERED'
-  }));
+  const compHeaders = [
+    'Sr No',
+    'Company Name',
+    'Company Code',
+    'Total Challans',
+    'Total Diamonds (pcs)',
+    'Total Orig Weight (ct)',
+    'Handed Weight (ct)',
+    'Net Weight Loss (ct)',
+    'Yield (%)',
+    'Status'
+  ];
 
-  // Company totals row
-  companyRows.push({
-    'Sr No': 'TOTAL',
-    'Company Name': `${companySummary.length} Companies`,
-    'Company Code': '',
-    'Total Challans': overallTotals.totalChallans || dispatches.length,
-    'Total Diamonds (pcs)': overallTotals.totalPieces || 0,
-    'Total Orig Weight (ct)': parseFloat((overallTotals.totalOriginalWeight || 0).toFixed(3)),
-    'Handed Weight (ct)': parseFloat((overallTotals.totalActualWeight || 0).toFixed(3)),
-    'Net Weight Loss (ct)': parseFloat((overallTotals.totalLoss || 0).toFixed(3)),
-    'Yield (%)': `${overallTotals.yieldPercentage || '100.00'}%`,
-    'Status': 'COMPLETED'
+  const compAoa = [
+    ['DIVY IMPEX — CLIENT COMPANY DELIVERY SUMMARY'],
+    [`Generated: ${dateFormatted} ${timeFormatted}   |   Scope: ${filters.scope || 'All Active Delivery Logs'}`],
+    [],
+    compHeaders
+  ];
+
+  companySummary.forEach((c, idx) => {
+    compAoa.push([
+      idx + 1,
+      c.name,
+      c.code,
+      c.challansCount,
+      c.diamondsCount,
+      parseFloat(c.totalOrigWeight.toFixed(3)),
+      parseFloat(c.totalActualWeight.toFixed(3)),
+      parseFloat(c.loss.toFixed(3)),
+      `${c.yieldPercentage}%`,
+      'DELIVERED'
+    ]);
   });
 
-  const wsCompany = XLSX.utils.json_to_sheet(companyRows);
+  const compTotalRowIdx = compAoa.length;
+  compAoa.push([
+    'TOTAL',
+    `${companySummary.length} Companies`,
+    '',
+    overallTotals.totalChallans || dispatches.length,
+    overallTotals.totalPieces || 0,
+    parseFloat((overallTotals.totalOriginalWeight || 0).toFixed(3)),
+    parseFloat((overallTotals.totalActualWeight || 0).toFixed(3)),
+    parseFloat((overallTotals.totalLoss || 0).toFixed(3)),
+    `${overallTotals.yieldPercentage || '100.00'}%`,
+    'COMPLETED'
+  ]);
+
+  const wsCompany = XLSX.utils.aoa_to_sheet(compAoa);
+  wsCompany['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }
+  ];
+
+  // Styles for Sheet 2
+  for (let c = 0; c <= 9; c++) {
+    const ref0 = XLSX.utils.encode_cell({ r: 0, c });
+    if (!wsCompany[ref0]) wsCompany[ref0] = { t: 's', v: '' };
+    wsCompany[ref0].s = STYLES.titleBanner;
+
+    const ref1 = XLSX.utils.encode_cell({ r: 1, c });
+    if (!wsCompany[ref1]) wsCompany[ref1] = { t: 's', v: '' };
+    wsCompany[ref1].s = STYLES.metadataStrip;
+
+    const refH = XLSX.utils.encode_cell({ r: 3, c });
+    if (wsCompany[refH]) {
+      wsCompany[refH].s = STYLES.tableHeader;
+    }
+  }
+
+  for (let r = 4; r < compTotalRowIdx; r++) {
+    for (let c = 0; c <= 9; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (wsCompany[ref]) {
+        if (c === 0 || c === 2 || c === 9) {
+          wsCompany[ref].s = STYLES.dataCellCenter;
+        } else if (c >= 3 && c <= 8) {
+          wsCompany[ref].s = STYLES.dataCellRight;
+        } else {
+          wsCompany[ref].s = STYLES.dataCellLeft;
+        }
+      }
+    }
+  }
+
+  for (let c = 0; c <= 9; c++) {
+    const ref = XLSX.utils.encode_cell({ r: compTotalRowIdx, c });
+    if (wsCompany[ref]) {
+      wsCompany[ref].s = (c >= 3 && c <= 8) ? STYLES.summaryTotalRight : STYLES.summaryTotal;
+    }
+  }
+
   wsCompany['!cols'] = [
     { wch: 8 },
     { wch: 24 },
@@ -352,55 +934,202 @@ export const exportDispatchHistoryExcel = (
     { wch: 12 },
     { wch: 14 }
   ];
+
+  wsCompany['!pageSetup'] = {
+    paperSize: 9,
+    orientation: 'landscape',
+    fitToWidth: 1,
+    fitToHeight: 0
+  };
+
   XLSX.utils.book_append_sheet(wb, wsCompany, 'Company_Summary');
 
   // 3. SHEET 3: EXECUTIVE OVERALL TOTALS
-  const summaryRows = [
-    { 'Metric': 'Report Title', 'Value': 'DIVY IMPEX - FINISHED GOODS DELIVERY & DISPATCH AUDIT REPORT' },
-    { 'Metric': 'Generated On', 'Value': new Date().toLocaleString('en-GB') },
-    { 'Metric': 'Filter Scope', 'Value': filters.scope || 'All Active Delivery Logs' },
-    { 'Metric': '', 'Value': '' },
-    { 'Metric': 'Total Dispatch Challans Executed', 'Value': overallTotals.totalChallans || dispatches.length },
-    { 'Metric': 'Total Finished Diamonds Handed Over', 'Value': `${overallTotals.totalPieces || 0} pcs` },
-    { 'Metric': 'Total Original / Assigned Weight', 'Value': `${(overallTotals.totalOriginalWeight || 0).toFixed(3)} ct` },
-    { 'Metric': 'Total Polished Weight Handed Over', 'Value': `${(overallTotals.totalActualWeight || 0).toFixed(3)} ct` },
-    { 'Metric': 'Total Weight Difference / Loss', 'Value': `${(overallTotals.totalLoss || 0).toFixed(3)} ct` },
-    { 'Metric': 'Overall Polishing Yield Rate', 'Value': `${overallTotals.yieldPercentage || '100.00'}%` },
-    { 'Metric': 'Distinct Client Companies Served', 'Value': companySummary.length }
+  const summaryAoa = [
+    ['DIVY IMPEX — EXECUTIVE DELIVERY & YIELD METRICS'],
+    [`Generated: ${dateFormatted} ${timeFormatted}`],
+    [],
+    ['Operational KPI Metric', 'Audit Value & Scope'],
+    ['Report Title', 'FINISHED GOODS DELIVERY & DISPATCH AUDIT REPORT'],
+    ['Generated On', `${dateFormatted} ${timeFormatted}`],
+    ['Filter Scope', filters.scope || 'All Active Delivery Logs'],
+    ['Total Dispatch Challans Executed', `${overallTotals.totalChallans || dispatches.length} Batches`],
+    ['Total Finished Diamonds Handed Over', `${overallTotals.totalPieces || 0} pcs`],
+    ['Total Original / Assigned Weight', `${(overallTotals.totalOriginalWeight || 0).toFixed(3)} ct`],
+    ['Total Polished Weight Handed Over', `${(overallTotals.totalActualWeight || 0).toFixed(3)} ct`],
+    ['Total Weight Difference / Loss', `${(overallTotals.totalLoss || 0).toFixed(3)} ct`],
+    ['Overall Polishing Yield Rate', `${overallTotals.yieldPercentage || '100.00'}%`],
+    ['Distinct Client Companies Served', `${companySummary.length} Companies`]
   ];
-  const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryAoa);
+  wsSummary['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } }
+  ];
+
+  for (let c = 0; c <= 1; c++) {
+    const ref0 = XLSX.utils.encode_cell({ r: 0, c });
+    if (!wsSummary[ref0]) wsSummary[ref0] = { t: 's', v: '' };
+    wsSummary[ref0].s = STYLES.titleBanner;
+
+    const ref1 = XLSX.utils.encode_cell({ r: 1, c });
+    if (!wsSummary[ref1]) wsSummary[ref1] = { t: 's', v: '' };
+    wsSummary[ref1].s = STYLES.metadataStrip;
+
+    const refH = XLSX.utils.encode_cell({ r: 3, c });
+    if (wsSummary[refH]) {
+      wsSummary[refH].s = STYLES.tableHeader;
+    }
+  }
+
+  for (let r = 4; r < summaryAoa.length; r++) {
+    const refK = XLSX.utils.encode_cell({ r, c: 0 });
+    const refV = XLSX.utils.encode_cell({ r, c: 1 });
+    if (wsSummary[refK]) {
+      wsSummary[refK].s = {
+        ...STYLES.dataCellLeft,
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '1E293B' } }
+      };
+    }
+    if (wsSummary[refV]) {
+      wsSummary[refV].s = STYLES.dataCellLeft;
+    }
+  }
+
   wsSummary['!cols'] = [
     { wch: 38 },
-    { wch: 45 }
+    { wch: 55 }
   ];
+
+  wsSummary['!pageSetup'] = {
+    paperSize: 9,
+    orientation: 'portrait',
+    fitToWidth: 1,
+    fitToHeight: 0
+  };
+
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Executive_Totals');
 
-  // 4. SHEET 4: ITEM-BY-ITEM INDIVIDUAL DIAMOND DETAILS
-  const itemRows = [];
+  // 4. SHEET 4: ITEM-BY-ITEM INDIVIDUAL DIAMOND DETAILS + TOTAL ROW
+  const itemHeaders = [
+    '#',
+    'Dispatch Date',
+    'Challan No',
+    'Diamond Barcode',
+    'Client Company',
+    'Shape',
+    'Orig Weight (ct)',
+    'Finished Weight (ct)',
+    'Loss (ct)',
+    'Artisan Worker',
+    'Receiver Person'
+  ];
+
+  const itemAoa = [
+    ['DIVY IMPEX — DISPATCHED DIAMONDS ITEMIZATION BREAKDOWN'],
+    [`Generated: ${dateFormatted} ${timeFormatted}   |   Scope: ${filters.scope || 'All Active Delivery Logs'}`],
+    [],
+    itemHeaders
+  ];
+
   let itemIdx = 1;
+  let dispatchTotalOrigW = 0;
+  let dispatchTotalActW = 0;
+  let dispatchTotalLossW = 0;
+
   dispatches.forEach((dp) => {
     (dp.diamonds || []).forEach((d) => {
       const orig = parseFloat(d.weight || 0);
       const act = parseFloat(d.actualWeight || 0);
       const loss = act - orig;
-      itemRows.push({
-        '#': itemIdx++,
-        'Dispatch Date': dp.dispatchDate,
-        'Challan No': dp.challanNo,
-        'Diamond Barcode': d.barcode,
-        'Client Company': `${dp.companyName} (${dp.companyCode})`,
-        'Shape': d.shape || d.size || '-',
-        'Orig Weight (ct)': parseFloat(orig.toFixed(3)),
-        'Finished Weight (ct)': parseFloat(act.toFixed(3)),
-        'Loss (ct)': parseFloat(loss.toFixed(3)),
-        'Artisan Worker': d.workerName || '-',
-        'Receiver Person': dp.receiverName || '-'
-      });
+
+      dispatchTotalOrigW += orig;
+      dispatchTotalActW += act;
+      dispatchTotalLossW += loss;
+
+      itemAoa.push([
+        itemIdx++,
+        dp.dispatchDate,
+        dp.challanNo,
+        d.barcode,
+        `${dp.companyName} (${dp.companyCode})`,
+        d.shape || d.size || '-',
+        parseFloat(orig.toFixed(3)),
+        parseFloat(act.toFixed(3)),
+        parseFloat(loss.toFixed(3)),
+        d.workerName || '-',
+        dp.receiverName || '-'
+      ]);
     });
   });
 
-  if (itemRows.length > 0) {
-    const wsItems = XLSX.utils.json_to_sheet(itemRows);
+  const dispatchItemTotalRowIdx = itemAoa.length;
+  itemAoa.push([
+    'TOTAL',
+    'GRAND TOTAL SUMMARY',
+    `${dispatches.length} Challans`,
+    `${itemIdx - 1} Diamonds`,
+    'ALL CLIENTS',
+    'ALL SHAPES',
+    parseFloat(dispatchTotalOrigW.toFixed(3)),
+    parseFloat(dispatchTotalActW.toFixed(3)),
+    parseFloat(dispatchTotalLossW.toFixed(3)),
+    'DISPATCH REGISTER',
+    'AUDITED'
+  ]);
+
+  if (itemAoa.length > 5) {
+    const wsItems = XLSX.utils.aoa_to_sheet(itemAoa);
+    wsItems['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } }
+    ];
+
+    for (let c = 0; c <= 10; c++) {
+      const ref0 = XLSX.utils.encode_cell({ r: 0, c });
+      if (!wsItems[ref0]) wsItems[ref0] = { t: 's', v: '' };
+      wsItems[ref0].s = STYLES.titleBanner;
+
+      const ref1 = XLSX.utils.encode_cell({ r: 1, c });
+      if (!wsItems[ref1]) wsItems[ref1] = { t: 's', v: '' };
+      wsItems[ref1].s = STYLES.metadataStrip;
+
+      const refH = XLSX.utils.encode_cell({ r: 3, c });
+      if (wsItems[refH]) {
+        wsItems[refH].s = STYLES.tableHeader;
+      }
+    }
+
+    for (let r = 4; r < dispatchItemTotalRowIdx; r++) {
+      for (let c = 0; c <= 10; c++) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (wsItems[ref]) {
+          if (c === 0 || c === 1 || c === 3) {
+            wsItems[ref].s = STYLES.dataCellCenter;
+          } else if (c >= 6 && c <= 8) {
+            wsItems[ref].s = STYLES.dataCellRight;
+          } else {
+            wsItems[ref].s = STYLES.dataCellLeft;
+          }
+        }
+      }
+    }
+
+    // Grand Total Row
+    for (let c = 0; c <= 10; c++) {
+      const ref = XLSX.utils.encode_cell({ r: dispatchItemTotalRowIdx, c });
+      if (wsItems[ref]) {
+        if (c >= 6 && c <= 8) {
+          wsItems[ref].s = STYLES.summaryTotalRight;
+        } else if (c === 1) {
+          wsItems[ref].s = STYLES.summaryTotalLeft;
+        } else {
+          wsItems[ref].s = STYLES.summaryTotal;
+        }
+      }
+    }
+
     wsItems['!cols'] = [
       { wch: 6 },
       { wch: 14 },
@@ -414,10 +1143,18 @@ export const exportDispatchHistoryExcel = (
       { wch: 18 },
       { wch: 22 }
     ];
+
+    wsItems['!pageSetup'] = {
+      paperSize: 9, // A4
+      orientation: 'landscape',
+      fitToWidth: 1,
+      fitToHeight: 0
+    };
+
     XLSX.utils.book_append_sheet(wb, wsItems, 'Diamond_Itemization');
   }
 
-  // Write actual native .xlsx file (safely handled by SheetJS browser export)
+  // Write actual native .xlsx file with embedded styling
   XLSX.writeFile(wb, `${filename}.xlsx`);
 };
 
