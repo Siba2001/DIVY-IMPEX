@@ -41,16 +41,22 @@ const Reports = () => {
   const [expandedDates, setExpandedDates] = useState({});
 
   const reportTypes = [
-    { id: '1', name: '1. Monthly Stock & Shape Matrix (Company-Wise)' },
-    { id: '2', name: '2. Date-Wise Received Inward Report' },
-    { id: '3', name: '3. Date-Wise Completed Report' },
-    { id: '4', name: '4. Date-Wise Pending Report' },
-    { id: '5', name: '5. Worker-Wise Performance Report' },
-    { id: '6', name: '6. Diamond Master Audit Report' },
-    { id: '7', name: '7. Inward Parcel Physical Log Report' },
-    { id: '8', name: '8. QC Safe Deposit Report' },
-    { id: '9', name: '9. Dual Scale Carat Verification Report' },
+    { id: '1', label: '1. Monthly Stock & Shape Matrix (Company-Wise)', name: 'Monthly Stock & Shape Matrix (Company-Wise)' },
+    { id: '2', label: '2. Date-Wise Received Inward Report', name: 'Date-Wise Received Inward Report' },
+    { id: '3', label: '3. Date-Wise Completed Report', name: 'Date-Wise Completed Report' },
+    { id: '4', label: '4. Date-Wise Pending Report', name: 'Date-Wise Pending Report' },
+    { id: '5', label: '5. Worker-Wise Performance Report', name: 'Worker-Wise Performance Report' },
+    { id: '6', label: '6. Diamond Master Audit Report', name: 'Diamond Master Audit Report' },
+    { id: '7', label: '7. Inward Parcel Physical Log Report', name: 'Inward Parcel Physical Log Report' },
+    { id: '8', label: '8. QC Safe Deposit Report', name: 'QC Safe Deposit Report' },
+    { id: '9', label: '9. Dual Scale Carat Verification Report', name: 'Dual Scale Carat Verification Report' },
   ];
+
+  // Strip leading numbering for clean heading and print titles (e.g. "4. Date-Wise Pending Report" -> "Date-Wise Pending Report")
+  const currentReportName = useMemo(() => {
+    const r = reportTypes.find((item) => item.id === activeReportType);
+    return r ? (r.name || r.label || '').replace(/^\d+\.\s*/, '').trim() : 'Official Audit Report';
+  }, [activeReportType]);
 
   // Quick Date Range Helpers
   const handleSetQuickDate = (preset) => {
@@ -189,7 +195,7 @@ const Reports = () => {
       VerifiedDate: d.verifiedDate || '',
       Remarks: d.remarks || ''
     }));
-    const reportTitle = reportTypes.find((r) => r.id === activeReportType)?.name || 'Diamond_Report';
+    const reportTitle = currentReportName || 'Diamond_Report';
     exportToCSV(reportTitle.replace(/[^a-zA-Z0-9]/g, '_'), exportRows);
   };
 
@@ -225,7 +231,7 @@ const Reports = () => {
       CompletedDate: d.completedDate || '',
       VerifiedDate: d.verifiedDate || ''
     }));
-    const reportTitle = reportTypes.find((r) => r.id === activeReportType)?.name || 'Diamond_Report';
+    const reportTitle = currentReportName || 'Diamond_Report';
     exportToExcel(reportTitle.replace(/[^a-zA-Z0-9]/g, '_'), exportRows, {
       title: `DIVY IMPEX — ${reportTitle}`,
       generatedBy: user?.name || user?.username || 'Admin Manager',
@@ -247,7 +253,7 @@ const Reports = () => {
             >
               {reportTypes.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name}
+                  {r.label || r.name}
                 </option>
               ))}
             </select>
@@ -417,7 +423,7 @@ const Reports = () => {
           <div className="print-banner-title">
             DIVY IMPEX — {activeReportType === '1'
               ? (viewMode === 'matrix' ? 'MONTHLY STOCK & SHAPE MATRIX LEDGER' : 'DETAILED DIAMOND ITEMIZATION AUDIT REGISTER')
-              : (reportTypes.find((r) => r.id === activeReportType)?.name || 'OFFICIAL AUDIT REPORT').toUpperCase()}
+              : (currentReportName || 'OFFICIAL AUDIT REPORT').toUpperCase()}
           </div>
           <div className="print-banner-meta">
             <span><strong>Generated On:</strong> {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
@@ -442,7 +448,7 @@ const Reports = () => {
                   ? selectedCompany
                     ? `${selectedCompany.name} - Monthly Stock & Shape Matrix`
                     : 'All Companies - Monthly Stock & Shape Matrix'
-                  : `DIVY IMPEX - ${reportTypes.find((r) => r.id === activeReportType)?.name}`}
+                  : `DIVY IMPEX - ${currentReportName}`}
               </h5>
               {selectedCompany && (
                 <span className="badge font-mono fw-bold px-2 py-1" style={{ backgroundColor: '#F1F5F9', color: '#0A192F', border: '1px solid #CBD5E1' }}>
