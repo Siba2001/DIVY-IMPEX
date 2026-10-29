@@ -787,20 +787,46 @@ const Reports = () => {
                   ))
                 )}
               </tbody>
-              {reportData.length > 0 && (
-                <tfoot className="table-light fw-bold">
-                  <tr>
-                    <td colSpan="5">Total Calculated ({reportData.length} Diamonds)</td>
-                    <td className="fw-bold text-navy">
-                      {reportData.reduce((sum, d) => sum + (parseFloat(d.weight) || 0), 0).toFixed(3)} ct
-                    </td>
-                    <td className="fw-bold text-success">
-                      {reportData.reduce((sum, d) => sum + (parseFloat(d.actualWeight) || 0), 0).toFixed(3)} ct
-                    </td>
-                    <td colSpan="4"></td>
-                  </tr>
-                </tfoot>
-              )}
+              {reportData.length > 0 && (() => {
+                const totalOrigWeight = reportData.reduce((sum, d) => sum + (parseFloat(d.weight) || 0), 0);
+                const weighedDiamonds = reportData.filter((d) => parseFloat(d.actualWeight) > 0);
+                const totalActualWeight = weighedDiamonds.reduce((sum, d) => sum + (parseFloat(d.actualWeight) || 0), 0);
+                const pendingCount = reportData.length - weighedDiamonds.length;
+
+                return (
+                  <tfoot className="table-light fw-bold">
+                    <tr>
+                      <td colSpan="5">
+                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                          <span>Total Calculated ({reportData.length} Diamonds)</span>
+                          {pendingCount > 0 ? (
+                            <span className="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 fw-semibold px-2 py-1" style={{ fontSize: '0.74rem' }}>
+                              {weighedDiamonds.length} Weighed &middot; {pendingCount} Pending Weighing
+                            </span>
+                          ) : (
+                            <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 fw-semibold px-2 py-1" style={{ fontSize: '0.74rem' }}>
+                              All {weighedDiamonds.length} Weighed
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="fw-bold text-navy text-nowrap">
+                        <div>{totalOrigWeight.toFixed(3)} ct</div>
+                        <small className="text-muted fw-normal d-block" style={{ fontSize: '0.7rem' }}>
+                          (Total Rough)
+                        </small>
+                      </td>
+                      <td className="fw-bold text-success text-nowrap">
+                        <div>{totalActualWeight.toFixed(3)} ct</div>
+                        <small className="text-muted fw-normal d-block" style={{ fontSize: '0.7rem' }}>
+                          {pendingCount > 0 ? `(${weighedDiamonds.length} polished pcs)` : '(All polished)'}
+                        </small>
+                      </td>
+                      <td colSpan="4"></td>
+                    </tr>
+                  </tfoot>
+                );
+              })()}
             </table>
           </div>
         )}

@@ -125,9 +125,11 @@ const CompanySubmission = () => {
   // Overall KPIs
   const overallMetrics = useMemo(() => {
     const returnedDiamonds = diamonds.filter((d) => d.status === 'RETURNED');
-    let returnedWeight = 0;
+    let returnedOrigWeight = 0;
+    let returnedActualWeight = 0;
     returnedDiamonds.forEach((d) => {
-      returnedWeight += parseFloat(d.actualWeight || d.weight) || 0;
+      returnedOrigWeight += parseFloat(d.weight) || 0;
+      returnedActualWeight += parseFloat(d.actualWeight || d.weight) || 0;
     });
 
     const distinctCompaniesPending = new Set(completedDiamonds.map((d) => d.companyId)).size;
@@ -136,7 +138,8 @@ const CompanySubmission = () => {
       readyCount: completedDiamonds.length,
       readyWeight: readyCalculations.origWeight,
       returnedCount: returnedDiamonds.length,
-      returnedWeight: parseFloat(returnedWeight.toFixed(3)),
+      returnedOrigWeight: parseFloat(returnedOrigWeight.toFixed(3)),
+      returnedWeight: parseFloat(returnedActualWeight.toFixed(3)),
       distinctCompaniesPending,
       totalDispatches: dispatches.length
     };
@@ -488,8 +491,13 @@ const CompanySubmission = () => {
                   {overallMetrics.returnedCount} <span className="small fs-6 fw-normal text-muted">pcs</span>
                 </h4>
                 <div className="text-secondary small mt-1" style={{ fontSize: '0.78rem' }}>
-                  Total Handed: <strong className="text-dark">{overallMetrics.returnedWeight} ct</strong>
+                  Handed (Polished): <strong className="text-dark">{overallMetrics.returnedWeight} ct</strong>
                 </div>
+                {overallMetrics.returnedOrigWeight > 0 && (
+                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                    Rough Inward: <span className="fw-semibold text-secondary">{overallMetrics.returnedOrigWeight} ct</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
