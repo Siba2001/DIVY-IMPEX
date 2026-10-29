@@ -491,13 +491,11 @@ const CompanySubmission = () => {
                   {overallMetrics.returnedCount} <span className="small fs-6 fw-normal text-muted">pcs</span>
                 </h4>
                 <div className="text-secondary small mt-1" style={{ fontSize: '0.78rem' }}>
-                  Handed (Polished): <strong className="text-dark">{overallMetrics.returnedWeight} ct</strong>
+                  Rough Inward: <strong className="text-dark">{overallMetrics.returnedOrigWeight} ct</strong>
                 </div>
-                {overallMetrics.returnedOrigWeight > 0 && (
-                  <div className="text-muted" style={{ fontSize: '0.72rem' }}>
-                    Rough Inward: <span className="fw-semibold text-secondary">{overallMetrics.returnedOrigWeight} ct</span>
-                  </div>
-                )}
+                <div className="text-muted" style={{ fontSize: '0.72rem' }}>
+                  Handed (Polished): <strong className="text-success">{overallMetrics.returnedWeight} ct</strong>
+                </div>
               </div>
             </div>
           </div>
