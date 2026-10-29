@@ -32,17 +32,17 @@ const Manufacturing = () => {
               const numStr = String(idx + 1).padStart(2, '0');
               return (
                 <div key={idx} className="col-md-6 col-lg-4">
-                  <div className="card card-custom h-100 p-4 border shadow-sm position-relative">
+                  <div className="process-step-card h-100">
                     <div className="d-flex align-items-center justify-content-between mb-3">
-                      <div className="p-3 bg-navy text-warning rounded-3" style={{ backgroundColor: '#0A192F' }}>
+                      <div className="p-3 process-icon-box flex-shrink-0">
                         <IconComp size={24} />
                       </div>
-                      <span className="font-heading fw-bold display-6 text-muted opacity-25">{numStr}</span>
+                      <span className="process-step-num display-6">{numStr}</span>
                     </div>
                     <h5 className="font-heading fw-bold text-navy mb-2" style={{ color: '#0A192F' }}>
                       {step.title.replace(/^\d+\.\s*/, '')}
                     </h5>
-                    <p className="text-secondary small mb-0">{step.desc}</p>
+                    <p className="text-secondary small mb-0 leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
               );

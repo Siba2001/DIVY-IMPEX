@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import PublicLayout from '../../layouts/PublicLayout';
 import Diamond360Viewer from '../../components/common/Diamond360Viewer';
@@ -18,6 +18,33 @@ import {
 } from 'lucide-react';
 
 const Home = () => {
+  const bannerRef = useRef(null);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (bannerRef.current) {
+            const rect = bannerRef.current.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+            if (rect.top < windowHeight && rect.bottom > 0) {
+              const offset = (windowHeight / 2 - (rect.top + rect.height / 2)) * 0.12;
+              setScrollY(offset);
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const processSteps = [
     { num: '01', title: 'Diamond Received', desc: 'Rough diamonds received securely from client diamond companies with parcel verification.', icon: PackageIcon },
     { num: '02', title: 'Inspection & Planning', desc: '3D Laser scanning and tension mapping to determine optimal cut yield and clarity.', icon: Shield },
@@ -182,14 +209,21 @@ const Home = () => {
       </section>
 
       {/* Craftsmanship Banner Showcase Section */}
-      <section className="py-0 bg-navy overflow-hidden">
+      <section ref={bannerRef} className="py-0 bg-navy overflow-hidden">
         <div className="container-fluid p-0">
-          <div className="position-relative">
+          <div className="position-relative overflow-hidden" style={{ maxHeight: '480px', minHeight: '260px' }}>
             <img
               src="/images/diamond_craftsman_banner.jpg"
               alt="Heartful Diamonds - The Heart of Every Diamond"
               className="w-100 object-fit-cover"
-              style={{ maxHeight: '480px', minHeight: '260px', objectPosition: 'center' }}
+              style={{
+                maxHeight: '520px',
+                minHeight: '280px',
+                objectPosition: 'center',
+                transform: `translateY(${scrollY}px) scale(1.05)`,
+                transition: 'transform 0.12s ease-out',
+                willChange: 'transform'
+              }}
             />
             <div className="position-absolute bottom-0 start-0 w-100 p-3 p-md-4" style={{ background: 'linear-gradient(to top, rgba(10, 25, 47, 0.95) 0%, rgba(10, 25, 47, 0.65) 65%, transparent 100%)' }}>
               <div className="container">
@@ -226,8 +260,8 @@ const Home = () => {
 
               <div className="row g-3 mb-4">
                 <div className="col-12 col-sm-6">
-                  <div className="d-flex align-items-center p-3 rounded-3 bg-light border h-100">
-                    <Shield className="text-warning me-3 flex-shrink-0" size={24} />
+                  <div className="d-flex align-items-center p-3 craft-feature-card bg-light h-100">
+                    <Shield className="text-warning me-3 flex-shrink-0 feature-icon" size={24} />
                     <div>
                       <h6 className="fw-bold mb-0 text-navy">100% Barcode Verified</h6>
                       <small className="text-muted">Zero mismatch tolerance</small>
@@ -235,8 +269,8 @@ const Home = () => {
                   </div>
                 </div>
                 <div className="col-12 col-sm-6">
-                  <div className="d-flex align-items-center p-3 rounded-3 bg-light border h-100">
-                    <Zap className="text-warning me-3 flex-shrink-0" size={24} />
+                  <div className="d-flex align-items-center p-3 craft-feature-card bg-light h-100">
+                    <Zap className="text-warning me-3 flex-shrink-0 feature-icon" size={24} />
                     <div>
                       <h6 className="fw-bold mb-0 text-navy">Rapid Turnaround</h6>
                       <small className="text-muted">Streamlined worker workflow</small>
@@ -252,22 +286,35 @@ const Home = () => {
 
             <div className="col-12 col-lg-6 mt-4 mt-lg-0">
               <div className="row g-2 g-md-3">
-                <div className="col-6">
-                  <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-2 mb-md-3">
-                    <img src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=600&q=80" alt="Diamond Artisan" className="img-fluid w-100" />
+                <div className="col-6 craft-collage-col-1">
+                  {/* Box 1: Image with shimmer light sweep and zoom */}
+                  <div className="craft-card-box shimmer-glow-wrap mb-2 mb-md-3 shadow-sm" style={{ height: '175px' }}>
+                    <img
+                      src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=600&q=80"
+                      alt="Diamond Artisan"
+                      className="img-fluid w-100 h-100 object-fit-cover zoom-img"
+                    />
                   </div>
-                  <div className="card bg-navy text-white p-3 p-md-4 rounded-4">
-                    <h4 className="font-heading fw-bold text-warning mb-1">100+</h4>
+                  {/* Box 2: Navy 100+ Master Polishers Metric Card */}
+                  <div className="craft-card-box navy-box text-white p-3 p-md-4 shadow-sm" style={{ backgroundColor: '#0A192F', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <h4 className="font-heading fw-bold mb-1" style={{ color: '#D4AF37' }}>100+</h4>
                     <span className="small text-slate-300">Master Polishers & Technicians</span>
                   </div>
                 </div>
-                <div className="col-6 pt-3 pt-md-4">
-                  <div className="card bg-light border p-3 p-md-4 rounded-4 mb-2 mb-md-3">
-                    <h4 className="font-heading fw-bold text-navy mb-1">0.001 ct</h4>
+
+                <div className="col-6 pt-3 pt-md-4 craft-collage-col-2">
+                  {/* Box 3: White 0.001 ct Metric Card */}
+                  <div className="craft-card-box light-box bg-light border p-3 p-md-4 mb-2 mb-md-3 shadow-sm">
+                    <h4 className="font-heading fw-bold text-navy mb-1" style={{ color: '#0A192F' }}>0.001 ct</h4>
                     <span className="small text-muted">Carat Scale Precision</span>
                   </div>
-                  <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1600003014755-ba31aa59c4b6?auto=format&fit=crop&w=600&q=80" alt="Diamond Polishing" className="img-fluid w-100" />
+                  {/* Box 4: Image with shimmer light sweep and zoom */}
+                  <div className="craft-card-box shimmer-glow-wrap shadow-sm" style={{ height: '175px' }}>
+                    <img
+                      src="https://images.unsplash.com/photo-1600003014755-ba31aa59c4b6?auto=format&fit=crop&w=600&q=80"
+                      alt="Diamond Polishing"
+                      className="img-fluid w-100 h-100 object-fit-cover zoom-img"
+                    />
                   </div>
                 </div>
               </div>
@@ -294,15 +341,15 @@ const Home = () => {
               const IconComp = step.icon;
               return (
                 <div key={step.num} className="col-12 col-sm-6 col-lg-4">
-                  <div className="card card-custom h-100 p-4 border-0 shadow-sm hover-translate position-relative">
+                  <div className="process-step-card h-100">
                     <div className="d-flex align-items-center justify-content-between mb-3">
-                      <div className="p-3 rounded-3 bg-navy text-warning" style={{ backgroundColor: '#0A192F' }}>
+                      <div className="p-3 process-icon-box flex-shrink-0">
                         <IconComp size={24} />
                       </div>
-                      <span className="font-heading fw-bold display-6 text-muted opacity-25">{step.num}</span>
+                      <span className="process-step-num display-6">{step.num}</span>
                     </div>
                     <h5 className="font-heading fw-bold text-navy mb-2" style={{ color: '#0A192F' }}>{step.title}</h5>
-                    <p className="text-secondary small mb-0">{step.desc}</p>
+                    <p className="text-secondary small mb-0 leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
               );
@@ -335,20 +382,23 @@ const Home = () => {
           <div className="row g-3 g-md-4">
             {sampleDiamonds.map((d, i) => (
               <div key={i} className="col-12 col-sm-6 col-lg-4">
-                <div className="card card-custom h-100 overflow-hidden border">
-                  <div className="position-relative" style={{ height: '220px', overflow: 'hidden' }}>
-                    <img src={d.img} alt={d.title} className="w-100 h-100 object-fit-cover" />
-                    <span className="badge bg-navy text-warning position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill font-heading">
-                      Premium Cut
+                <div className="diamond-showcase-card h-100 card-hover-box">
+                  {/* Image area with shimmer light sweep and zoom */}
+                  <div className="position-relative shimmer-glow-wrap" style={{ height: '230px' }}>
+                    <img src={d.img} alt={d.title} className="w-100 h-100 object-fit-cover zoom-img" />
+                    <span className="badge premium-cut-badge position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill font-heading">
+                      <Sparkles size={12} className="me-1 text-warning d-inline-block" /> Premium Cut
                     </span>
                   </div>
-                  <div className="card-body p-3 p-md-4">
-                    <h5 className="font-heading fw-bold text-navy mb-3" style={{ color: '#0A192F' }}>{d.title}</h5>
+                  <div className="p-3 p-md-4">
+                    <h5 className="font-heading fw-bold text-navy card-title-link mb-3" style={{ color: '#0A192F' }}>
+                      {d.title}
+                    </h5>
                     <div className="row g-2 small text-muted border-top pt-3">
-                      <div className="col-6"><strong>Carat Weight:</strong> {d.carat}</div>
-                      <div className="col-6"><strong>Clarity Range:</strong> {d.clarity}</div>
-                      <div className="col-6"><strong>Color Grade:</strong> {d.color}</div>
-                      <div className="col-6"><strong>Symmetry:</strong> Excellent</div>
+                      <div className="col-6 spec-chip"><strong>Carat Weight:</strong> {d.carat}</div>
+                      <div className="col-6 spec-chip"><strong>Clarity Range:</strong> {d.clarity}</div>
+                      <div className="col-6 spec-chip"><strong>Color Grade:</strong> {d.color}</div>
+                      <div className="col-6 spec-chip"><strong>Symmetry:</strong> Excellent</div>
                     </div>
                   </div>
                 </div>
@@ -388,7 +438,7 @@ const Home = () => {
 
                 <div className="row g-4">
                   <div className="col-12 col-md-6">
-                    <div className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="hq-detail-box h-100">
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Company Owner</small>
                       <h5 className="fw-bold mb-1" style={{ color: '#F5D466' }}>Chandrakant Vaghasiya</h5>
                       <span className="small" style={{ color: '#CBD5E1' }}>Proprietor & Production Head</span>
@@ -396,7 +446,7 @@ const Home = () => {
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <div className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="hq-detail-box h-100">
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Direct Phone & Support</small>
                       <h5 className="fw-bold mb-1"><a href="tel:+919879452045" className="text-warning text-decoration-none fw-bold">+91 98794 52045</a></h5>
                       <span className="small" style={{ color: '#CBD5E1' }}>Mon - Sat: 09:00 AM - 07:00 PM</span>
@@ -404,7 +454,7 @@ const Home = () => {
                   </div>
 
                   <div className="col-12">
-                    <div className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="hq-detail-box">
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Works Address</small>
                       <p className="mb-0 small leading-relaxed" style={{ color: '#E2E8F0' }}>
                         FP - 75, 3rd Floor, Room No.-8, G. K. Chambers, Kohinoor Society, Varachha Road, Surat - 395006, Gujarat, India

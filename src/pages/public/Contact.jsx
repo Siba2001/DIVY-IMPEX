@@ -18,11 +18,11 @@ const Contact = () => {
       {/* Craftsmanship Banner */}
       <section className="py-4 bg-navy overflow-hidden">
         <div className="container">
-          <div className="position-relative rounded-4 overflow-hidden shadow-lg border">
+          <div className="position-relative rounded-4 overflow-hidden shadow-lg border shimmer-glow-wrap">
             <img
               src="/images/diamond_craftsman_banner.jpg"
               alt="Heartful Diamonds - The Heart of Every Diamond"
-              className="w-100 object-fit-cover"
+              className="w-100 object-fit-cover zoom-img"
               style={{ maxHeight: '340px', objectPosition: 'center' }}
             />
             <div className="position-absolute bottom-0 start-0 w-100 p-3 p-md-4" style={{ background: 'linear-gradient(to top, rgba(10, 25, 47, 0.95) 0%, rgba(10, 25, 47, 0.65) 65%, transparent 100%)' }}>
@@ -48,8 +48,8 @@ const Contact = () => {
                 Manufacturing Facilities
               </h3>
 
-              <div className="d-flex mb-4 p-3 bg-light rounded-4 border">
-                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
+              <div className="d-flex mb-4 p-3 contact-info-card">
+                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0 contact-icon" style={{ backgroundColor: '#0A192F' }}>
                   <MapPin size={24} />
                 </div>
                 <div>
@@ -58,8 +58,8 @@ const Contact = () => {
                 </div>
               </div>
 
-              <div className="d-flex mb-4 p-3 bg-light rounded-4 border">
-                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
+              <div className="d-flex mb-4 p-3 contact-info-card">
+                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0 contact-icon" style={{ backgroundColor: '#0A192F' }}>
                   <Phone size={24} />
                 </div>
                 <div>
@@ -70,8 +70,8 @@ const Contact = () => {
                 </div>
               </div>
 
-              <div className="d-flex mb-4 p-3 bg-light rounded-4 border">
-                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
+              <div className="d-flex mb-4 p-3 contact-info-card">
+                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0 contact-icon" style={{ backgroundColor: '#0A192F' }}>
                   <Mail size={24} />
                 </div>
                 <div>
@@ -80,8 +80,8 @@ const Contact = () => {
                 </div>
               </div>
 
-              <div className="d-flex p-3 bg-light rounded-4 border">
-                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0" style={{ backgroundColor: '#0A192F' }}>
+              <div className="d-flex p-3 contact-info-card">
+                <div className="p-3 bg-navy text-warning rounded-3 me-3 flex-shrink-0 contact-icon" style={{ backgroundColor: '#0A192F' }}>
                   <Clock size={24} />
                 </div>
                 <div>
@@ -102,7 +102,7 @@ const Contact = () => {
 
                 <div className="row g-4 text-white">
                   <div className="col-12 col-md-6">
-                    <div className="p-3.5 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="hq-detail-box h-100">
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Company Owner</small>
                       <h5 className="fw-bold mb-1">Chandrakant Vaghasiya</h5>
                       <span className="text-slate-300 small" style={{ color: '#CBD5E1' }}>Proprietor & Production Head</span>
@@ -110,7 +110,7 @@ const Contact = () => {
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <div className="p-3.5 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="hq-detail-box h-100">
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Direct Phone Support</small>
                       <h5 className="fw-bold mb-1"><a href="tel:+919879452045" className="text-white text-decoration-none">+91 98794 52045</a></h5>
                       <span className="text-slate-300 small" style={{ color: '#CBD5E1' }}>Mon - Sat: 09:00 AM - 07:00 PM</span>
@@ -118,7 +118,7 @@ const Contact = () => {
                   </div>
 
                   <div className="col-12">
-                    <div className="p-3.5 rounded-3" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="hq-detail-box">
                       <small className="text-warning font-heading fw-bold d-block text-uppercase mb-1" style={{ letterSpacing: '0.05em' }}>Manufacturing Location</small>
                       <p className="text-white mb-0 small leading-relaxed">
                         FP - 75, 3rd Floor, Room No.-8, G. K. Chambers, Kohinoor Society, Varachha Road, Surat - 395006, Gujarat, India
