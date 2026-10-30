@@ -19,7 +19,8 @@ import {
   Filter,
   Trash2,
   FileBarChart2,
-  Truck
+  Truck,
+  Scale
 } from 'lucide-react';
 
 const CompanyDetails = () => {
@@ -67,13 +68,33 @@ const CompanyDetails = () => {
     companyDiamonds = companyDiamonds.filter((d) => d.receivedDate <= toDate);
   }
 
-  // Calculate aggregates with 100% mathematical integrity
+  // Helper for safe weight extraction
+  const getWeight = (d) => parseFloat(d?.weight) || 0;
+  const getActualOrOrigWeight = (d) => parseFloat(d?.actualWeight || d?.weight) || 0;
+
+  // Calculate aggregates (Pieces & Carat Weights) with 100% mathematical integrity
   const totalReceived = companyDiamonds.length;
-  const submitted = companyDiamonds.filter((d) => d.status === 'RETURNED').length;
-  const inFactoryBalance = totalReceived - submitted;
-  const completed = companyDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
-  const inProduction = companyDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)).length;
-  const pending = companyDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status)).length;
+  const totalReceivedWeight = companyDiamonds.reduce((sum, d) => sum + getWeight(d), 0);
+
+  const submittedDiamonds = companyDiamonds.filter((d) => d.status === 'RETURNED');
+  const submitted = submittedDiamonds.length;
+  const submittedWeight = submittedDiamonds.reduce((sum, d) => sum + getActualOrOrigWeight(d), 0);
+
+  const inFactoryDiamonds = companyDiamonds.filter((d) => d.status !== 'RETURNED');
+  const inFactoryBalance = inFactoryDiamonds.length;
+  const inFactoryWeight = inFactoryDiamonds.reduce((sum, d) => sum + getActualOrOrigWeight(d), 0);
+
+  const completedDiamonds = companyDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status));
+  const completed = completedDiamonds.length;
+  const completedWeight = completedDiamonds.reduce((sum, d) => sum + getActualOrOrigWeight(d), 0);
+
+  const inProductionDiamonds = companyDiamonds.filter((d) => ['IN PROGRESS', 'WORK COMPLETED'].includes(d.status));
+  const inProduction = inProductionDiamonds.length;
+  const inProductionWeight = inProductionDiamonds.reduce((sum, d) => sum + getActualOrOrigWeight(d), 0);
+
+  const pendingDiamonds = companyDiamonds.filter((d) => ['RECEIVED', 'ASSIGNED', 'DEPOSITED', 'REWORK'].includes(d.status));
+  const pending = pendingDiamonds.length;
+  const pendingWeight = pendingDiamonds.reduce((sum, d) => sum + getWeight(d), 0);
 
   // Group date-wise summary with 100% mathematical integrity (received = submitted + inFactory)
   const dateWiseMap = {};
@@ -83,28 +104,42 @@ const CompanyDetails = () => {
       dateWiseMap[dDate] = {
         date: dDate,
         received: 0,
+        receivedWeight: 0,
         inFactory: 0,
+        inFactoryWeight: 0,
         assigned: 0,
         inProgress: 0,
         completed: 0,
+        completedWeight: 0,
         submitted: 0,
-        pending: 0
+        submittedWeight: 0,
+        pending: 0,
+        pendingWeight: 0
       };
     }
+    const origW = getWeight(d);
+    const effW = getActualOrOrigWeight(d);
+
     dateWiseMap[dDate].received += 1;
+    dateWiseMap[dDate].receivedWeight += origW;
+
     if (d.status === 'RETURNED') {
       dateWiseMap[dDate].submitted += 1;
+      dateWiseMap[dDate].submittedWeight += effW;
     } else {
       dateWiseMap[dDate].inFactory += 1;
+      dateWiseMap[dDate].inFactoryWeight += effW;
       if (d.status === 'ASSIGNED') {
         dateWiseMap[dDate].assigned += 1;
       } else if (['IN PROGRESS', 'WORK COMPLETED'].includes(d.status)) {
         dateWiseMap[dDate].inProgress += 1;
       } else if (['COMPLETED', 'VERIFIED', 'DEPOSITED'].includes(d.status)) {
         dateWiseMap[dDate].completed += 1;
+        dateWiseMap[dDate].completedWeight += effW;
       } else {
         // RECEIVED, REWORK, and any other initial pending status
         dateWiseMap[dDate].pending += 1;
+        dateWiseMap[dDate].pendingWeight += origW;
       }
     }
   });
@@ -131,7 +166,7 @@ const CompanyDetails = () => {
   return (
     <PrivateLayout title={`Company Profile - ${company.name}`}>
       {/* Header Info Banner */}
-      <div className="card card-custom p-3 p-md-4 mb-4 shadow-sm">
+      <div className="card card-custom p-3 p-md-4 mb-3 shadow-sm">
         <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
           <div className="d-flex align-items-start align-items-sm-center">
             <button className="btn btn-light border rounded-circle p-2 me-3 flex-shrink-0" onClick={() => navigate('/companies')}>
@@ -174,25 +209,79 @@ const CompanyDetails = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards (Detailed Breakdown) */}
       <div className="row g-2 mb-3">
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard title="Total Received" value={totalReceived} icon={Gem} colorType="diamonds" subtitle="All-time Inward" />
+          <StatCard
+            title="Total Received"
+            value={totalReceived}
+            unit="pcs"
+            weight={totalReceivedWeight}
+            weightLabel="Inward Wt"
+            icon={Gem}
+            colorType="diamonds"
+            subtitle="All-time Inward"
+          />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard title="In-Factory Stock" value={inFactoryBalance} icon={CheckCircle2} colorType="balance" subtitle="Active Balance" />
+          <StatCard
+            title="In-Factory Stock"
+            value={inFactoryBalance}
+            unit="pcs"
+            weight={inFactoryWeight}
+            weightLabel="Stock Wt"
+            icon={CheckCircle2}
+            colorType="balance"
+            subtitle="Active Balance"
+          />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard title="Submitted to Co." value={submitted} icon={Truck} colorType="submitted" subtitle="Returned to Client" />
+          <StatCard
+            title="Submitted to Co."
+            value={submitted}
+            unit="pcs"
+            weight={submittedWeight}
+            weightLabel="Return Wt"
+            icon={Truck}
+            colorType="submitted"
+            subtitle="Returned to Client"
+          />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard title="In Production" value={inProduction} icon={Activity} colorType="production" subtitle="Active on Sockets" />
+          <StatCard
+            title="In Production"
+            value={inProduction}
+            unit="pcs"
+            weight={inProductionWeight}
+            weightLabel="Active Wt"
+            icon={Activity}
+            colorType="production"
+            subtitle="Active on Sockets"
+          />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard title="Total Pending" value={pending} icon={Clock} colorType="pending" subtitle="Awaiting Work/QC" />
+          <StatCard
+            title="Total Pending"
+            value={pending}
+            unit="pcs"
+            weight={pendingWeight}
+            weightLabel="Pending Wt"
+            icon={Clock}
+            colorType="pending"
+            subtitle="Awaiting Work/QC"
+          />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard title="Completed Ready" value={completed} icon={CheckCircle2} colorType="completed" subtitle="Ready for Dispatch" />
+          <StatCard
+            title="Completed Ready"
+            value={completed}
+            unit="pcs"
+            weight={completedWeight}
+            weightLabel="Ready Wt"
+            icon={CheckCircle2}
+            colorType="completed"
+            subtitle="Ready for Dispatch"
+          />
         </div>
       </div>
 
@@ -242,14 +331,14 @@ const CompanyDetails = () => {
           <table className="table table-custom table-sticky-first text-center align-middle mb-0">
             <thead>
               <tr>
-                <th className="text-start text-nowrap">Received Date</th>
-                <th className="text-nowrap text-center">Received</th>
-                <th className="text-nowrap text-center">In-Factory</th>
-                <th className="text-nowrap text-center">Assigned</th>
-                <th className="text-nowrap text-center">In Progress</th>
-                <th className="text-nowrap text-center">Completed</th>
-                <th className="text-nowrap text-center">Submitted</th>
-                <th className="text-nowrap text-center">Pending</th>
+                <th className="text-start text-nowrap">RECEIVED DATE</th>
+                <th className="text-nowrap text-center">RECEIVED</th>
+                <th className="text-nowrap text-center">IN-FACTORY</th>
+                <th className="text-nowrap text-center">ASSIGNED</th>
+                <th className="text-nowrap text-center">IN PROGRESS</th>
+                <th className="text-nowrap text-center">COMPLETED</th>
+                <th className="text-nowrap text-center">SUBMITTED</th>
+                <th className="text-nowrap text-center">PENDING</th>
               </tr>
             </thead>
             <tbody>
@@ -287,7 +376,8 @@ const CompanyDetails = () => {
               <tr>
                 <th className="text-nowrap">Barcode</th>
                 <th className="text-nowrap">Shape</th>
-                <th className="text-nowrap">Weight (ct)</th>
+                <th className="text-nowrap">Rough Wt (ct)</th>
+                <th className="text-nowrap">Actual Wt (ct)</th>
                 <th className="text-nowrap">Received Date</th>
                 <th className="text-nowrap">Assigned Worker</th>
                 <th className="text-nowrap">Status</th>
@@ -298,7 +388,7 @@ const CompanyDetails = () => {
             <tbody>
               {companyDiamonds.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4 text-muted">No diamonds found matching current search.</td>
+                  <td colSpan="9" className="text-center py-4 text-muted">No diamonds found matching current search.</td>
                 </tr>
               ) : (
                 companyDiamonds.map((d) => (
@@ -307,7 +397,8 @@ const CompanyDetails = () => {
                       <span className="font-heading fw-bold text-navy" style={{ color: '#0A192F' }}>{d.barcode}</span>
                     </td>
                     <td className="small">{d.shape || d.size || '-'}</td>
-                    <td className="fw-semibold">{d.weight} ct</td>
+                    <td className="fw-semibold font-mono">{d.weight} ct</td>
+                    <td className="small font-mono text-muted">{d.actualWeight ? `${d.actualWeight} ct` : '—'}</td>
                     <td className="small text-muted">{d.receivedDate}</td>
                     <td>{d.assignedWorkerName || <span className="text-muted small">Unassigned</span>}</td>
                     <td><Badge status={d.status} /></td>

@@ -31,8 +31,20 @@ const SparkLine = ({ color }) => (
   </svg>
 );
 
-const StatCard = ({ title, value, icon: Icon, colorType, subtitle }) => {
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+  colorType,
+  subtitle,
+  weight,
+  weightLabel = 'Weight',
+  unit,
+  badgeValue
+}) => {
   const colors = colorMap[colorType] || colorMap.total;
+
+  const displayBadge = badgeValue !== undefined ? badgeValue : value;
 
   return (
     <div
@@ -44,7 +56,7 @@ const StatCard = ({ title, value, icon: Icon, colorType, subtitle }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        gap: '10px',
+        gap: '8px',
         position: 'relative',
         overflow: 'hidden',
         transition: 'transform 0.18s ease, box-shadow 0.18s ease',
@@ -103,27 +115,60 @@ const StatCard = ({ title, value, icon: Icon, colorType, subtitle }) => {
             borderRadius: '20px',
             padding: '2px 9px',
             flexShrink: 0,
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'Inter, monospace',
             letterSpacing: '0.01em',
           }}
         >
-          {value}
+          {displayBadge}
         </span>
       </div>
 
       {/* Row 2: Large value */}
-      <div
-        style={{
-          fontSize: '2.1rem',
-          fontWeight: 800,
-          color: '#0F172A',
-          lineHeight: 1,
-          fontFamily: 'Outfit, sans-serif',
-          letterSpacing: '-0.03em',
-        }}
-      >
-        {value}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+        <div
+          style={{
+            fontSize: '2.1rem',
+            fontWeight: 800,
+            color: '#0F172A',
+            lineHeight: 1,
+            fontFamily: 'Outfit, sans-serif',
+            letterSpacing: '-0.03em',
+          }}
+        >
+          {value}
+        </div>
+        {unit && (
+          <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase' }}>
+            {unit}
+          </span>
+        )}
       </div>
+
+      {/* Weight section (if provided) */}
+      {weight !== undefined && weight !== null && (
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '3px 8px',
+            borderRadius: '8px',
+            backgroundColor: colors.iconBg,
+            color: colors.iconColor,
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            fontFamily: 'JetBrains Mono, monospace',
+            width: 'fit-content',
+            border: `1px solid ${colors.badgeColor}25`
+          }}
+          title={`${weightLabel}: ${typeof weight === 'number' ? weight.toFixed(3) : weight} ct`}
+        >
+          <span style={{ fontSize: '0.67rem', opacity: 0.85, fontWeight: 600, fontFamily: 'Inter, sans-serif' }}>
+            {weightLabel}:
+          </span>
+          <span>{typeof weight === 'number' ? weight.toFixed(3) : weight} ct</span>
+        </div>
+      )}
 
       {/* Row 3: Subtitle */}
       {subtitle && (
@@ -133,6 +178,7 @@ const StatCard = ({ title, value, icon: Icon, colorType, subtitle }) => {
             color: '#94A3B8',
             fontWeight: 500,
             fontFamily: 'Inter, sans-serif',
+            marginTop: 'auto'
           }}
         >
           {subtitle}
