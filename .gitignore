@@ -49,9 +49,3 @@ coverage
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-/nbproject/private/
-
-# Java / Maven build outputs
-**/target/
-*.class
-.nb-gradle/
