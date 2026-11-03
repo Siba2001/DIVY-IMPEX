@@ -1,10 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { useDiamonds } from '../../context/DiamondContext';
-import { Building2, Plus, Eye, Edit, Phone, Mail, MapPin, Search, Trash2, AlertCircle, LayoutGrid, Table as TableIcon, User } from 'lucide-react';
+import {
+  Building2,
+  Plus,
+  Eye,
+  Edit,
+  Phone,
+  Mail,
+  MapPin,
+  Search,
+  Trash2,
+  AlertCircle,
+  LayoutGrid,
+  Table as TableIcon,
+  User,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
+} from 'lucide-react';
 
 const Companies = () => {
   const { companies, diamonds, addCompany, updateCompany, deleteCompany } = useDiamonds();
@@ -16,6 +34,10 @@ const Companies = () => {
   const [editingCompany, setEditingCompany] = useState(null);
   const [companyToDelete, setCompanyToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Pagination state (default: 12 companies per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -186,12 +208,22 @@ const Companies = () => {
     }
   };
 
-  const filteredCompanies = companies.filter(
-    (c) =>
-      String(c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(c.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(c.contactPerson || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompanies = useMemo(() => {
+    return companies.filter(
+      (c) =>
+        String(c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(c.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(c.contactPerson || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [companies, searchTerm]);
+
+  // Calculate pagination boundaries
+  const totalCount = filteredCompanies.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalCount);
+  const paginatedCompanies = filteredCompanies.slice(startIndex, endIndex);
 
   return (
     <PrivateLayout title="Diamond Client Companies">
@@ -265,7 +297,7 @@ const Companies = () => {
           {/* MOBILE CARDS VIEW: Automatically visible on small screens (< 768px) OR when user selects 'cards' */}
           <div className={`${viewMode === 'table' ? 'd-none' : viewMode === 'cards' ? 'd-block' : 'd-block d-md-none'} mb-4`}>
             <div className="row g-3">
-              {filteredCompanies.map((c) => {
+              {paginatedCompanies.map((c) => {
                 const compDiamonds = diamonds.filter((d) => d.companyId === c.id);
                 const totalReceived = compDiamonds.length;
                 const completed = compDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
@@ -388,7 +420,7 @@ const Companies = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCompanies.map((c) => {
+                    {paginatedCompanies.map((c) => {
                       const compDiamonds = diamonds.filter((d) => d.companyId === c.id);
                       const totalReceived = compDiamonds.length;
                       const completed = compDiamonds.filter((d) => ['COMPLETED', 'VERIFIED'].includes(d.status)).length;
@@ -479,6 +511,123 @@ const Companies = () => {
               </div>
             </div>
           </div>
+
+          {/* Pagination Bar for Companies */}
+          {totalCount > 0 && (
+            <div className="card card-custom p-3 mt-3 shadow-sm border">
+              <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                {/* Left: Summary and Page Size Selector */}
+                <div className="d-flex align-items-center flex-wrap gap-2 text-muted small">
+                  <span>
+                    Showing <strong className="text-dark font-mono">{startIndex + 1}</strong> to{' '}
+                    <strong className="text-dark font-mono">{endIndex}</strong> of{' '}
+                    <strong className="text-navy font-mono" style={{ color: '#0A192F' }}>{totalCount}</strong> companies
+                  </span>
+                  <span className="text-muted d-none d-sm-inline">•</span>
+                  <div className="d-inline-flex align-items-center gap-1.5">
+                    <label htmlFor="companyRosterPageSize" className="text-muted small mb-0 text-nowrap">Show per page:</label>
+                    <select
+                      id="companyRosterPageSize"
+                      className="form-select form-select-sm py-1 px-2 fw-semibold border shadow-none"
+                      style={{ width: 'auto', minWidth: '70px', fontSize: '0.8rem' }}
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <option value={8}>8</option>
+                      <option value={12}>12</option>
+                      <option value={24}>24</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Right: Page Navigation Buttons */}
+                <div className="d-flex align-items-center gap-1">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage(1)}
+                    disabled={safeCurrentPage === 1}
+                    title="First Page"
+                  >
+                    <ChevronsLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={safeCurrentPage === 1}
+                    title="Previous Page"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+
+                  {/* Numbered Page Buttons */}
+                  <div className="d-flex align-items-center gap-1 mx-1">
+                    {(() => {
+                      const pages = [];
+                      const maxButtons = 5;
+                      let start = Math.max(1, safeCurrentPage - 2);
+                      let end = Math.min(totalPages, start + maxButtons - 1);
+                      if (end - start + 1 < maxButtons) {
+                        start = Math.max(1, end - maxButtons + 1);
+                      }
+                      for (let p = start; p <= end; p++) {
+                        pages.push(p);
+                      }
+                      return pages.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          className={`btn btn-sm rounded-pill fw-bold font-mono px-2.5 py-1 ${
+                            p === safeCurrentPage
+                              ? 'btn-navy text-white shadow-xs'
+                              : 'btn-outline-secondary border-0 text-dark'
+                          }`}
+                          style={{
+                            minWidth: '32px',
+                            height: '32px',
+                            backgroundColor: p === safeCurrentPage ? '#0A192F' : 'transparent',
+                            borderColor: p === safeCurrentPage ? '#0A192F' : 'transparent',
+                            fontSize: '0.825rem'
+                          }}
+                          onClick={() => setCurrentPage(p)}
+                        >
+                          {p}
+                        </button>
+                      ));
+                    })()}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={safeCurrentPage === totalPages}
+                    title="Next Page"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={safeCurrentPage === totalPages}
+                    title="Last Page"
+                  >
+                    <ChevronsRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
