@@ -297,7 +297,7 @@ const DiamondList = () => {
             </h6>
             <small className="text-muted" style={{ fontSize: '0.8rem' }}>
               {totalCount > 0
-                ? `Showing ${startIndex + 1}–${endIndex} of ${totalCount} diamonds (Page ${safeCurrentPage} of ${totalPages})`
+                ? `Showing Sr No ${startIndex + 1}–${endIndex} of ${totalCount} diamonds (Page ${safeCurrentPage} of ${totalPages})`
                 : activeTab === 'factory'
                 ? 'No active stock diamonds matching current criteria'
                 : 'No returned diamonds matching current criteria'}
@@ -309,6 +309,7 @@ const DiamondList = () => {
           <table className="table table-custom table-hover align-middle mb-0">
             <thead>
               <tr>
+                <th style={{ width: '45px' }}>#</th>
                 <th>Barcode</th>
                 <th>Company</th>
                 <th>Shape</th>
@@ -323,13 +324,16 @@ const DiamondList = () => {
             <tbody>
               {totalCount === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center py-4 text-muted">
+                  <td colSpan="10" className="text-center py-4 text-muted">
                     No diamond records found matching your filter criteria.
                   </td>
                 </tr>
               ) : (
-                paginatedDiamonds.map((d) => (
+                paginatedDiamonds.map((d, idx) => (
                   <tr key={d.id}>
+                    <td className="text-muted small font-mono fw-semibold">
+                      {startIndex + idx + 1}
+                    </td>
                     <td>
                       <span className="font-heading fw-bold text-navy fs-6" style={{ color: '#0A192F' }}>
                         {d.barcode}
@@ -452,7 +456,7 @@ const DiamondList = () => {
             {/* Left: Summary and Page Size Selector */}
             <div className="d-flex align-items-center flex-wrap gap-2 text-muted small">
               <span>
-                Showing <strong className="text-dark font-mono">{startIndex + 1}</strong> to{' '}
+                Showing Sr No <strong className="text-dark font-mono">{startIndex + 1}</strong> to{' '}
                 <strong className="text-dark font-mono">{endIndex}</strong> of{' '}
                 <strong className="text-navy font-mono" style={{ color: '#0A192F' }}>{totalCount}</strong> diamonds
               </span>

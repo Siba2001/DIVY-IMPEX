@@ -450,6 +450,7 @@ const CompanyDetails = () => {
           <table className="table table-custom table-sticky-first table-hover align-middle mb-0">
             <thead>
               <tr>
+                <th style={{ width: '45px' }} className="text-nowrap">#</th>
                 <th className="text-nowrap">Barcode</th>
                 <th className="text-nowrap">Shape</th>
                 <th className="text-nowrap">Rough Wt (ct)</th>
@@ -464,11 +465,14 @@ const CompanyDetails = () => {
             <tbody>
               {companyDiamonds.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center py-4 text-muted">No diamonds found matching current search.</td>
+                  <td colSpan="10" className="text-center py-4 text-muted">No diamonds found matching current search.</td>
                 </tr>
               ) : (
-                paginatedDiamonds.map((d) => (
+                paginatedDiamonds.map((d, idx) => (
                   <tr key={d.id}>
+                    <td className="text-muted small font-mono fw-semibold">
+                      {startIndex + idx + 1}
+                    </td>
                     <td>
                       <span className="font-heading fw-bold text-navy" style={{ color: '#0A192F' }}>{d.barcode}</span>
                     </td>
@@ -500,7 +504,7 @@ const CompanyDetails = () => {
             {/* Left: Summary and Page Size Selector */}
             <div className="d-flex align-items-center flex-wrap gap-2 text-muted small">
               <span>
-                Showing <strong className="text-dark font-mono">{startIndex + 1}</strong> to{' '}
+                Showing Sr No <strong className="text-dark font-mono">{startIndex + 1}</strong> to{' '}
                 <strong className="text-dark font-mono">{endIndex}</strong> of{' '}
                 <strong className="text-navy font-mono" style={{ color: '#0A192F' }}>{totalCount}</strong> diamonds
               </span>

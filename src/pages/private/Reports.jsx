@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PrivateLayout from '../../layouts/PrivateLayout';
 import Badge from '../../components/common/Badge';
@@ -18,6 +18,9 @@ import {
   Layers,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
   Sparkles,
   CheckCircle2,
   ListOrdered
@@ -39,6 +42,10 @@ const Reports = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [expandedDates, setExpandedDates] = useState({});
+
+  // Pagination State for Itemized View
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const reportTypes = [
     { id: '1', label: '1. Monthly Stock & Shape Matrix (Company-Wise)', name: 'Monthly Stock & Shape Matrix (Company-Wise)' },
@@ -110,7 +117,25 @@ const Reports = () => {
     });
   };
 
-  const reportData = getFilteredData();
+  const reportData = useMemo(() => {
+    return getFilteredData();
+  }, [diamonds, companyFilter, workerFilter, statusFilter, fromDate, toDate, activeReportType]);
+
+  // Reset page when filters, report type or view mode changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeReportType, viewMode, companyFilter, workerFilter, statusFilter, fromDate, toDate, pageSize]);
+
+  // Pagination Calculations
+  const totalCount = reportData.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalCount);
+
+  const paginatedReportData = useMemo(() => {
+    return reportData.slice(startIndex, endIndex);
+  }, [reportData, startIndex, endIndex]);
 
   // Find currently selected company
   const selectedCompany = companies.find((c) => c.id === companyFilter);
@@ -735,100 +760,218 @@ const Reports = () => {
           /* ========================================================================= */
           /* VIEW 2: ITEMIZED DIAMONDS AUDIT TABLE (Row-by-Row List) */
           /* ========================================================================= */
-          <div className="table-responsive rounded-3 border">
-            <table className="table table-custom table-hover table-bordered align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: '40px' }}>#</th>
-                  <th>Barcode</th>
-                  <th>Rough Cut #</th>
-                  <th>Company</th>
-                  <th>Shape</th>
-                  <th>Original Weight</th>
-                  <th>Actual Weight</th>
-                  <th>Received Date</th>
-                  <th>Assigned Artisan</th>
-                  <th>Work Status</th>
-                  <th>Completed Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reportData.length === 0 ? (
+          <>
+            <div className="table-responsive rounded-3 border">
+              <table className="table table-custom table-hover table-bordered align-middle mb-0">
+                <thead className="table-light">
                   <tr>
-                    <td colSpan="11" className="text-center py-4 text-muted">
-                      No matching records found for this report configuration.
-                    </td>
+                    <th style={{ width: '40px' }}>#</th>
+                    <th>Barcode</th>
+                    <th>Rough Cut #</th>
+                    <th>Company</th>
+                    <th>Shape</th>
+                    <th>Original Weight</th>
+                    <th>Actual Weight</th>
+                    <th>Received Date</th>
+                    <th>Assigned Artisan</th>
+                    <th>Work Status</th>
+                    <th>Completed Date</th>
                   </tr>
-                ) : (
-                  reportData.map((d, idx) => (
-                    <tr key={d.id || idx}>
-                      <td>{idx + 1}</td>
-                      <td>
-                        <span className="font-heading fw-bold text-navy">{d.barcode}</span>
-                      </td>
-                      <td className="font-mono text-muted small">{d.roughCutNo || '-'}</td>
-                      <td>
-                        {d.companyName} <span className="badge bg-light text-navy border ms-1">{d.companyCode}</span>
-                      </td>
-                      <td>
-                        <span className="badge bg-light text-dark border">
-                          {d.shape || d.size || '-'}
-                        </span>
-                      </td>
-                      <td className="fw-semibold">{d.weight} ct</td>
-                      <td>{d.actualWeight ? `${d.actualWeight} ct` : '-'}</td>
-                      <td>{d.receivedDate}</td>
-                      <td>{d.assignedWorkerName || <span className="text-muted italic">Unassigned</span>}</td>
-                      <td>
-                        <Badge status={d.status} />
-                      </td>
-                      <td>{d.completedDate || '-'}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-              {reportData.length > 0 && (() => {
-                const totalOrigWeight = reportData.reduce((sum, d) => sum + (parseFloat(d.weight) || 0), 0);
-                const weighedDiamonds = reportData.filter((d) => parseFloat(d.actualWeight) > 0);
-                const totalActualWeight = weighedDiamonds.reduce((sum, d) => sum + (parseFloat(d.actualWeight) || 0), 0);
-                const pendingCount = reportData.length - weighedDiamonds.length;
-
-                return (
-                  <tfoot className="table-light fw-bold">
+                </thead>
+                <tbody>
+                  {paginatedReportData.length === 0 ? (
                     <tr>
-                      <td colSpan="5">
-                        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                          <span>Total Calculated ({reportData.length} Diamonds)</span>
-                          {pendingCount > 0 ? (
-                            <span className="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 fw-semibold px-2 py-1" style={{ fontSize: '0.74rem' }}>
-                              {weighedDiamonds.length} Weighed &middot; {pendingCount} Pending Weighing
-                            </span>
-                          ) : (
-                            <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 fw-semibold px-2 py-1" style={{ fontSize: '0.74rem' }}>
-                              All {weighedDiamonds.length} Weighed
-                            </span>
-                          )}
-                        </div>
+                      <td colSpan="11" className="text-center py-4 text-muted">
+                        No matching records found for this report configuration.
                       </td>
-                      <td className="fw-bold text-navy text-nowrap">
-                        <div>{totalOrigWeight.toFixed(3)} ct</div>
-                        <small className="text-muted fw-normal d-block" style={{ fontSize: '0.7rem' }}>
-                          (Total Rough)
-                        </small>
-                      </td>
-                      <td className="fw-bold text-success text-nowrap">
-                        <div>{totalActualWeight.toFixed(3)} ct</div>
-                        <small className="text-muted fw-normal d-block" style={{ fontSize: '0.7rem' }}>
-                          {pendingCount > 0 ? `(${weighedDiamonds.length} polished pcs)` : '(All polished)'}
-                        </small>
-                      </td>
-                      <td colSpan="4"></td>
                     </tr>
-                  </tfoot>
-                );
-              })()}
-            </table>
-          </div>
+                  ) : (
+                    paginatedReportData.map((d, idx) => (
+                      <tr key={d.id || idx}>
+                        <td>{startIndex + idx + 1}</td>
+                        <td>
+                          <span className="font-heading fw-bold text-navy">{d.barcode}</span>
+                        </td>
+                        <td className="font-mono text-muted small">{d.roughCutNo || '-'}</td>
+                        <td>
+                          {d.companyName} <span className="badge bg-light text-navy border ms-1">{d.companyCode}</span>
+                        </td>
+                        <td>
+                          <span className="badge bg-light text-dark border">
+                            {d.shape || d.size || '-'}
+                          </span>
+                        </td>
+                        <td className="fw-semibold">{d.weight} ct</td>
+                        <td>{d.actualWeight ? `${d.actualWeight} ct` : '-'}</td>
+                        <td>{d.receivedDate}</td>
+                        <td>{d.assignedWorkerName || <span className="text-muted italic">Unassigned</span>}</td>
+                        <td>
+                          <Badge status={d.status} />
+                        </td>
+                        <td>{d.completedDate || '-'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                {reportData.length > 0 && (() => {
+                  const totalOrigWeight = reportData.reduce((sum, d) => sum + (parseFloat(d.weight) || 0), 0);
+                  const weighedDiamonds = reportData.filter((d) => parseFloat(d.actualWeight) > 0);
+                  const totalActualWeight = weighedDiamonds.reduce((sum, d) => sum + (parseFloat(d.actualWeight) || 0), 0);
+                  const pendingCount = reportData.length - weighedDiamonds.length;
+
+                  return (
+                    <tfoot className="table-light fw-bold">
+                      <tr>
+                        <td colSpan="5">
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <span>Total Calculated ({reportData.length} Diamonds)</span>
+                            {pendingCount > 0 ? (
+                              <span className="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 fw-semibold px-2 py-1" style={{ fontSize: '0.74rem' }}>
+                                {weighedDiamonds.length} Weighed &middot; {pendingCount} Pending Weighing
+                              </span>
+                            ) : (
+                              <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 fw-semibold px-2 py-1" style={{ fontSize: '0.74rem' }}>
+                                All {weighedDiamonds.length} Weighed
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="fw-bold text-navy text-nowrap">
+                          <div>{totalOrigWeight.toFixed(3)} ct</div>
+                          <small className="text-muted fw-normal d-block" style={{ fontSize: '0.7rem' }}>
+                            (Total Rough)
+                          </small>
+                        </td>
+                        <td className="fw-bold text-success text-nowrap">
+                          <div>{totalActualWeight.toFixed(3)} ct</div>
+                          <small className="text-muted fw-normal d-block" style={{ fontSize: '0.7rem' }}>
+                            {pendingCount > 0 ? `(${weighedDiamonds.length} polished pcs)` : '(All polished)'}
+                          </small>
+                        </td>
+                        <td colSpan="4"></td>
+                      </tr>
+                    </tfoot>
+                  );
+                })()}
+              </table>
+            </div>
+
+            {/* Pagination Bar */}
+            {totalCount > 0 && (
+              <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 pt-3 mt-3 border-top btn-print-hide">
+                {/* Left: Summary and Page Size Selector */}
+                <div className="d-flex align-items-center flex-wrap gap-2 text-muted small">
+                  <span>
+                    Showing Sr No <strong className="text-dark font-mono">{startIndex + 1}</strong> to{' '}
+                    <strong className="text-dark font-mono">{endIndex}</strong> of{' '}
+                    <strong className="text-navy font-mono" style={{ color: '#0A192F' }}>{totalCount}</strong> diamonds
+                  </span>
+                  <span className="text-muted d-none d-sm-inline">•</span>
+                  <div className="d-inline-flex align-items-center gap-1.5">
+                    <label htmlFor="reportPageSizeSelect" className="text-muted small mb-0 text-nowrap">Show per page:</label>
+                    <select
+                      id="reportPageSizeSelect"
+                      className="form-select form-select-sm py-1 px-2 fw-semibold border shadow-none"
+                      style={{ width: 'auto', minWidth: '70px', fontSize: '0.8rem' }}
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={totalCount}>All ({totalCount})</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Right: Page Navigation Buttons */}
+                <div className="d-flex align-items-center gap-1">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage(1)}
+                    disabled={safeCurrentPage === 1}
+                    title="First Page"
+                  >
+                    <ChevronsLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={safeCurrentPage === 1}
+                    title="Previous Page"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+
+                  {/* Numbered Page Buttons */}
+                  <div className="d-flex align-items-center gap-1 mx-1">
+                    {(() => {
+                      const pages = [];
+                      const maxButtons = 5;
+                      let start = Math.max(1, safeCurrentPage - 2);
+                      let end = Math.min(totalPages, start + maxButtons - 1);
+                      if (end - start + 1 < maxButtons) {
+                        start = Math.max(1, end - maxButtons + 1);
+                      }
+                      for (let p = start; p <= end; p++) {
+                        pages.push(p);
+                      }
+                      return pages.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          className={`btn btn-sm rounded-pill fw-bold font-mono px-2.5 py-1 ${
+                            p === safeCurrentPage
+                              ? 'btn-navy text-white shadow-xs'
+                              : 'btn-outline-secondary border-0 text-dark'
+                          }`}
+                          style={{
+                            minWidth: '32px',
+                            height: '32px',
+                            backgroundColor: p === safeCurrentPage ? '#0A192F' : 'transparent',
+                            borderColor: p === safeCurrentPage ? '#0A192F' : 'transparent',
+                            fontSize: '0.825rem'
+                          }}
+                          onClick={() => setCurrentPage(p)}
+                        >
+                          {p}
+                        </button>
+                      ));
+                    })()}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={safeCurrentPage === totalPages}
+                    title="Next Page"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 d-flex align-items-center justify-content-center shadow-none"
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={safeCurrentPage === totalPages}
+                    title="Last Page"
+                  >
+                    <ChevronsRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </PrivateLayout>
