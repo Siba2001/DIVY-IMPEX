@@ -26,7 +26,7 @@ const About = () => {
                 Founded in the diamond capital of Surat under the leadership of Owner <strong>Chandrakant Vaghasiya</strong>, <strong>DIVY IMPEX</strong> has grown into a premier high-volume B2B contract manufacturer specializing as an <strong>"All Fancy Cut Manufacturer"</strong>.
               </p>
               <p className="text-secondary leading-relaxed mb-4">
-                Operating out of Varachha Road, Surat, our facility encompasses every stage: physical inward parcel receiving, 3D laser tension planning, blocking, girdling, fancy cut polishing, automated weight verification, and secure barcode deposit.
+                Operating out of Varachha Road, Surat, our facility manages every stage of diamond manufacturing, including physical inward parcel receiving, laser planning, blocking, girdling, fancy-cut polishing, automated weight verification, and secure barcode-based storage.
               </p>
               <div className="p-4 bg-light rounded-4 border border-start border-4 border-warning craft-feature-card">
                 <h6 className="fw-bold text-navy mb-1">Our Core Objective</h6>
